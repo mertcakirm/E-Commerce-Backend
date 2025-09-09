@@ -148,3 +148,4 @@
 /Users/mertcakir/BackEnd-Projects/eCommerce/eCommerce.API/obj/Debug/net8.0/eCommerce.API.pdb
 /Users/mertcakir/BackEnd-Projects/eCommerce/eCommerce.API/obj/Debug/net8.0/eCommerce.API.genruntimeconfig.cache
 /Users/mertcakir/BackEnd-Projects/eCommerce/eCommerce.API/obj/Debug/net8.0/ref/eCommerce.API.dll
+/Users/mertcakir/BackEnd-Projects/eCommerce/eCommerce.API/obj/Debug/net8.0/eCommerce.API.sourcelink.json

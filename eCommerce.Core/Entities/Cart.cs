@@ -3,7 +3,8 @@ namespace eCommerce.Core.Entities;
 public class Cart : BaseEntity
 {
     public int UserId { get; set; }
-    public User User { get; set; }
+    public virtual User User { get; set; }
 
-    public ICollection<CartItem> Items { get; set; }
+    // Tek navigation property
+    public virtual List<CartItem> CartItems { get; set; } = new List<CartItem>();
 }

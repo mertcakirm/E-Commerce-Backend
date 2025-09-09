@@ -9,3 +9,4 @@
 /Users/mertcakir/BackEnd-Projects/eCommerce/eCommerce.Core/obj/Debug/net8.0/refint/eCommerce.Core.dll
 /Users/mertcakir/BackEnd-Projects/eCommerce/eCommerce.Core/obj/Debug/net8.0/eCommerce.Core.pdb
 /Users/mertcakir/BackEnd-Projects/eCommerce/eCommerce.Core/obj/Debug/net8.0/ref/eCommerce.Core.dll
+/Users/mertcakir/BackEnd-Projects/eCommerce/eCommerce.Core/obj/Debug/net8.0/eCommerce.Core.sourcelink.json

@@ -9,4 +9,5 @@ public class CartItem : BaseEntity
     public ProductVariant ProductVariant { get; set; }
 
     public int Quantity { get; set; }
+    
 }

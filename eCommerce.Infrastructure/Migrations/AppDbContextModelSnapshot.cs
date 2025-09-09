@@ -122,6 +122,9 @@ namespace eCommerce.Infrastructure.Migrations
                     b.Property<int>("ProductVariantId")
                         .HasColumnType("int");
 
+                    b.Property<int?>("ProductVariantId1")
+                        .HasColumnType("int");
+
                     b.Property<int>("Quantity")
                         .HasColumnType("int");
 
@@ -135,6 +138,8 @@ namespace eCommerce.Infrastructure.Migrations
                     b.HasIndex("ProductId");
 
                     b.HasIndex("ProductVariantId");
+
+                    b.HasIndex("ProductVariantId1");
 
                     b.ToTable("CartItems");
                 });
@@ -336,9 +341,6 @@ namespace eCommerce.Infrastructure.Migrations
                     b.Property<decimal>("Price")
                         .HasColumnType("decimal(65,30)");
 
-                    b.Property<int>("Stock")
-                        .HasColumnType("int");
-
                     b.Property<DateTime?>("UpdatedAt")
                         .HasColumnType("datetime(6)");
 
@@ -393,6 +395,9 @@ namespace eCommerce.Infrastructure.Migrations
                         .HasColumnType("int");
 
                     MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<decimal>("CostPrice")
+                        .HasColumnType("decimal(65,30)");
 
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime(6)");
@@ -601,7 +606,7 @@ namespace eCommerce.Infrastructure.Migrations
             modelBuilder.Entity("eCommerce.Core.Entities.CartItem", b =>
                 {
                     b.HasOne("eCommerce.Core.Entities.Cart", "Cart")
-                        .WithMany("Items")
+                        .WithMany("CartItems")
                         .HasForeignKey("CartId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
@@ -611,10 +616,14 @@ namespace eCommerce.Infrastructure.Migrations
                         .HasForeignKey("ProductId");
 
                     b.HasOne("eCommerce.Core.Entities.ProductVariant", "ProductVariant")
-                        .WithMany("CartItems")
+                        .WithMany()
                         .HasForeignKey("ProductVariantId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
+
+                    b.HasOne("eCommerce.Core.Entities.ProductVariant", null)
+                        .WithMany("CartItems")
+                        .HasForeignKey("ProductVariantId1");
 
                     b.Navigation("Cart");
 
@@ -701,7 +710,7 @@ namespace eCommerce.Infrastructure.Migrations
             modelBuilder.Entity("eCommerce.Core.Entities.ProductVariant", b =>
                 {
                     b.HasOne("eCommerce.Core.Entities.Product", "Product")
-                        .WithMany()
+                        .WithMany("Variants")
                         .HasForeignKey("ProductId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
@@ -760,7 +769,7 @@ namespace eCommerce.Infrastructure.Migrations
 
             modelBuilder.Entity("eCommerce.Core.Entities.Cart", b =>
                 {
-                    b.Navigation("Items");
+                    b.Navigation("CartItems");
                 });
 
             modelBuilder.Entity("eCommerce.Core.Entities.Category", b =>
@@ -787,6 +796,8 @@ namespace eCommerce.Infrastructure.Migrations
                     b.Navigation("OrderItems");
 
                     b.Navigation("Reviews");
+
+                    b.Navigation("Variants");
 
                     b.Navigation("Wishlists");
                 });

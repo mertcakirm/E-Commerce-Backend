@@ -60,7 +60,18 @@ public class AppDbContext : DbContext
             .WithMany(pv => pv.CartItems)
             .HasForeignKey(ci => ci.ProductVariantId)
             .OnDelete(DeleteBehavior.Restrict);
-
+        
+        modelBuilder.Entity<CartItem>()
+            .HasOne(ci => ci.ProductVariant)
+            .WithMany() 
+            .HasForeignKey(ci => ci.ProductVariantId);
+        
+        modelBuilder.Entity<Cart>()
+            .HasMany(c => c.CartItems)
+            .WithOne(ci => ci.Cart)
+            .HasForeignKey(ci => ci.CartId)
+            .OnDelete(DeleteBehavior.Cascade);
+        
         base.OnModelCreating(modelBuilder);
     }
 

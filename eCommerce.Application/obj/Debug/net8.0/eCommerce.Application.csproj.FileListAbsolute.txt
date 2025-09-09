@@ -13,3 +13,4 @@
 /Users/mertcakir/BackEnd-Projects/eCommerce/eCommerce.Application/obj/Debug/net8.0/refint/eCommerce.Application.dll
 /Users/mertcakir/BackEnd-Projects/eCommerce/eCommerce.Application/obj/Debug/net8.0/eCommerce.Application.pdb
 /Users/mertcakir/BackEnd-Projects/eCommerce/eCommerce.Application/obj/Debug/net8.0/ref/eCommerce.Application.dll
+/Users/mertcakir/BackEnd-Projects/eCommerce/eCommerce.Application/obj/Debug/net8.0/eCommerce.Application.sourcelink.json
