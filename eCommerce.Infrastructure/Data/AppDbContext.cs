@@ -8,11 +8,10 @@ public class AppDbContext : DbContext
 {
     public AppDbContext(DbContextOptions<AppDbContext> options) : base(options) { }
 
-    // Tablolar
     public DbSet<User> Users { get; set; }
     public DbSet<Category> Categories { get; set; }
     public DbSet<Product> Products { get; set; }
-    public DbSet<ProductVariant> ProductVariants { get; set; } // 🔹 Yeni
+    public DbSet<ProductVariant> ProductVariants { get; set; }
     public DbSet<ProductImage> ProductImages { get; set; }
     public DbSet<Cart> Carts { get; set; }
     public DbSet<CartItem> CartItems { get; set; }
@@ -26,7 +25,6 @@ public class AppDbContext : DbContext
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
-        // Soft delete global filter
         foreach (var entityType in modelBuilder.Model.GetEntityTypes())
         {
             if (typeof(BaseEntity).IsAssignableFrom(entityType.ClrType))
@@ -47,14 +45,14 @@ public class AppDbContext : DbContext
             .HasForeignKey(c => c.ParentCategoryId)
             .OnDelete(DeleteBehavior.Restrict);
 
-        // OrderItem → ProductVariant ilişkisi
+        // OrderItem → ProductVariant
         modelBuilder.Entity<OrderItem>()
             .HasOne(oi => oi.ProductVariant)
             .WithMany(pv => pv.OrderItems)
             .HasForeignKey(oi => oi.ProductVariantId)
             .OnDelete(DeleteBehavior.Restrict);
 
-        // CartItem → ProductVariant ilişkisi
+        // CartItem → ProductVariant 
         modelBuilder.Entity<CartItem>()
             .HasOne(ci => ci.ProductVariant)
             .WithMany(pv => pv.CartItems)
