@@ -1,0 +1,15 @@
+/Users/mertcakir/BackEnd-Projects/eCommerce/eCommerce.Application/bin/Debug/net8.0/eCommerce.Application.deps.json
+/Users/mertcakir/BackEnd-Projects/eCommerce/eCommerce.Application/bin/Debug/net8.0/eCommerce.Application.dll
+/Users/mertcakir/BackEnd-Projects/eCommerce/eCommerce.Application/bin/Debug/net8.0/eCommerce.Application.pdb
+/Users/mertcakir/BackEnd-Projects/eCommerce/eCommerce.Application/bin/Debug/net8.0/eCommerce.Core.dll
+/Users/mertcakir/BackEnd-Projects/eCommerce/eCommerce.Application/bin/Debug/net8.0/eCommerce.Core.pdb
+/Users/mertcakir/BackEnd-Projects/eCommerce/eCommerce.Application/obj/Debug/net8.0/eCommerce.Application.csproj.AssemblyReference.cache
+/Users/mertcakir/BackEnd-Projects/eCommerce/eCommerce.Application/obj/Debug/net8.0/eCommerce.Application.GeneratedMSBuildEditorConfig.editorconfig
+/Users/mertcakir/BackEnd-Projects/eCommerce/eCommerce.Application/obj/Debug/net8.0/eCommerce.Application.AssemblyInfoInputs.cache
+/Users/mertcakir/BackEnd-Projects/eCommerce/eCommerce.Application/obj/Debug/net8.0/eCommerce.Application.AssemblyInfo.cs
+/Users/mertcakir/BackEnd-Projects/eCommerce/eCommerce.Application/obj/Debug/net8.0/eCommerce.Application.csproj.CoreCompileInputs.cache
+/Users/mertcakir/BackEnd-Projects/eCommerce/eCommerce.Application/obj/Debug/net8.0/eCommerc.FF2FEB98.Up2Date
+/Users/mertcakir/BackEnd-Projects/eCommerce/eCommerce.Application/obj/Debug/net8.0/eCommerce.Application.dll
+/Users/mertcakir/BackEnd-Projects/eCommerce/eCommerce.Application/obj/Debug/net8.0/refint/eCommerce.Application.dll
+/Users/mertcakir/BackEnd-Projects/eCommerce/eCommerce.Application/obj/Debug/net8.0/eCommerce.Application.pdb
+/Users/mertcakir/BackEnd-Projects/eCommerce/eCommerce.Application/obj/Debug/net8.0/ref/eCommerce.Application.dll

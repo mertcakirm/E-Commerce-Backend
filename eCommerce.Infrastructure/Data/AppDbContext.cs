@@ -1,0 +1,91 @@
+using eCommerce.Core.Entities;
+using Microsoft.EntityFrameworkCore;
+using System.Linq.Expressions;
+
+namespace eCommerce.Infrastructure.Data;
+
+public class AppDbContext : DbContext
+{
+    public AppDbContext(DbContextOptions<AppDbContext> options) : base(options) { }
+
+    // Tablolar
+    public DbSet<User> Users { get; set; }
+    public DbSet<Category> Categories { get; set; }
+    public DbSet<Product> Products { get; set; }
+    public DbSet<ProductVariant> ProductVariants { get; set; } // 🔹 Yeni
+    public DbSet<ProductImage> ProductImages { get; set; }
+    public DbSet<Cart> Carts { get; set; }
+    public DbSet<CartItem> CartItems { get; set; }
+    public DbSet<Order> Orders { get; set; }
+    public DbSet<OrderItem> OrderItems { get; set; }
+    public DbSet<Payment> Payments { get; set; }
+    public DbSet<Wishlist> Wishlists { get; set; }
+    public DbSet<Review> Reviews { get; set; }
+    public DbSet<UserAddress> UserAddresses { get; set; }
+    public DbSet<AuditLog> AuditLogs { get; set; }
+
+    protected override void OnModelCreating(ModelBuilder modelBuilder)
+    {
+        // Soft delete global filter
+        foreach (var entityType in modelBuilder.Model.GetEntityTypes())
+        {
+            if (typeof(BaseEntity).IsAssignableFrom(entityType.ClrType))
+            {
+                var method = typeof(AppDbContext)
+                    .GetMethod(nameof(GetIsDeletedRestriction), System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static)
+                    .MakeGenericMethod(entityType.ClrType);
+
+                var filter = method.Invoke(null, Array.Empty<object>());
+                modelBuilder.Entity(entityType.ClrType).HasQueryFilter((LambdaExpression)filter);
+            }
+        }
+
+        // Category self-reference
+        modelBuilder.Entity<Category>()
+            .HasOne(c => c.ParentCategory)
+            .WithMany(c => c.SubCategories)
+            .HasForeignKey(c => c.ParentCategoryId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        // OrderItem → ProductVariant ilişkisi
+        modelBuilder.Entity<OrderItem>()
+            .HasOne(oi => oi.ProductVariant)
+            .WithMany(pv => pv.OrderItems)
+            .HasForeignKey(oi => oi.ProductVariantId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        // CartItem → ProductVariant ilişkisi
+        modelBuilder.Entity<CartItem>()
+            .HasOne(ci => ci.ProductVariant)
+            .WithMany(pv => pv.CartItems)
+            .HasForeignKey(ci => ci.ProductVariantId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        base.OnModelCreating(modelBuilder);
+    }
+
+    private static LambdaExpression GetIsDeletedRestriction<T>() where T : BaseEntity
+    {
+        Expression<Func<T, bool>> filter = x => !x.IsDeleted;
+        return filter;
+    }
+
+    public override int SaveChanges()
+    {
+        var entries = ChangeTracker.Entries<BaseEntity>();
+        foreach (var entry in entries)
+        {
+            if (entry.State == EntityState.Deleted)
+            {
+                entry.State = EntityState.Modified;
+                entry.Entity.IsDeleted = true;
+                entry.Entity.DeletedAt = DateTime.UtcNow;
+            }
+            else if (entry.State == EntityState.Modified)
+            {
+                entry.Entity.UpdatedAt = DateTime.UtcNow;
+            }
+        }
+        return base.SaveChanges();
+    }
+}

@@ -1,0 +1,17 @@
+/Users/mertcakir/BackEnd-Projects/eCommerce/eCommerce.Infrastructure/bin/Debug/net8.0/eCommerce.Infrastructure.deps.json
+/Users/mertcakir/BackEnd-Projects/eCommerce/eCommerce.Infrastructure/bin/Debug/net8.0/eCommerce.Infrastructure.runtimeconfig.json
+/Users/mertcakir/BackEnd-Projects/eCommerce/eCommerce.Infrastructure/bin/Debug/net8.0/eCommerce.Infrastructure.dll
+/Users/mertcakir/BackEnd-Projects/eCommerce/eCommerce.Infrastructure/bin/Debug/net8.0/eCommerce.Infrastructure.pdb
+/Users/mertcakir/BackEnd-Projects/eCommerce/eCommerce.Infrastructure/bin/Debug/net8.0/eCommerce.Core.dll
+/Users/mertcakir/BackEnd-Projects/eCommerce/eCommerce.Infrastructure/bin/Debug/net8.0/eCommerce.Core.pdb
+/Users/mertcakir/BackEnd-Projects/eCommerce/eCommerce.Infrastructure/obj/Debug/net8.0/eCommerce.Infrastructure.csproj.AssemblyReference.cache
+/Users/mertcakir/BackEnd-Projects/eCommerce/eCommerce.Infrastructure/obj/Debug/net8.0/eCommerce.Infrastructure.GeneratedMSBuildEditorConfig.editorconfig
+/Users/mertcakir/BackEnd-Projects/eCommerce/eCommerce.Infrastructure/obj/Debug/net8.0/eCommerce.Infrastructure.AssemblyInfoInputs.cache
+/Users/mertcakir/BackEnd-Projects/eCommerce/eCommerce.Infrastructure/obj/Debug/net8.0/eCommerce.Infrastructure.AssemblyInfo.cs
+/Users/mertcakir/BackEnd-Projects/eCommerce/eCommerce.Infrastructure/obj/Debug/net8.0/eCommerce.Infrastructure.csproj.CoreCompileInputs.cache
+/Users/mertcakir/BackEnd-Projects/eCommerce/eCommerce.Infrastructure/obj/Debug/net8.0/eCommerc.0C272DDA.Up2Date
+/Users/mertcakir/BackEnd-Projects/eCommerce/eCommerce.Infrastructure/obj/Debug/net8.0/eCommerce.Infrastructure.dll
+/Users/mertcakir/BackEnd-Projects/eCommerce/eCommerce.Infrastructure/obj/Debug/net8.0/refint/eCommerce.Infrastructure.dll
+/Users/mertcakir/BackEnd-Projects/eCommerce/eCommerce.Infrastructure/obj/Debug/net8.0/eCommerce.Infrastructure.pdb
+/Users/mertcakir/BackEnd-Projects/eCommerce/eCommerce.Infrastructure/obj/Debug/net8.0/eCommerce.Infrastructure.genruntimeconfig.cache
+/Users/mertcakir/BackEnd-Projects/eCommerce/eCommerce.Infrastructure/obj/Debug/net8.0/ref/eCommerce.Infrastructure.dll
