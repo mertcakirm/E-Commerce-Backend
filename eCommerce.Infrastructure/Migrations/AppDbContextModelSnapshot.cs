@@ -315,6 +315,9 @@ namespace eCommerce.Infrastructure.Migrations
 
                     MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
 
+                    b.Property<decimal>("BasePrice")
+                        .HasColumnType("decimal(65,30)");
+
                     b.Property<int>("CategoryId")
                         .HasColumnType("int");
 
