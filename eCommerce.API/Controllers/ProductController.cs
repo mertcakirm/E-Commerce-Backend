@@ -70,5 +70,15 @@ namespace eCommerce.API.Controllers
 
             return NoContent();
         }
+        
+        [HttpDelete("image/{id}")]
+        public async Task<IActionResult> DeleteImage(int id)
+        {
+            var result = await _productService.DeleteImageAsync(id);
+            if (result.IsFail)
+                return StatusCode((int)result.Status, result);
+
+            return NoContent();
+        }
     }
 }

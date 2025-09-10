@@ -10,5 +10,6 @@ namespace eCommerce.Core.Interfaces
         
         Task<IEnumerable<Product>> GetAllWithDetailsAsync();
         Task<Product?> GetByIdWithDetailsAsync(int id);
+        Task<bool> DeleteImageAsync(int id);
     }
 }

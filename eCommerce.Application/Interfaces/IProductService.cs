@@ -10,5 +10,6 @@ namespace eCommerce.Application.Interfaces;
         Task<ServiceResult<ProductDto>> CreateProductAsync(ProductDto product);
         Task<ServiceResult<ProductDto>> UpdateProductAsync(int id, ProductDto product);
         Task<ServiceResult> DeleteProductAsync(int id);
+        Task<ServiceResult> DeleteImageAsync(int id);
         
     }

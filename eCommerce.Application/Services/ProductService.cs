@@ -35,13 +35,13 @@ namespace eCommerce.Application.Services
                     Size = v.Size,
                     Stock = v.Stock,
                     CostPrice = v.CostPrice
-                }).ToList(),
+                }).OrderBy(v=>v.Id).ToList(),
                 Images = p.Images.Select(i => new ProductImageResponseDto
                 {
                     Id = i.Id,
                     ImageUrl = i.ImageUrl,
                     IsMain = i.IsMain
-                }).ToList()
+                }).OrderBy(i=>i.Id).ToList()
             }).ToList();
 
             return ServiceResult<List<ProductResponseDto>>.Success(productDtos);
@@ -197,6 +197,19 @@ namespace eCommerce.Application.Services
             await _productRepo.SaveChangesAsync();
 
             return ServiceResult.NoContent();
+        }
+        
+        public async Task<ServiceResult> DeleteImageAsync(int id)
+        {
+            try
+            {
+                await _productRepository.DeleteImageAsync(id);
+                return ServiceResult.Success(HttpStatusCode.NoContent);
+            }
+            catch (Exception ex)
+            {
+                return ServiceResult.Fail($"Silme işlemi sırasında hata oluştu: {ex.Message}", HttpStatusCode.InternalServerError);
+            }
         }
     }
 }

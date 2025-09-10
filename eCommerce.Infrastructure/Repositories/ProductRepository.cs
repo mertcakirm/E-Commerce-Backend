@@ -51,5 +51,18 @@ namespace eCommerce.Infrastructure.Repositories
                 .Include(p => p.Images)
                 .FirstOrDefaultAsync(p => p.Id == id);
         }
+        
+        public async Task<bool> DeleteImageAsync(int id)
+        {
+            var image = await _context.ProductImages.FirstOrDefaultAsync(p => p.Id == id);
+            if (image == null)
+                return false;
+
+            _context.ProductImages.Remove(image);
+            
+            var result = await _context.SaveChangesAsync();
+
+            return result > 0;
+        }
     }
 }
