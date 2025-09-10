@@ -35,5 +35,21 @@ namespace eCommerce.Infrastructure.Repositories
                 .Include(v => v.Product)
                 .ToListAsync();
         }
+        
+        public async Task<IEnumerable<Product>> GetAllWithDetailsAsync()
+        {
+            return await _dbSet
+                .Include(p => p.Variants)
+                .Include(p => p.Images)
+                .ToListAsync();
+        }
+
+        public async Task<Product?> GetByIdWithDetailsAsync(int id)
+        {
+            return await _dbSet
+                .Include(p => p.Variants)
+                .Include(p => p.Images)
+                .FirstOrDefaultAsync(p => p.Id == id);
+        }
     }
 }

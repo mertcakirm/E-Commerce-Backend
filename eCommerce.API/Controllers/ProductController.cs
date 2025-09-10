@@ -1,8 +1,7 @@
 using eCommerce.Application.Interfaces;
-using eCommerce.Core.Entities;
+using eCommerce.Application.DTOs;
 using Microsoft.AspNetCore.Mvc;
 using System.Threading.Tasks;
-using eCommerce.Application.DTOs;
 
 namespace eCommerce.API.Controllers
 {
@@ -28,6 +27,7 @@ namespace eCommerce.API.Controllers
             return Ok(result);
         }
 
+        // GET: api/products/5
         [HttpGet("{id}")]
         public async Task<IActionResult> GetById(int id)
         {
@@ -35,16 +35,12 @@ namespace eCommerce.API.Controllers
             if (result.IsFail)
                 return StatusCode((int)result.Status, result);
 
-            return Ok(new
-            {
-                Product = result.Data,
-                Variants = result.Data.Variants,
-                Images = result.Data.Images
-            });
+            return Ok(result); 
         }
 
+        // POST: api/products
         [HttpPost]
-        public async Task<IActionResult> Create(ProductDto product)
+        public async Task<IActionResult> Create([FromBody] ProductDto product)
         {
             var result = await _productService.CreateProductAsync(product);
             if (result.IsFail)
@@ -53,8 +49,9 @@ namespace eCommerce.API.Controllers
             return Created(result.UrlAsCreated!, result);
         }
 
+        // PUT: api/products/5
         [HttpPut("{id}")]
-        public async Task<IActionResult> Update(int id, Product product)
+        public async Task<IActionResult> Update(int id, [FromBody] ProductDto product)
         {
             var result = await _productService.UpdateProductAsync(id, product);
             if (result.IsFail)
@@ -63,6 +60,7 @@ namespace eCommerce.API.Controllers
             return Ok(result);
         }
 
+        // DELETE: api/products/5
         [HttpDelete("{id}")]
         public async Task<IActionResult> Delete(int id)
         {

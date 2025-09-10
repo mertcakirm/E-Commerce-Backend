@@ -7,5 +7,8 @@ namespace eCommerce.Core.Interfaces
         Task<IEnumerable<Product>> GetTopSellingProductsAsync(int count);
         Task<IEnumerable<Product>> SearchProductsAsync(string keyword, int? categoryId);
         Task<IEnumerable<ProductVariant>> GetStockReportAsync();
+        
+        Task<IEnumerable<Product>> GetAllWithDetailsAsync();
+        Task<Product?> GetByIdWithDetailsAsync(int id);
     }
 }

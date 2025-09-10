@@ -1,26 +1,29 @@
 namespace eCommerce.Application.DTOs;
 
-public class ProductDto
+public class ProductResponseDto
 {
+    public int Id { get; set; }
     public string Name { get; set; }
     public string Description { get; set; }
     public decimal BasePrice { get; set; }
     public decimal Price { get; set; }
     public int CategoryId { get; set; }
 
-    public List<ProductVariantDto> Variants { get; set; } = new();
-    public List<ProductImageDto> Images { get; set; } = new();
+    public List<ProductVariantResponseDto> Variants { get; set; } = new();
+    public List<ProductImageResponseDto> Images { get; set; } = new();
 }
 
-public class ProductVariantDto
+public class ProductVariantResponseDto
 {
+    public int Id { get; set; }
     public string Size { get; set; }
     public int Stock { get; set; }
     public decimal CostPrice { get; set; }
 }
 
-public class ProductImageDto
+public class ProductImageResponseDto
 {
+    public int Id { get; set; }
     public string ImageUrl { get; set; }
     public bool IsMain { get; set; }
 }

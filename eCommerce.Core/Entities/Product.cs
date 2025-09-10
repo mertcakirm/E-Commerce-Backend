@@ -13,7 +13,7 @@ public class Product : BaseEntity
 
     // Navigation properties
     public virtual List<ProductVariant> Variants { get; set; } = new List<ProductVariant>();
-    public virtual List<ProductImage> Images { get; set; } = new List<ProductImage>();
+    public virtual List<ProductImage?> Images { get; set; } = new List<ProductImage?>();
     public virtual List<CartItem> CartItems { get; set; } = new List<CartItem>();
     public virtual List<OrderItem> OrderItems { get; set; } = new List<OrderItem>();
     public virtual List<Wishlist> Wishlists { get; set; } = new List<Wishlist>();

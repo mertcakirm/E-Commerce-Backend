@@ -88,7 +88,6 @@ public class AppDbContext : DbContext
             {
                 entry.State = EntityState.Modified;
                 entry.Entity.IsDeleted = true;
-                entry.Entity.DeletedAt = DateTime.UtcNow;
             }
             else if (entry.State == EntityState.Modified)
             {

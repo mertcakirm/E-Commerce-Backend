@@ -21,11 +21,23 @@ namespace eCommerce.Infrastructure.Repositories
         public async Task<IEnumerable<T>> FindAsync(Expression<Func<T, bool>> predicate) =>
             await _dbSet.Where(predicate).ToListAsync();
 
-        public async Task<IEnumerable<T>> GetAllAsync() => await _dbSet.ToListAsync();
+        public async Task<IEnumerable<T>> GetAllAsync() => await _dbSet.Where(e => EF.Property<bool>(e, "IsDeleted") == false).ToListAsync();
 
-        public async Task<T> GetByIdAsync(int id) => await _dbSet.FindAsync(id);
+        public async Task<T?> GetByIdAsync(int id) => await _dbSet.FindAsync(id);
 
-        public void Remove(T entity) => _dbSet.Remove(entity);
+        public void Remove(T entity)
+        {
+            var prop = typeof(T).GetProperty("IsDeleted");
+            if (prop != null)
+            {
+                prop.SetValue(entity, true);
+                Update(entity);
+            }
+            else
+            {
+                _dbSet.Remove(entity);
+            }
+        }
 
         public void Update(T entity) => _dbSet.Update(entity);
 
