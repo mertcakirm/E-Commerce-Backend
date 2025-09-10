@@ -1,3 +1,4 @@
+using eCommerce.Core.Entities;
 using eCommerce.Core.Interfaces;
 using eCommerce.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
@@ -10,6 +11,12 @@ public class UserRepository: IUserRepository
     public UserRepository(AppDbContext context)
     {
         _context = context;
+    }
+
+    public async Task<IEnumerable<User>> GetAllUsers()
+    {
+        var users = await _context.Users.Where(u=>u.IsDeleted == false).ToListAsync();
+        return users;
     }
     
     public async Task<bool> IsUser(int id)

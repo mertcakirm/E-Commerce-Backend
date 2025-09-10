@@ -28,7 +28,7 @@ namespace eCommerce.Application.Services;
                 new Claim(JwtRegisteredClaimNames.Sub, user.Id.ToString()),
                 new Claim(JwtRegisteredClaimNames.Email, user.Email),
                 new Claim(JwtRegisteredClaimNames.UniqueName, user.Name),
-                new Claim("roleId", user.Role)
+                new Claim("role", user.Role)
             };
 
             // SHA256 kullanıyoruz
@@ -67,7 +67,7 @@ namespace eCommerce.Application.Services;
             return int.Parse(userIdClaim.Value);
         }
         
-        public int GetRoleFromToken(string token)
+        public string GetRoleFromToken(string token)
         {
             if (string.IsNullOrWhiteSpace(token))
                 throw new ArgumentException("Token boş olamaz");
@@ -78,9 +78,9 @@ namespace eCommerce.Application.Services;
             var roleClaim = jwtToken.Claims.FirstOrDefault(c => c.Type == "role");
 
             if (roleClaim == null)
-                throw new UnauthorizedAccessException("Token içinde roleId bulunamadı");
+                throw new UnauthorizedAccessException("Token içinde role bulunamadı");
 
-            return int.Parse(roleClaim.Value);
+            return roleClaim.Value; // Örn: "User" veya "Admin"
         }
 
         public async Task<bool> IsUserAsync(string token)
