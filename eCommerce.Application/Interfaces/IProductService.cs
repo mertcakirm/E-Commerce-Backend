@@ -7,9 +7,9 @@ namespace eCommerce.Application.Interfaces;
     {
         Task<ServiceResult<List<ProductResponseDto>>> GetAllProductsAsync();
         Task<ServiceResult<ProductResponseDto>> GetProductByIdAsync(int id);
-        Task<ServiceResult<ProductDto>> CreateProductAsync(ProductDto product);
-        Task<ServiceResult<ProductDto>> UpdateProductAsync(int id, ProductDto product);
-        Task<ServiceResult> DeleteProductAsync(int id);
-        Task<ServiceResult> DeleteImageAsync(int id);
+        Task<ServiceResult<ProductDto>> CreateProductAsync(ProductDto product,string token);
+        Task<ServiceResult<ProductDto>> UpdateProductAsync(int id, ProductDto product,string token);
+        Task<ServiceResult> DeleteProductAsync(int id,string token);
+        Task<ServiceResult> DeleteImageAsync(int id,string token);
         
     }

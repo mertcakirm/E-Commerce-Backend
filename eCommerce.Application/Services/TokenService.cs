@@ -3,6 +3,7 @@ using System.Security.Claims;
 using System.Text;
 using eCommerce.Application.Interfaces;
 using eCommerce.Core.Entities;
+using eCommerce.Core.Interfaces;
 using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
 
@@ -11,10 +12,13 @@ namespace eCommerce.Application.Services;
     public class TokenService : ITokenService
     {
         private readonly IConfiguration _config;
+        private readonly IUserRepository _userRepository;
+        
 
-        public TokenService(IConfiguration config)
+        public TokenService(IConfiguration config, IUserRepository userRepository)
         {
             _config = config;
+            _userRepository = userRepository;
         }
 
         public string CreateToken(User user)
@@ -63,7 +67,7 @@ namespace eCommerce.Application.Services;
             return int.Parse(userIdClaim.Value);
         }
         
-        public int GetRoleIdFromToken(string token)
+        public int GetRoleFromToken(string token)
         {
             if (string.IsNullOrWhiteSpace(token))
                 throw new ArgumentException("Token boş olamaz");
@@ -71,11 +75,31 @@ namespace eCommerce.Application.Services;
             var handler = new JwtSecurityTokenHandler();
             var jwtToken = handler.ReadJwtToken(token.Replace("Bearer ", ""));
 
-            var roleClaim = jwtToken.Claims.FirstOrDefault(c => c.Type == "roleId");
+            var roleClaim = jwtToken.Claims.FirstOrDefault(c => c.Type == "role");
 
             if (roleClaim == null)
                 throw new UnauthorizedAccessException("Token içinde roleId bulunamadı");
 
             return int.Parse(roleClaim.Value);
+        }
+
+        public async Task<bool> IsUserAsync(string token)
+        {
+            if (string.IsNullOrWhiteSpace(token))
+                return false;
+
+            int userId;
+            try
+            {
+                userId = GetUserIdFromToken(token);
+            }
+            catch
+            {
+                return false;
+            }
+
+            var exists = await _userRepository.IsUser(userId);
+
+            return exists;
         }
     }

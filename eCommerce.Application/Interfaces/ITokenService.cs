@@ -6,5 +6,6 @@ public interface ITokenService
 {
     string CreateToken(User user);
     int GetUserIdFromToken(string token);
-    int GetRoleIdFromToken(string token);
+    int GetRoleFromToken(string token);
+    Task<bool> IsUserAsync(string token);
 }

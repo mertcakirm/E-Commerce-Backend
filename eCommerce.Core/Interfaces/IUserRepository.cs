@@ -4,5 +4,6 @@ namespace eCommerce.Core.Interfaces;
 
 public interface IUserRepository
 {
-    
+    Task<bool> IsUser(int id);
+
 }
