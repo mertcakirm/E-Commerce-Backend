@@ -1,6 +1,8 @@
+using eCommerce.Core.Interfaces;
+
 namespace eCommerce.Infrastructure.Repositories;
 
-public class UserRepository
+public class UserRepository: IUserRepository
 {
     
 }
