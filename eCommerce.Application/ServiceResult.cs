@@ -13,7 +13,6 @@ public class ServiceResult<T>
 
     [JsonIgnore]public string? UrlAsCreated { get; set; }
 
-    // static factory method 
     public static ServiceResult<T> Success(T data, HttpStatusCode status = HttpStatusCode.OK)
     {
         return new ServiceResult<T>()

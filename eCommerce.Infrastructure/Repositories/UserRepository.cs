@@ -24,4 +24,24 @@ public class UserRepository: IUserRepository
         var isUser = await _context.Users.AnyAsync(u => u.Id == id);
         return isUser;
     }
+
+    public async Task<bool> UpdatePassword(int userId, string newPassword)
+    {
+        var user = await _context.Users.FirstOrDefaultAsync(u => u.Id == userId && !u.IsDeleted);
+        if (user == null)
+            return false;
+        
+        user.PasswordHash = newPassword;
+        try
+        {
+            await _context.SaveChangesAsync();
+            return true;
+        }
+        catch
+        {
+            return false; 
+        }
+    }
+    
+    
 }

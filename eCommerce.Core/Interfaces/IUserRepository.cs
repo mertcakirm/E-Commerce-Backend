@@ -6,5 +6,5 @@ public interface IUserRepository
 {
     Task<IEnumerable<User>> GetAllUsers();
     Task<bool> IsUser(int id);
-
+    Task<bool> UpdatePassword(int userId, string newPassword);
 }

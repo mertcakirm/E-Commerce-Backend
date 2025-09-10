@@ -1,8 +1,8 @@
 using System.Net;
 using eCommerce.Application.DTOs;
 using eCommerce.Application.Interfaces;
-using eCommerce.Core.Entities;
 using eCommerce.Core.Interfaces;
+using eCommerce.Core.Helpers;
 
 namespace eCommerce.Application.Services;
 
@@ -20,17 +20,13 @@ public class UserService : IUserService
 
     public async Task<ServiceResult<IEnumerable<UserDto>>> GetAllUsers(string token)
     {
-        // Token'dan rolü al
         var role = _tokenService.GetRoleFromToken(token);
 
-        // Eğer admin değilse erişimi reddet
         if (role != "Admin")
             return ServiceResult<IEnumerable<UserDto>>.Fail("Bu işlem için yetkiniz yok!", HttpStatusCode.Forbidden);
 
-        // Tüm kullanıcıları getir
         var users = await _userRepository.GetAllUsers();
 
-        // User -> UserDto dönüşümü
         var usersDto = users.Select(u => new UserDto
         {
             Id = u.Id,
@@ -39,8 +35,41 @@ public class UserService : IUserService
             Role = u.Role
         }).ToList();
 
-        // Başarılı sonucu dön
         return ServiceResult<IEnumerable<UserDto>>.Success(usersDto);
     }
+    
+    public async Task<ServiceResult<bool>> UpdatePassword(string token, string oldPassword, string newPassword)
+    {
+        int userId;
+        var newHashPassword = CreatePassword.CreatePasswordHash(newPassword);
+        var oldhashPassword = CreatePassword.CreatePasswordHash(oldPassword);
+        try
+        {
+            userId = _tokenService.GetUserIdFromToken(token);
+        }
+        catch
+        {
+            return ServiceResult<bool>.Fail("Geçersiz token", HttpStatusCode.Unauthorized);
+        }
+
+        var userExists = await _userRepository.IsUser(userId);
+        if (!userExists)
+            return ServiceResult<bool>.Fail("Kullanıcı bulunamadı", HttpStatusCode.NotFound);
+
+        var user = (await _userRepository.GetAllUsers()).FirstOrDefault(u => u.Id == userId);
+        if (user == null)
+            return ServiceResult<bool>.Fail("Kullanıcı bulunamadı", HttpStatusCode.NotFound);
+
+        if (user.PasswordHash != oldhashPassword) 
+            return ServiceResult<bool>.Fail("Eski şifre yanlış", HttpStatusCode.BadRequest);
+
+        var updated = await _userRepository.UpdatePassword(userId, newHashPassword);
+        if (!updated)
+            return ServiceResult<bool>.Fail("Şifre güncellenirken hata oluştu", HttpStatusCode.InternalServerError);
+
+        return ServiceResult<bool>.Success(true, HttpStatusCode.OK);
+    }
+    
+    
 
 }

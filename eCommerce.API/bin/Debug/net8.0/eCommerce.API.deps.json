@@ -832,7 +832,7 @@
         },
         "runtime": {
           "eCommerce.Application.dll": {
-            "assemblyVersion": "1.0.0",
+            "assemblyVersion": "1.0.0.0",
             "fileVersion": "1.0.0.0"
           }
         }
@@ -840,7 +840,7 @@
       "eCommerce.Core/1.0.0": {
         "runtime": {
           "eCommerce.Core.dll": {
-            "assemblyVersion": "1.0.0",
+            "assemblyVersion": "1.0.0.0",
             "fileVersion": "1.0.0.0"
           }
         }
@@ -853,7 +853,7 @@
         },
         "runtime": {
           "eCommerce.Infrastructure.dll": {
-            "assemblyVersion": "1.0.0",
+            "assemblyVersion": "1.0.0.0",
             "fileVersion": "1.0.0.0"
           }
         }

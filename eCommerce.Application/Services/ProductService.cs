@@ -36,7 +36,6 @@ namespace eCommerce.Application.Services
                     Id = v.Id,
                     Size = v.Size,
                     Stock = v.Stock,
-                    CostPrice = v.CostPrice
                 }).OrderBy(v=>v.Id).ToList(),
                 Images = p.Images.Select(i => new ProductImageResponseDto
                 {
@@ -68,7 +67,6 @@ namespace eCommerce.Application.Services
                     Id = v.Id,
                     Size = v.Size,
                     Stock = v.Stock,
-                    CostPrice = v.CostPrice
                 }).ToList(),
                 Images = product.Images.Select(i => new ProductImageResponseDto
                 {
@@ -99,7 +97,6 @@ namespace eCommerce.Application.Services
                 {
                     Size = v.Size,
                     Stock = v.Stock,
-                    CostPrice = v.CostPrice
                 }).ToList(),
                 Images = dto.Images.Select(i => new ProductImage
                 {
@@ -122,7 +119,6 @@ namespace eCommerce.Application.Services
                 {
                     Size = v.Size,
                     Stock = v.Stock,
-                    CostPrice = v.CostPrice
                 }).ToList(),
                 Images = product.Images.Select(i => new ProductImageDto
                 {
@@ -160,7 +156,6 @@ namespace eCommerce.Application.Services
                 {
                     Size = variantDto.Size,
                     Stock = variantDto.Stock,
-                    CostPrice = variantDto.CostPrice,
                     ProductId = existing.Id
                 });
             }
@@ -190,7 +185,6 @@ namespace eCommerce.Application.Services
                 {
                     Size = v.Size,
                     Stock = v.Stock,
-                    CostPrice = v.CostPrice
                 }).ToList(),
                 Images = existing.Images.Select(i => new ProductImageDto
                 {

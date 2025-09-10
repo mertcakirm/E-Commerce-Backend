@@ -8,7 +8,6 @@ public class ProductVariant : BaseEntity
 
     public string Size { get; set; }  
     public int Stock { get; set; }   
-    public decimal CostPrice { get; set; }
 
     public virtual List<OrderItem> OrderItems { get; set; } = new List<OrderItem>();
     public virtual List<CartItem> CartItems { get; set; } = new List<CartItem>();

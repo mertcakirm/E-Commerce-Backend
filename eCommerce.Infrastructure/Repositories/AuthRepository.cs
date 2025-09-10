@@ -1,9 +1,8 @@
 using eCommerce.Core.Entities;
 using eCommerce.Core.Interfaces;
 using eCommerce.Infrastructure.Data;
-using eCommerce.Infrastructure.Helpers;
+using eCommerce.Core.Helpers;
 using Microsoft.EntityFrameworkCore;
-
 namespace eCommerce.Infrastructure.Repositories;
 
 public class AuthRepository : IAuthRepository

@@ -18,7 +18,6 @@ public class ProductVariantResponseDto
     public int Id { get; set; }
     public string Size { get; set; }
     public int Stock { get; set; }
-    public decimal CostPrice { get; set; }
 }
 
 public class ProductImageResponseDto
