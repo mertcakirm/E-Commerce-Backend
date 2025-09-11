@@ -47,6 +47,35 @@ namespace eCommerce.Application.Services
 
             return ServiceResult<List<ProductResponseDto>>.Success(productDtos);
         }
+        
+        public async Task<ServiceResult<List<ProductResponseDto>>> GetProductByCategoryAsync(string categoryName)
+        {
+            var products = await _productRepository.GetProductByCategory(categoryName);
+
+            var productDtos = products.Select(p => new ProductResponseDto
+            {
+                Id = p.Id,
+                Name = p.Name,
+                Description = p.Description,
+                BasePrice = p.BasePrice,
+                Price = p.Price,
+                CategoryId = p.CategoryId,
+                Variants = p.Variants.Select(v => new ProductVariantResponseDto
+                {
+                    Id = v.Id,
+                    Size = v.Size,
+                    Stock = v.Stock,
+                }).OrderBy(v=>v.Id).ToList(),
+                Images = p.Images.Select(i => new ProductImageResponseDto
+                {
+                    Id = i.Id,
+                    ImageUrl = i.ImageUrl,
+                    IsMain = i.IsMain
+                }).OrderBy(i=>i.Id).ToList()
+            }).ToList();
+
+            return ServiceResult<List<ProductResponseDto>>.Success(productDtos);
+        }
 
         public async Task<ServiceResult<ProductResponseDto>> GetProductByIdAsync(int id)
         {

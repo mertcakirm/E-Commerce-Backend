@@ -27,6 +27,19 @@ namespace eCommerce.API.Controllers
 
             return Ok(result);
         }
+        //GET: api/get-by-category/t-shirt
+        [HttpGet("get-by-category/{categoryName}")]
+        public async Task<IActionResult> GetByCategory(string categoryName)
+        {
+            if (string.IsNullOrEmpty(categoryName))
+                return Unauthorized("Kategori ismi alınamadı!");
+                
+            var result = await _productService.GetProductByCategoryAsync(categoryName);
+            if (result.IsFail)
+                return StatusCode((int)result.Status, result);
+
+            return Ok(result);
+        }
 
         // GET: api/products/5
         [HttpGet("{id}")]

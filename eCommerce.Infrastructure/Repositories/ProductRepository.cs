@@ -64,5 +64,14 @@ namespace eCommerce.Infrastructure.Repositories
 
             return result > 0;
         }
+
+        public async Task<IEnumerable<Product>> GetProductByCategory(string categoryName)
+        {
+            return await _dbSet
+                .Where(p => p.Category.Name == categoryName)
+                .Include(p => p.Variants)
+                .Include(p => p.Images)
+                .ToListAsync();
+        }
+        }
     }
-}
