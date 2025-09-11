@@ -17,12 +17,12 @@ public class UserController: ControllerBase
 
     [Authorize]
     [HttpGet("get-all")]
-    public async Task<IActionResult> GetAllUsers([FromHeader(Name = "Authorization")] string token)
+    public async Task<IActionResult> GetAllUsers([FromHeader(Name = "Authorization")] string token,[FromQuery] int pageNumber=1, [FromQuery] int pageSize=10)
     {
         if (string.IsNullOrEmpty(token))
             return Unauthorized("Token gerekli");
 
-        var users = await _userService.GetAllUsers(token);
+        var users = await _userService.GetAllUsers(token,pageNumber,pageSize);
         return Ok(users);
     }
 
