@@ -6,5 +6,7 @@ namespace eCommerce.Core.Interfaces
     {
         Task<Cart> GetUserCartAsync(int userId);
         Task ClearCartAsync(int userId);
+        Task IncreaseItemAsync(int cartItemId);
+        Task DecreaseItemAsync(int cartItemId);
     }
 }
