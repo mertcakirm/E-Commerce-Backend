@@ -19,22 +19,28 @@ namespace eCommerce.API.Controllers
 
         // GET: api/products
         [HttpGet]
-        public async Task<IActionResult> GetAll()
+        public async Task<IActionResult> GetAll(
+            [FromQuery] int pageNumber = 1,
+            [FromQuery] int pageSize = 10)
         {
-            var result = await _productService.GetAllProductsAsync();
+            var result = await _productService.GetAllProductsAsync(pageNumber, pageSize);
             if (result.IsFail)
                 return StatusCode((int)result.Status, result);
 
             return Ok(result);
         }
-        //GET: api/get-by-category/t-shirt
+        
+        // GET: api/products/get-by-category/t-shirt?pageNumber=1&pageSize=10
         [HttpGet("get-by-category/{categoryName}")]
-        public async Task<IActionResult> GetByCategory(string categoryName)
+        public async Task<IActionResult> GetByCategory(
+            string categoryName,
+            [FromQuery] int pageNumber = 1,
+            [FromQuery] int pageSize = 10)
         {
             if (string.IsNullOrEmpty(categoryName))
                 return Unauthorized("Kategori ismi alınamadı!");
-                
-            var result = await _productService.GetProductByCategoryAsync(categoryName);
+
+            var result = await _productService.GetProductByCategoryAsync( categoryName,pageNumber, pageSize);
             if (result.IsFail)
                 return StatusCode((int)result.Status, result);
 
@@ -63,8 +69,7 @@ namespace eCommerce.API.Controllers
 
             return Created(result.UrlAsCreated!, result);
         }
-
-
+        
         // PUT: api/products/5
         [Authorize]
         [HttpPut("{id}")]

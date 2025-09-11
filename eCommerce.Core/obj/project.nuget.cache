@@ -1,11 +1,8 @@
 {
   "version": 2,
-  "dgSpecHash": "EKApf3a1pEQ=",
+  "dgSpecHash": "gd1/qy7rqJI=",
   "success": true,
   "projectFilePath": "/Users/mertcakir/BackEnd-Projects/eCommerce/eCommerce.Core/eCommerce.Core.csproj",
-  "expectedPackageFiles": [
-    "/Users/mertcakir/.nuget/packages/microsoft.netcore.app.ref/8.0.18/microsoft.netcore.app.ref.8.0.18.nupkg.sha512",
-    "/Users/mertcakir/.nuget/packages/microsoft.aspnetcore.app.ref/8.0.18/microsoft.aspnetcore.app.ref.8.0.18.nupkg.sha512"
-  ],
+  "expectedPackageFiles": [],
   "logs": []
 }

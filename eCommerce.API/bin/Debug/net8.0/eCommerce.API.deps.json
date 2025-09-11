@@ -826,13 +826,16 @@
       "eCommerce.Application/1.0.0": {
         "dependencies": {
           "AutoMapper": "13.0.1",
+          "Microsoft.EntityFrameworkCore": "9.0.0",
+          "Microsoft.EntityFrameworkCore.Relational": "9.0.0",
           "Microsoft.Extensions.Configuration": "9.0.9",
+          "Pomelo.EntityFrameworkCore.MySql": "9.0.0",
           "System.IdentityModel.Tokens.Jwt": "8.14.0",
           "eCommerce.Core": "1.0.0"
         },
         "runtime": {
           "eCommerce.Application.dll": {
-            "assemblyVersion": "1.0.0.0",
+            "assemblyVersion": "1.0.0",
             "fileVersion": "1.0.0.0"
           }
         }
@@ -840,7 +843,7 @@
       "eCommerce.Core/1.0.0": {
         "runtime": {
           "eCommerce.Core.dll": {
-            "assemblyVersion": "1.0.0.0",
+            "assemblyVersion": "1.0.0",
             "fileVersion": "1.0.0.0"
           }
         }
@@ -853,7 +856,7 @@
         },
         "runtime": {
           "eCommerce.Infrastructure.dll": {
-            "assemblyVersion": "1.0.0.0",
+            "assemblyVersion": "1.0.0",
             "fileVersion": "1.0.0.0"
           }
         }

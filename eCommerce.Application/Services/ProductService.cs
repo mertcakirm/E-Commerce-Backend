@@ -19,62 +19,92 @@ namespace eCommerce.Application.Services
             _tokenService = tokenService;
         }
 
-        public async Task<ServiceResult<List<ProductResponseDto>>> GetAllProductsAsync()
+        public async Task<ServiceResult<PagedResult<ProductResponseDto>>> GetAllProductsAsync(int pageNumber, int pageSize)
         {
+            if (pageNumber <= 0) pageNumber = 1;
+            if (pageSize <= 0) pageSize = 10;
+
             var products = await _productRepository.GetAllWithDetailsAsync();
 
-            var productDtos = products.Select(p => new ProductResponseDto
-            {
-                Id = p.Id,
-                Name = p.Name,
-                Description = p.Description,
-                BasePrice = p.BasePrice,
-                Price = p.Price,
-                CategoryId = p.CategoryId,
-                Variants = p.Variants.Select(v => new ProductVariantResponseDto
-                {
-                    Id = v.Id,
-                    Size = v.Size,
-                    Stock = v.Stock,
-                }).OrderBy(v=>v.Id).ToList(),
-                Images = p.Images.Select(i => new ProductImageResponseDto
-                {
-                    Id = i.Id,
-                    ImageUrl = i.ImageUrl,
-                    IsMain = i.IsMain
-                }).OrderBy(i=>i.Id).ToList()
-            }).ToList();
+            var totalCount = products.Count();
 
-            return ServiceResult<List<ProductResponseDto>>.Success(productDtos);
+            var productDtos = products
+                .Skip((pageNumber - 1) * pageSize)
+                .Take(pageSize)
+                .Select(p => new ProductResponseDto
+                {
+                    Id = p.Id,
+                    Name = p.Name,
+                    Description = p.Description,
+                    BasePrice = p.BasePrice,
+                    Price = p.Price,
+                    CategoryId = p.CategoryId,
+                    Variants = p.Variants.Select(v => new ProductVariantResponseDto
+                    {
+                        Id = v.Id,
+                        Size = v.Size,
+                        Stock = v.Stock,
+                    }).OrderBy(v => v.Id).ToList(),
+                    Images = p.Images.Select(i => new ProductImageResponseDto
+                    {
+                        Id = i.Id,
+                        ImageUrl = i.ImageUrl,
+                        IsMain = i.IsMain
+                    }).OrderBy(i => i.Id).ToList()
+                }).ToList();
+
+            var pagedResult = new PagedResult<ProductResponseDto>(
+                productDtos,
+                totalCount,
+                pageNumber,
+                pageSize
+            );
+
+            return ServiceResult<PagedResult<ProductResponseDto>>.Success(pagedResult);
         }
         
-        public async Task<ServiceResult<List<ProductResponseDto>>> GetProductByCategoryAsync(string categoryName)
+        public async Task<ServiceResult<PagedResult<ProductResponseDto>>> GetProductByCategoryAsync(string categoryName,int pageNumber, int pageSize)
         {
+            if (pageNumber <= 0) pageNumber = 1;
+            if (pageSize <= 0) pageSize = 10;
+
             var products = await _productRepository.GetProductByCategory(categoryName);
 
-            var productDtos = products.Select(p => new ProductResponseDto
-            {
-                Id = p.Id,
-                Name = p.Name,
-                Description = p.Description,
-                BasePrice = p.BasePrice,
-                Price = p.Price,
-                CategoryId = p.CategoryId,
-                Variants = p.Variants.Select(v => new ProductVariantResponseDto
-                {
-                    Id = v.Id,
-                    Size = v.Size,
-                    Stock = v.Stock,
-                }).OrderBy(v=>v.Id).ToList(),
-                Images = p.Images.Select(i => new ProductImageResponseDto
-                {
-                    Id = i.Id,
-                    ImageUrl = i.ImageUrl,
-                    IsMain = i.IsMain
-                }).OrderBy(i=>i.Id).ToList()
-            }).ToList();
+            var totalCount = products.Count();
 
-            return ServiceResult<List<ProductResponseDto>>.Success(productDtos);
+            var productDtos = products
+                .Skip((pageNumber - 1) * pageSize)
+                .Take(pageSize)
+                .Select(p => new ProductResponseDto
+                {
+                    Id = p.Id,
+                    Name = p.Name,
+                    Description = p.Description,
+                    BasePrice = p.BasePrice,
+                    Price = p.Price,
+                    CategoryId = p.CategoryId,
+                    Variants = p.Variants.Select(v => new ProductVariantResponseDto
+                    {
+                        Id = v.Id,
+                        Size = v.Size,
+                        Stock = v.Stock,
+                    }).OrderBy(v => v.Id).ToList(),
+                    Images = p.Images.Select(i => new ProductImageResponseDto
+                    {
+                        Id = i.Id,
+                        ImageUrl = i.ImageUrl,
+                        IsMain = i.IsMain
+                    }).OrderBy(i => i.Id).ToList()
+                }).ToList();
+
+            var pagedResult = new PagedResult<ProductResponseDto>(
+                productDtos,
+                totalCount,
+                pageNumber,
+                pageSize
+            );
+
+            return ServiceResult<PagedResult<ProductResponseDto>>.Success(pagedResult);
         }
 
         public async Task<ServiceResult<ProductResponseDto>> GetProductByIdAsync(int id)
