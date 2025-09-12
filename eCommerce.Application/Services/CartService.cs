@@ -37,35 +37,45 @@ public class CartService : ICartService
             {
                 Id = ci.Id,
                 ProductVariantId = ci.ProductVariantId,
-                Quantity = ci.Quantity
-            }).ToList(),
-            ProductResponseDtos = cart.CartItems
-                .Select(ci => ci.ProductVariant.Product)
-                .DistinctBy(p => p.Id) // Aynı ürün tekrarı olmasın
-                .Select(p => new ProductResponseDto
+                Quantity = ci.Quantity,
+                Product = new ProductResponseDto
                 {
-                    Id = p.Id,
-                    Name = p.Name,
-                    Description = p.Description,
-                    BasePrice = p.BasePrice,
-                    Price = p.Price,
-                    CategoryId = p.CategoryId,
-                    Variants = p.Variants.Select(v => new ProductVariantResponseDto
+                    Id = ci.ProductVariant.Product.Id,
+                    Name = ci.ProductVariant.Product.Name,
+                    Description = ci.ProductVariant.Product.Description,
+                    BasePrice = ci.ProductVariant.Product.BasePrice,
+                    Price = ci.ProductVariant.Product.Price,
+                    CategoryId = ci.ProductVariant.Product.CategoryId,
+                    Variants = ci.ProductVariant.Product.Variants.Select(v => new ProductVariantResponseDto
                     {
                         Id = v.Id,
                         Size = v.Size,
                         Stock = v.Stock
                     }).ToList(),
-                    Images = p.Images.Select(i => new ProductImageResponseDto
+                    Images = ci.ProductVariant.Product.Images.Select(i => new ProductImageResponseDto
                     {
                         Id = i.Id,
                         ImageUrl = i.ImageUrl,
                         IsMain = i.IsMain
                     }).ToList()
-                }).ToList()
+                }
+            }).ToList()
         };
 
         return ServiceResult<CartResponseDto>.Success(cartDto);
+    }
+    
+    public async Task<ServiceResult> AddItemAsync(string token, int productId, int productVariantId)
+    {
+        var checkToken = await _tokenService.IsUserAsync(token);
+        var userId = _tokenService.GetUserIdFromToken(token);
+
+        if (!checkToken || userId == null)
+            return ServiceResult.Fail("Geçersiz kullanıcı", HttpStatusCode.Unauthorized);
+
+        await _cartRepository.AddItemAsync(userId, productId, productVariantId, 1);
+
+        return ServiceResult.Success();
     }
 
     public async Task<ServiceResult> ClearCartAsync(string token)
@@ -80,7 +90,7 @@ public class CartService : ICartService
         return ServiceResult.Success();
     }
 
-    public async Task<ServiceResult> IncreaseItemAsync(int cartItemId, string token)
+    public async Task<ServiceResult> IncreaseItemAsync(int productId, string token)
     {
         var userId = _tokenService.GetUserIdFromToken(token);
         if (userId == null)
@@ -93,11 +103,11 @@ public class CartService : ICartService
         if (cart.UserId != userId)
             return ServiceResult.Fail("Bu işlem için yetkiniz yok", HttpStatusCode.Forbidden);
 
-        await _cartRepository.IncreaseItemAsync(cartItemId);
+        await _cartRepository.IncreaseItemByProductIdAsync(userId, productId);
         return ServiceResult.Success();
     }
 
-    public async Task<ServiceResult> DecreaseItemAsync(int cartItemId, string token)
+    public async Task<ServiceResult> DecreaseItemAsync(int productId, string token)
     {
         var userId = _tokenService.GetUserIdFromToken(token);
         if (userId == null)
@@ -110,7 +120,7 @@ public class CartService : ICartService
         if (cart.UserId != userId)
             return ServiceResult.Fail("Bu işlem için yetkiniz yok", HttpStatusCode.Forbidden);
 
-        await _cartRepository.DecreaseItemAsync(cartItemId);
+        await _cartRepository.DecreaseItemByProductIdAsync(userId, productId);
         return ServiceResult.Success();
     }
 }

@@ -17,8 +17,9 @@ builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddControllers()
     .AddJsonOptions(options =>
     {
-        options.JsonSerializerOptions.ReferenceHandler = System.Text.Json.Serialization.ReferenceHandler.Preserve;
+        options.JsonSerializerOptions.ReferenceHandler = null;
         options.JsonSerializerOptions.MaxDepth = 64;
+        options.JsonSerializerOptions.WriteIndented = true;
     });
 
 // Swagger + JWT Authorize

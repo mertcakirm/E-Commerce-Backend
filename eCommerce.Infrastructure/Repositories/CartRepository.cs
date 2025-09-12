@@ -1,61 +1,100 @@
 using eCommerce.Core.Entities;
 using eCommerce.Core.Interfaces;
 using eCommerce.Infrastructure.Data;
+using eCommerce.Infrastructure.Repositories;
 using Microsoft.EntityFrameworkCore;
 
-namespace eCommerce.Infrastructure.Repositories
+public class CartRepository : GenericRepository<Cart>, ICartRepository
 {
-    public class CartRepository : GenericRepository<Cart>, ICartRepository
+    public CartRepository(AppDbContext context) : base(context) { }
+
+    public async Task<Cart> GetUserCartAsync(int userId)
     {
-        public CartRepository(AppDbContext context) : base(context) { }
+        return await _dbSet
+            .Include(c => c.CartItems)
+            .ThenInclude(ci => ci.ProductVariant)
+            .ThenInclude(pv => pv.Product)
+            .FirstOrDefaultAsync(c => c.UserId == userId);
+    }
 
-        public async Task<Cart> GetUserCartAsync(int userId)
+    public async Task ClearCartAsync(int userId)
+    {
+        var cart = await GetUserCartAsync(userId);
+        if (cart != null)
         {
-            return await _dbSet
-                .Include(c => c.CartItems)
-                .ThenInclude(ci => ci.ProductVariant)
-                .ThenInclude(pv => pv.Product)
-                .FirstOrDefaultAsync(c => c.UserId == userId);
+            _context.CartItems.RemoveRange(cart.CartItems);
+            await _context.SaveChangesAsync();
+        }
+    }
+
+    public async Task AddItemAsync(int userId, int productId, int productVariantId, int quantity = 1)
+    {
+        var cart = await _dbSet
+            .Include(c => c.CartItems)
+            .FirstOrDefaultAsync(c => c.UserId == userId);
+
+        if (cart == null)
+        {
+            cart = new Cart
+            {
+                UserId = userId,
+                CartItems = new List<CartItem>()
+            };
+            await _dbSet.AddAsync(cart);
         }
 
-        public async Task ClearCartAsync(int userId)
-        {
-            var cart = await GetUserCartAsync(userId);
-            if (cart != null)
-            {
-                _context.CartItems.RemoveRange(cart.CartItems);
-                await _context.SaveChangesAsync();
-            }
-        }
-        
+        var existingItem = cart.CartItems
+            .FirstOrDefault(ci => ci.ProductVariantId == productVariantId);
 
-        public async Task IncreaseItemAsync(int cartItemId)
+        if (existingItem != null)
         {
-            var item = await _context.CartItems.FindAsync(cartItemId);
-            if (item != null)
+            existingItem.Quantity += quantity;
+            _context.CartItems.Update(existingItem);
+        }
+        else
+        {
+            var newItem = new CartItem
             {
-                item.Quantity += 1;
-                _context.CartItems.Update(item);
-                await _context.SaveChangesAsync();
-            }
+                ProductId = productId,       
+                ProductVariantId = productVariantId, 
+                Quantity = quantity
+            };
+            cart.CartItems.Add(newItem);
         }
 
-        public async Task DecreaseItemAsync(int cartItemId)
+        await _context.SaveChangesAsync();
+    }
+
+    public async Task IncreaseItemByProductIdAsync(int userId, int productId)
+    {
+        var cartItem = await _context.CartItems
+            .FirstOrDefaultAsync(ci => ci.Cart.UserId == userId && ci.ProductVariant.ProductId == productId);
+
+        if (cartItem != null)
         {
-            var item = await _context.CartItems.FindAsync(cartItemId);
-            if (item != null)
+            cartItem.Quantity += 1;
+            _context.CartItems.Update(cartItem);
+            await _context.SaveChangesAsync();
+        }
+    }
+
+    public async Task DecreaseItemByProductIdAsync(int userId, int productId)
+    {
+        var cartItem = await _context.CartItems
+            .FirstOrDefaultAsync(ci => ci.Cart.UserId == userId && ci.ProductVariant.ProductId == productId);
+
+        if (cartItem != null)
+        {
+            cartItem.Quantity -= 1;
+            if (cartItem.Quantity <= 0)
             {
-                item.Quantity -= 1;
-                if (item.Quantity <= 0)
-                {
-                    _context.CartItems.Remove(item);
-                }
-                else
-                {
-                    _context.CartItems.Update(item);
-                }
-                await _context.SaveChangesAsync();
+                _context.CartItems.Remove(cartItem);
             }
+            else
+            {
+                _context.CartItems.Update(cartItem);
+            }
+            await _context.SaveChangesAsync();
         }
     }
 }
