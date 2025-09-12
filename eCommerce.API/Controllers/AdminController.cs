@@ -34,9 +34,18 @@ public class AdminController : ControllerBase
             return Unauthorized("Token missing");
 
         var result = await _adminService.DiscountProduct(token, productId, discountRate);
-//        if (!result.Success())
-//            return StatusCode((int)result.StatusCode, result.Message);
-        return Ok("Discount applied successfully");
+        return StatusCode((int)result.Status, result.IsFail ? result.ErrorMessage : null);
+
+    }
+    
+    [HttpDelete("users/{userId}")]
+    public async Task<IActionResult> DeleteUser(int userId,[FromHeader(Name = "Authorization")] string token)
+    {
+        if (string.IsNullOrEmpty(token))
+            return Unauthorized("Token missing");
+
+        var result = await _adminService.DeleteUser(token, userId);
+        return StatusCode((int)result.Status, result.IsFail ? result.ErrorMessage : null);
     }
 
     

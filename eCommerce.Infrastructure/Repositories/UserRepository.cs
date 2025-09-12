@@ -19,6 +19,12 @@ public class UserRepository: IUserRepository
         return users;
     }
     
+    public async Task<User?> GetByIdUser(int userId)
+    {
+        return await _context.Users
+            .FirstOrDefaultAsync(u => u.Id == userId && !u.IsDeleted);
+    }
+    
     public async Task<bool> IsUser(int id)
     {
         var isUser = await _context.Users.AnyAsync(u => u.Id == id);
@@ -42,6 +48,22 @@ public class UserRepository: IUserRepository
             return false; 
         }
     }
+    
+    public async Task<bool> DeleteUserAsync(int userId)
+    {
+        var user = await _context.Users.FirstOrDefaultAsync(u => u.Id == userId);
+        if (user == null)
+            return false;
+
+        user.IsDeleted = true;
+        
+        _context.Users.Update(user);
+            
+        var result = await _context.SaveChangesAsync();
+
+        return result > 0;
+    }
+
     
     
 }

@@ -6,4 +6,5 @@ public interface IAdminService
 {
     Task<ServiceResult<PagedResult<UserDto>>> GetAllUsers(string token,int  pageNumber,int pageSize);
     Task<ServiceResult> DiscountProduct(string token, int productId, int discountRate);
+    Task<ServiceResult> DeleteUser(string token, int userId);
 }

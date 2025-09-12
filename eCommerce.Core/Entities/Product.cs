@@ -14,6 +14,7 @@ public class Product : BaseEntity
 
     // Navigation properties
     public virtual List<ProductVariant> Variants { get; set; } = new List<ProductVariant>();
+    public virtual List<Comment> Comments { get; set; } = new List<Comment>();
     public virtual List<ProductImage?> Images { get; set; } = new List<ProductImage?>();
     public virtual List<CartItem> CartItems { get; set; } = new List<CartItem>();
     public virtual List<OrderItem> OrderItems { get; set; } = new List<OrderItem>();

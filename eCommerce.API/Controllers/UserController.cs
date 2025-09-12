@@ -41,5 +41,19 @@ public class UserController: ControllerBase
             Message = "Şifre başarıyla değiştirildi",
         });
     }
+    
+    [HttpGet("me")]
+    [Authorize]
+    public async Task<IActionResult> GetUserById()
+    {
+        var token = Request.Headers["Authorization"].ToString().Replace("Bearer ", "");
+
+        var result = await _userService.GetProductByIdAsync(token);
+
+        if (result.IsFail)
+            return StatusCode((int)result.Status, result.ErrorMessage);
+
+        return Ok(result.Data);
+    }
 
 }

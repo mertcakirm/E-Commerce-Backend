@@ -1,6 +1,7 @@
 using System.Net;
 using eCommerce.Application.DTOs;
 using eCommerce.Application.Interfaces;
+using eCommerce.Core.Entities;
 using eCommerce.Core.Interfaces;
 using eCommerce.Core.Helpers;
 
@@ -16,8 +17,6 @@ public class UserService : IUserService
         _userRepository = userRepository;
         _tokenService = tokenService;
         }
-
-
    
     
     public async Task<ServiceResult<bool>> UpdatePassword(string token, string oldPassword, string newPassword)
@@ -50,6 +49,35 @@ public class UserService : IUserService
             return ServiceResult<bool>.Fail("Şifre güncellenirken hata oluştu", HttpStatusCode.InternalServerError);
 
         return ServiceResult<bool>.Success(true, HttpStatusCode.OK);
+    }
+
+    public async Task<ServiceResult<UserDto>> GetProductByIdAsync(string token)
+    {
+        int userId;
+        try
+        {
+            userId = _tokenService.GetUserIdFromToken(token);
+        }
+        catch
+        {
+            return ServiceResult<UserDto>.Fail("Geçersiz kullanıcı", HttpStatusCode.Unauthorized);
+        }
+
+        var user = await _userRepository.GetByIdUser(userId);
+        if (user == null)
+        {
+            return ServiceResult<UserDto>.Fail("Kullanıcı bulunamadı", HttpStatusCode.NotFound);
+        }
+
+        var userDto = new UserDto
+        {
+            Id = user.Id,
+            Name = user.Name,
+            Email = user.Email,
+            Role = user.Role
+        };
+
+        return ServiceResult<UserDto>.Success(userDto, HttpStatusCode.OK);
     }
     
     

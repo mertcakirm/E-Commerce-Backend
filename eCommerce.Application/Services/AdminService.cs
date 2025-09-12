@@ -21,14 +21,12 @@ public class AdminService : IAdminService
         _productRepository = productRepository;
     }
 
-    // Admin yetkisi kontrolü için yardımcı metod
     private bool IsAdmin(string token)
     {
         var role = _tokenService.GetRoleFromToken(token);
         return role == "Admin";
     }
 
-    // Tüm kullanıcıları sayfalı şekilde getir
     public async Task<ServiceResult<PagedResult<UserDto>>> GetAllUsers(string token, int pageNumber, int pageSize)
     {
         if (!IsAdmin(token))
@@ -59,6 +57,19 @@ public class AdminService : IAdminService
         return ServiceResult<PagedResult<UserDto>>.Success(pagedResult, HttpStatusCode.OK);
     }
 
+    public async Task<ServiceResult> DeleteUser(string token, int userId)
+    {
+        if (!IsAdmin(token))
+            return ServiceResult.Fail("You do not have permission for this action!", HttpStatusCode.Forbidden);
+
+        var user = await _userRepository.GetByIdUser(userId);
+        if (user == null)
+            return ServiceResult.Fail("User not found", HttpStatusCode.NotFound);
+
+        await _userRepository.DeleteUserAsync(userId);
+        return ServiceResult.Success(HttpStatusCode.OK);
+    }
+    
     public async Task<ServiceResult> DiscountProduct(string token, int productId, int discountRate)
     {
         if (!IsAdmin(token))
