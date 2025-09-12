@@ -64,7 +64,22 @@ namespace eCommerce.Infrastructure.Repositories
 
             return result > 0;
         }
+        
+        public async Task<bool> DiscountProductAsync(int productId, int discountRate)
+        {
+            var product = await _context.Products.FirstOrDefaultAsync(p => p.Id == productId);
+            if (product == null)
+                return false;
 
+            product.Price -= product.Price * discountRate / 100;
+
+            _context.Products.Update(product);
+
+            var result = await _context.SaveChangesAsync();
+
+            return result > 0;
+        }
+        
         public async Task<IEnumerable<Product>> GetProductByCategory(string categoryName)
         {
             return await _dbSet

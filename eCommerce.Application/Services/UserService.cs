@@ -18,43 +18,7 @@ public class UserService : IUserService
         }
 
 
-    public async Task<ServiceResult<PagedResult<UserDto>>> GetAllUsers(string token, int pageNumber, int pageSize)
-    {
-        if (pageNumber <= 0) pageNumber = 1;
-        if (pageSize <= 0) pageSize = 10;
-        
-        var role = _tokenService.GetRoleFromToken(token);
-
-        if (role != "Admin")
-            return ServiceResult<PagedResult<UserDto>>.Fail("Bu işlem için yetkiniz yok!", HttpStatusCode.Forbidden);
-
-        var users = await _userRepository.GetAllUsers();
-
-        var usersDto = users.Select(u => new UserDto
-        {
-            Id = u.Id,
-            Name = u.Name,
-            Email = u.Email,
-            Role = u.Role
-        }).ToList();
-
-        var totalCount = usersDto.Count;
-
-        var pagedUsers = usersDto
-            .Skip((pageNumber - 1) * pageSize)
-            .Take(pageSize)
-            .ToList();
-
-        // İşte parametreli constructor kullanımı
-        var pagedResult = new PagedResult<UserDto>(
-            pagedUsers,  // items
-            totalCount,  // totalCount
-            pageNumber,  // pageNumber
-            pageSize     // pageSize
-        );
-
-        return ServiceResult<PagedResult<UserDto>>.Success(pagedResult, HttpStatusCode.OK);
-    }
+   
     
     public async Task<ServiceResult<bool>> UpdatePassword(string token, string oldPassword, string newPassword)
     {

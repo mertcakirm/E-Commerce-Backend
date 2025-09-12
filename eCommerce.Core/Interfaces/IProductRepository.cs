@@ -9,6 +9,7 @@ namespace eCommerce.Core.Interfaces
         Task<IEnumerable<ProductVariant>> GetStockReportAsync();
         Task<IEnumerable<Product>> GetProductByCategory(string categoryName);
         Task<IEnumerable<Product>> GetAllWithDetailsAsync();
+        Task<bool> DiscountProductAsync(int productId, int discountRate);
         Task<Product?> GetByIdWithDetailsAsync(int id);
         Task<bool> DeleteImageAsync(int id);
     }
