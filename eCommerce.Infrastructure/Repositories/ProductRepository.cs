@@ -71,7 +71,7 @@ namespace eCommerce.Infrastructure.Repositories
             if (product == null)
                 return false;
 
-            product.Price -= product.Price * discountRate / 100;
+            product.DiscountRate = discountRate ;
 
             _context.Products.Update(product);
 

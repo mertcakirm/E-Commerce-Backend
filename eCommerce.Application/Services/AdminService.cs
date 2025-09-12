@@ -59,7 +59,6 @@ public class AdminService : IAdminService
         return ServiceResult<PagedResult<UserDto>>.Success(pagedResult, HttpStatusCode.OK);
     }
 
-    // Ürüne indirim uygulama (sadece admin)
     public async Task<ServiceResult> DiscountProduct(string token, int productId, int discountRate)
     {
         if (!IsAdmin(token))
@@ -69,7 +68,6 @@ public class AdminService : IAdminService
         if (product == null)
             return ServiceResult.Fail("Product not found", HttpStatusCode.NotFound);
 
-        product.Price -= product.Price * discountRate / 100;
         await _productRepository.DiscountProductAsync(productId,discountRate);
 
         return ServiceResult.Success(HttpStatusCode.OK);

@@ -107,7 +107,7 @@ namespace eCommerce.Infrastructure.Migrations
                     b.Property<bool>("IsDeleted")
                         .HasColumnType("tinyint(1)");
 
-                    b.Property<int?>("ProductId")
+                    b.Property<int>("ProductId")
                         .HasColumnType("int");
 
                     b.Property<int>("ProductVariantId")
@@ -306,6 +306,9 @@ namespace eCommerce.Infrastructure.Migrations
                     b.Property<string>("Description")
                         .IsRequired()
                         .HasColumnType("longtext");
+
+                    b.Property<int>("DiscountRate")
+                        .HasColumnType("int");
 
                     b.Property<bool>("IsActive")
                         .HasColumnType("tinyint(1)");
@@ -571,7 +574,9 @@ namespace eCommerce.Infrastructure.Migrations
 
                     b.HasOne("eCommerce.Core.Entities.Product", null)
                         .WithMany("CartItems")
-                        .HasForeignKey("ProductId");
+                        .HasForeignKey("ProductId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
 
                     b.HasOne("eCommerce.Core.Entities.ProductVariant", "ProductVariant")
                         .WithMany()

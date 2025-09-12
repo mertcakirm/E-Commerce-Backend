@@ -72,6 +72,7 @@ builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<ICartRepository, CartRepository>();
 builder.Services.AddScoped<ICartService, CartService>();
+builder.Services.AddScoped<IAdminService, AdminService>();
 
 // JWT Ayarları
 var jwtSettings = builder.Configuration.GetSection("Jwt");
