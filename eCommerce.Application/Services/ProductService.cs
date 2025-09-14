@@ -41,6 +41,7 @@ namespace eCommerce.Application.Services
                     DiscountRate = p.DiscountRate,
                     Price = p.Price * (1 - (p.DiscountRate / 100m )),
                     CategoryId = p.CategoryId,
+                    CategoryName = p.Category.Name,
                     Variants = p.Variants.Select(v => new ProductVariantResponseDto
                     {
                         Id = v.Id,
@@ -87,6 +88,7 @@ namespace eCommerce.Application.Services
                     DiscountRate = p.DiscountRate,
                     Price = p.BasePrice * (1 - (p.DiscountRate / 100m )),
                     CategoryId = p.CategoryId,
+                    CategoryName = p.Category.Name,
                     Variants = p.Variants.Select(v => new ProductVariantResponseDto
                     {
                         Id = v.Id,
@@ -127,6 +129,7 @@ namespace eCommerce.Application.Services
                 DiscountRate = product.DiscountRate,
                 Price = product.BasePrice * (1 - (product.DiscountRate / 100m)),
                 CategoryId = product.CategoryId,
+                CategoryName = product.Category.Name,
                 Variants = product.Variants.Select(v => new ProductVariantResponseDto
                 {
                     Id = v.Id,

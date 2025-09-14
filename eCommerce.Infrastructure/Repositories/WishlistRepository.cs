@@ -13,6 +13,7 @@ namespace eCommerce.Infrastructure.Repositories
         {
             return await _dbSet
                 .Include(w => w.Product)
+                .ThenInclude(w=>w.Category)
                 .Where(w => w.UserId == userId)
                 .ToListAsync();
         }

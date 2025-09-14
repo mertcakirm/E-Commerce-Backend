@@ -41,6 +41,7 @@ namespace eCommerce.Infrastructure.Repositories
             return await _dbSet
                 .Include(p => p.Variants)
                 .Include(p => p.Images)
+                .Include(p=>p.Category)
                 .ToListAsync();
         }
 
@@ -49,6 +50,7 @@ namespace eCommerce.Infrastructure.Repositories
             return await _dbSet
                 .Include(p => p.Variants)
                 .Include(p => p.Images)
+                .Include(p=>p.Category)
                 .FirstOrDefaultAsync(p => p.Id == id);
         }
         
@@ -86,6 +88,7 @@ namespace eCommerce.Infrastructure.Repositories
                 .Where(p => p.Category.Name == categoryName)
                 .Include(p => p.Variants)
                 .Include(p => p.Images)
+                .Include(p=>p.Category)
                 .ToListAsync();
         }
         }

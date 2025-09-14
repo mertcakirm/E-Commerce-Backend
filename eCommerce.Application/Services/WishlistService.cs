@@ -39,8 +39,10 @@ namespace eCommerce.Application.Services
                 Description = w.Product.Description,
                 DiscountRate = w.Product.DiscountRate,
                 BasePrice = w.Product.BasePrice,
+                CategoryName = w.Product.Category.Name,
                 Price = w.Product.Price,
                 AverageRating = w.Product.AverageRating,
+                
                 CategoryId = w.Product.CategoryId,
                 Variants = w.Product.Variants.Select(v => new ProductVariantResponseDto
                 {

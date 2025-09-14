@@ -8,6 +8,7 @@ public class ProductResponseDto
     public int DiscountRate { get; set; }
     public decimal BasePrice { get; set; }
     public double AverageRating { get; set; }
+    public string CategoryName { get; set; }
     
     public decimal Price { get; set; }
     public int CategoryId { get; set; }
