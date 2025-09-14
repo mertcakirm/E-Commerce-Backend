@@ -1,5 +1,4 @@
 /Users/mertcakir/BackEnd-Projects/eCommerce/eCommerce.API/bin/Debug/net8.0/appsettings.Development.json
-/Users/mertcakir/BackEnd-Projects/eCommerce/eCommerce.API/bin/Debug/net8.0/appsettings.json
 /Users/mertcakir/BackEnd-Projects/eCommerce/eCommerce.API/bin/Debug/net8.0/eCommerce.API
 /Users/mertcakir/BackEnd-Projects/eCommerce/eCommerce.API/bin/Debug/net8.0/eCommerce.API.deps.json
 /Users/mertcakir/BackEnd-Projects/eCommerce/eCommerce.API/bin/Debug/net8.0/eCommerce.API.runtimeconfig.json
@@ -145,6 +144,7 @@
 /Users/mertcakir/BackEnd-Projects/eCommerce/eCommerce.API/obj/Debug/net8.0/ref/eCommerce.API.dll
 /Users/mertcakir/BackEnd-Projects/eCommerce/eCommerce.API/obj/Debug/net8.0/eCommerce.API.sourcelink.json
 /Users/mertcakir/BackEnd-Projects/eCommerce/eCommerce.API/bin/Debug/net8.0/Microsoft.Extensions.Configuration.dll
+/Users/mertcakir/BackEnd-Projects/eCommerce/eCommerce.API/bin/Debug/net8.0/appsettings.json
 /Users/mertcakir/BackEnd-Projects/eCommerce/eCommerce.API/obj/Debug/net8.0/staticwebassets/msbuild.eCommerce.API.Microsoft.AspNetCore.StaticWebAssets.props
 /Users/mertcakir/BackEnd-Projects/eCommerce/eCommerce.API/obj/Debug/net8.0/staticwebassets/msbuild.build.eCommerce.API.props
 /Users/mertcakir/BackEnd-Projects/eCommerce/eCommerce.API/obj/Debug/net8.0/staticwebassets/msbuild.buildMultiTargeting.eCommerce.API.props

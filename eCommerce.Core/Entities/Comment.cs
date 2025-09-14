@@ -2,7 +2,11 @@ namespace eCommerce.Core.Entities;
 
 public class Comment : BaseEntity
 {
-    public int userId { get; set; }
-    public int rating { get; set; }
-    public string comment { get; set; }
+    public int UserId { get; set; }
+    public int ProductId { get; set; }
+    public int Rating { get; set; }
+    public string CommentText { get; set; }
+
+    public User User { get; set; }
+    public Product Product { get; set; }
 }
