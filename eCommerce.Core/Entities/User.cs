@@ -11,5 +11,4 @@ public class User : BaseEntity
     public Cart Cart { get; set; }
     public ICollection<UserAddress> Addresses { get; set; }
     public ICollection<Wishlist> Wishlists { get; set; }
-    public ICollection<Review> Reviews { get; set; }
 }

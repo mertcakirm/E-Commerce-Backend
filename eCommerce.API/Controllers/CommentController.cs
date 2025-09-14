@@ -40,9 +40,9 @@ namespace eCommerce.API.Controllers
         }
 
         [HttpGet("product/{productId}")]
-        public async Task<IActionResult> GetCommentsByProduct(int productId)
+        public async Task<IActionResult> GetCommentsByProduct(int productId,[FromQuery] int pageNumber=1, [FromQuery] int pageSize=10)
         {
-            var comments = await _commentService.GetCommentsByProductIdAsync(productId);
+            var comments = await _commentService.GetCommentsByProductIdAsync(productId,pageNumber,pageSize);
             return Ok(comments);
         }
         

@@ -443,45 +443,6 @@ namespace eCommerce.Infrastructure.Migrations
                     b.ToTable("ProductVariants");
                 });
 
-            modelBuilder.Entity("eCommerce.Core.Entities.Review", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<string>("Comment")
-                        .IsRequired()
-                        .HasColumnType("longtext");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("datetime(6)");
-
-                    b.Property<bool>("IsDeleted")
-                        .HasColumnType("tinyint(1)");
-
-                    b.Property<int>("ProductId")
-                        .HasColumnType("int");
-
-                    b.Property<int>("Rating")
-                        .HasColumnType("int");
-
-                    b.Property<DateTime?>("UpdatedAt")
-                        .HasColumnType("datetime(6)");
-
-                    b.Property<int>("UserId")
-                        .HasColumnType("int");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("ProductId");
-
-                    b.HasIndex("UserId");
-
-                    b.ToTable("Reviews");
-                });
-
             modelBuilder.Entity("eCommerce.Core.Entities.User", b =>
                 {
                     b.Property<int>("Id")
@@ -742,25 +703,6 @@ namespace eCommerce.Infrastructure.Migrations
                     b.Navigation("Product");
                 });
 
-            modelBuilder.Entity("eCommerce.Core.Entities.Review", b =>
-                {
-                    b.HasOne("eCommerce.Core.Entities.Product", "Product")
-                        .WithMany("Reviews")
-                        .HasForeignKey("ProductId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("eCommerce.Core.Entities.User", "User")
-                        .WithMany("Reviews")
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Product");
-
-                    b.Navigation("User");
-                });
-
             modelBuilder.Entity("eCommerce.Core.Entities.UserAddress", b =>
                 {
                     b.HasOne("eCommerce.Core.Entities.User", "User")
@@ -821,8 +763,6 @@ namespace eCommerce.Infrastructure.Migrations
 
                     b.Navigation("OrderItems");
 
-                    b.Navigation("Reviews");
-
                     b.Navigation("Variants");
 
                     b.Navigation("Wishlists");
@@ -843,8 +783,6 @@ namespace eCommerce.Infrastructure.Migrations
                         .IsRequired();
 
                     b.Navigation("Orders");
-
-                    b.Navigation("Reviews");
 
                     b.Navigation("Wishlists");
                 });

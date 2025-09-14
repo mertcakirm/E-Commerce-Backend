@@ -6,7 +6,7 @@ namespace eCommerce.Application.Interfaces;
 public interface ICommentService
 {
     Task<Comment?> GetByIdAsync(int id);
-    Task<IEnumerable<CommentListDto>> GetCommentsByProductIdAsync(int productId);
+    Task<ServiceResult<PagedResult<CommentListDto>>> GetCommentsByProductIdAsync(int productId, int pageNumber, int pageSize);
     Task<Comment?> AddCommentAsync(CommentCreateDto commentDto, string token);
     Task<bool> DeleteCommentAsync(int id, string token);
 }

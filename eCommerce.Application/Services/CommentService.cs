@@ -1,3 +1,4 @@
+using System.Net;
 using eCommerce.Application.DTOs;
 using eCommerce.Application.Interfaces;
 using eCommerce.Core.Entities;
@@ -23,19 +24,31 @@ namespace eCommerce.Application.Services
             return await _commentRepository.GetByIdAsync(id);
         }
 
-        public async Task<IEnumerable<CommentListDto>> GetCommentsByProductIdAsync(int productId)
+        public async Task<ServiceResult<PagedResult<CommentListDto>>> GetCommentsByProductIdAsync(int productId, int pageNumber, int pageSize)
         {
-            var comments = await _commentRepository
-                .GetCommentsByProductIdAsync(productId); // Entity dönüyor
+            if (pageNumber <= 0) pageNumber = 1;
+            if (pageSize <= 0) pageSize = 10;
 
-            // Entity => DTO map
-            return comments.Select(c => new CommentListDto
+            var comments = await _commentRepository.GetCommentsByProductIdAsync(productId);
+
+            var commentsDto = comments.Select(c => new CommentListDto
             {
                 Id = c.Id,
                 CommentText = c.CommentText,
                 Rating = c.Rating,
-                UserName = c.User?.Name,
-            });
+                UserName = c.User != null ? c.User.Name : null
+            }).ToList();
+
+            var totalCount = commentsDto.Count;
+
+            var pagedComments = commentsDto
+                .Skip((pageNumber - 1) * pageSize)
+                .Take(pageSize)
+                .ToList();
+
+            var pagedResult = new PagedResult<CommentListDto>(pagedComments, totalCount, pageNumber, pageSize);
+
+            return ServiceResult<PagedResult<CommentListDto>>.Success(pagedResult);
         }
         
         public async Task<Comment?> AddCommentAsync(CommentCreateDto commentDto, string token)

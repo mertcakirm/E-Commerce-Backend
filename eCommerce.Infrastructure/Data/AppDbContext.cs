@@ -20,7 +20,6 @@ public class AppDbContext : DbContext
     public DbSet<OrderItem> OrderItems { get; set; }
     public DbSet<Payment> Payments { get; set; }
     public DbSet<Wishlist> Wishlists { get; set; }
-    public DbSet<Review> Reviews { get; set; }
     public DbSet<UserAddress> UserAddresses { get; set; }
     public DbSet<AuditLog> AuditLogs { get; set; }
 
