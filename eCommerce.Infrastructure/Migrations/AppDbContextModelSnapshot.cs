@@ -333,6 +333,9 @@ namespace eCommerce.Infrastructure.Migrations
 
                     MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
 
+                    b.Property<double>("AverageRating")
+                        .HasColumnType("double");
+
                     b.Property<decimal>("BasePrice")
                         .HasColumnType("decimal(65,30)");
 

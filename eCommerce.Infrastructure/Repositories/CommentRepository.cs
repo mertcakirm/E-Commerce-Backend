@@ -23,14 +23,6 @@ public class CommentRepository : GenericRepository<Comment>,  ICommentRepository
             .Include(c => c.User)
             .ToListAsync();
     }
-
-    public async Task<double> GetAverageRatingByProductIdAsync(int productId)
-    {
-        return await _dbSet
-            .Where(c => c.ProductId == productId && !EF.Property<bool>(c, "IsDeleted"))
-            .AverageAsync(c => (double?)c.Rating) ?? 0.0;
-    }
-
     public async Task AddCommentAsync(Comment comment)
     {
         await _dbSet.AddAsync(comment);

@@ -45,13 +45,7 @@ namespace eCommerce.API.Controllers
             var comments = await _commentService.GetCommentsByProductIdAsync(productId);
             return Ok(comments);
         }
-
-        [HttpGet("product/{productId}/rating")]
-        public async Task<IActionResult> GetAverageRating(int productId)
-        {
-            var avg = await _commentService.GetAverageRatingByProductIdAsync(productId);
-            return Ok(new { ProductId = productId, AverageRating = avg });
-        }
+        
 
         [Authorize]
         [HttpDelete("{id}")]

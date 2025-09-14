@@ -9,11 +9,13 @@ namespace eCommerce.Application.Services
     {
         private readonly ICommentRepository _commentRepository;
         private readonly ITokenService _tokenService;
+        private readonly IProductRepository  _productRepository;
 
-        public CommentService(ICommentRepository commentRepository, ITokenService tokenService)
+        public CommentService(ICommentRepository commentRepository, ITokenService tokenService, IProductRepository  productRepository)
         {
             _commentRepository = commentRepository;
             _tokenService = tokenService;
+            _productRepository = productRepository;
         }
 
         public async Task<Comment?> GetByIdAsync(int id)
@@ -21,16 +23,21 @@ namespace eCommerce.Application.Services
             return await _commentRepository.GetByIdAsync(id);
         }
 
-        public async Task<IEnumerable<Comment>> GetCommentsByProductIdAsync(int productId)
+        public async Task<IEnumerable<CommentListDto>> GetCommentsByProductIdAsync(int productId)
         {
-            return await _commentRepository.GetCommentsByProductIdAsync(productId);
-        }
+            var comments = await _commentRepository
+                .GetCommentsByProductIdAsync(productId); // Entity dönüyor
 
-        public async Task<double> GetAverageRatingByProductIdAsync(int productId)
-        {
-            return await _commentRepository.GetAverageRatingByProductIdAsync(productId);
+            // Entity => DTO map
+            return comments.Select(c => new CommentListDto
+            {
+                Id = c.Id,
+                CommentText = c.CommentText,
+                Rating = c.Rating,
+                UserName = c.User?.Name,
+            });
         }
-
+        
         public async Task<Comment?> AddCommentAsync(CommentCreateDto commentDto, string token)
         {
             var userId = _tokenService.GetUserIdFromToken(token);
@@ -45,6 +52,19 @@ namespace eCommerce.Application.Services
             };
 
             await _commentRepository.AddCommentAsync(newComment);
+
+            var product = await _productRepository.GetByIdAsync(commentDto.ProductId);
+            if (product != null)
+            {
+                var comments = await _commentRepository.GetCommentsByProductIdAsync(commentDto.ProductId);
+                product.AverageRating = comments.Any() 
+                    ? comments.Average(c => c.Rating) 
+                    : 0.0;
+
+                _productRepository.Update(product);
+                await _productRepository.SaveChangesAsync();
+            }
+
             return newComment;
         }
 
@@ -58,6 +78,18 @@ namespace eCommerce.Application.Services
                 return false;
 
             await _commentRepository.DeleteCommentAsync(id);
+
+            var product = await _productRepository.GetByIdAsync(comment.ProductId);
+            if (product != null)
+            {
+                var comments = await _commentRepository.GetCommentsByProductIdAsync(comment.ProductId);
+                product.AverageRating = comments.Any() 
+                    ? comments.Average(c => c.Rating) 
+                    : 0.0;
+                _productRepository.Update(product);
+                await _productRepository.SaveChangesAsync();
+            }
+
             return true;
         }
     }

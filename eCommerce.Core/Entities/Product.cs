@@ -8,7 +8,7 @@ public class Product : BaseEntity
     public decimal Price { get; set; }
     public int DiscountRate { get; set; }
     public bool IsActive { get; set; } = true;
-
+    public double AverageRating { get; set; } = 0.0;
     public int CategoryId { get; set; }
     public Category Category { get; set; }
 

@@ -35,6 +35,7 @@ namespace eCommerce.Application.Services
                 {
                     Id = p.Id,
                     Name = p.Name,
+                    AverageRating = p.AverageRating,
                     Description = p.Description,
                     BasePrice = p.BasePrice,
                     DiscountRate = p.DiscountRate,
@@ -81,6 +82,7 @@ namespace eCommerce.Application.Services
                     Id = p.Id,
                     Name = p.Name,
                     Description = p.Description,
+                    AverageRating = p.AverageRating,
                     BasePrice = p.BasePrice,
                     DiscountRate = p.DiscountRate,
                     Price = p.BasePrice * (1 - (p.DiscountRate / 100m )),
@@ -121,6 +123,7 @@ namespace eCommerce.Application.Services
                 Name = product.Name,
                 Description = product.Description,
                 BasePrice = product.BasePrice,
+                AverageRating = product.AverageRating,
                 DiscountRate = product.DiscountRate,
                 Price = product.BasePrice * (1 - (product.DiscountRate / 100m)),
                 CategoryId = product.CategoryId,
@@ -155,6 +158,7 @@ namespace eCommerce.Application.Services
                 BasePrice = dto.BasePrice,
                 Price = dto.Price,
                 DiscountRate = 0,
+                AverageRating = 0,
                 CategoryId = dto.CategoryId,
                 Variants = dto.Variants.Select(v => new ProductVariant
                 {
