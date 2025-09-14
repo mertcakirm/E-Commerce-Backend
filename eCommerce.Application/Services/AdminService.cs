@@ -9,16 +9,19 @@ public class AdminService : IAdminService
 {
     private readonly IUserRepository _userRepository;
     private readonly ITokenService _tokenService;
+    private readonly IOrderRepository _orderRepository;
     private readonly IProductRepository _productRepository;
 
     public AdminService(
         IUserRepository userRepository,
         ITokenService tokenService,
-        IProductRepository productRepository)
+        IProductRepository productRepository,
+        IOrderRepository  orderRepository)
     {
         _userRepository = userRepository;
         _tokenService = tokenService;
         _productRepository = productRepository;
+        _orderRepository = orderRepository;
     }
 
     private bool IsAdmin(string token)
@@ -83,4 +86,19 @@ public class AdminService : IAdminService
 
         return ServiceResult.Success(status:HttpStatusCode.OK);
     }
+    
+    public async Task UpdateOrderStatusAsync(int orderId, string status, string token)
+    {
+        var role = _tokenService.GetRoleFromToken(token);
+        
+        
+        
+        var order = await _orderRepository.GetByIdAsync(orderId);
+        if (order == null) throw new Exception("Sipariş bulunamadı");
+
+        order.Status = status;
+        await _orderRepository.UpdateAsync(order);
+    }
+    
+    
 }
