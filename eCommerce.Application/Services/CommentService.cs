@@ -74,7 +74,7 @@ namespace eCommerce.Application.Services
                     ? comments.Average(c => c.Rating) 
                     : 0.0;
 
-                _productRepository.Update(product);
+                await _productRepository.UpdateAsync(product);
                 await _productRepository.SaveChangesAsync();
             }
 
@@ -99,7 +99,7 @@ namespace eCommerce.Application.Services
                 product.AverageRating = comments.Any() 
                     ? comments.Average(c => c.Rating) 
                     : 0.0;
-                _productRepository.Update(product);
+                await _productRepository.UpdateAsync(product);
                 await _productRepository.SaveChangesAsync();
             }
 

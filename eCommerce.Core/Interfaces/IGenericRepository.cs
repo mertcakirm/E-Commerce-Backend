@@ -1,7 +1,6 @@
 using System.Linq.Expressions;
 
-namespace eCommerce.Core.Interfaces
-{
+namespace eCommerce.Core.Interfaces;
     public interface IGenericRepository<T> where T : class
     {
         Task<T?> GetByIdAsync(int id);
@@ -9,8 +8,7 @@ namespace eCommerce.Core.Interfaces
         Task<IEnumerable<T>> FindAsync(Expression<Func<T, bool>> predicate);
 
         Task AddAsync(T entity);
-        void Update(T entity);
-        void Remove(T entity);
+        Task UpdateAsync(T entity);
+        Task RemoveAsync(T entity);
         Task<int> SaveChangesAsync();
     }
-}

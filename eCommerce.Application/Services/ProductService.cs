@@ -238,7 +238,7 @@ namespace eCommerce.Application.Services
                 });
             }
 
-            _productRepo.Update(existing);
+            await _productRepo.UpdateAsync(existing);
             await _productRepo.SaveChangesAsync();
 
             var updatedDto = new ProductDto
@@ -275,7 +275,7 @@ namespace eCommerce.Application.Services
             if (existing == null)
                 return ServiceResult.Fail("Ürün bulunamadı", HttpStatusCode.NotFound);
 
-            _productRepo.Remove(existing);
+            await _productRepo.RemoveAsync(existing);
             await _productRepo.SaveChangesAsync();
 
             return ServiceResult.NoContent();
