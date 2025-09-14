@@ -6,5 +6,5 @@ namespace eCommerce.Application.Interfaces;
 public interface IUserService
 {
     Task<ServiceResult<bool>> UpdatePassword(string token, string oldPassword, string newPassword);
-    Task<ServiceResult<UserDto>> GetProductByIdAsync(string token);
+    Task<ServiceResult<UserDto>> GetUserByIdAsync(string token);
 }

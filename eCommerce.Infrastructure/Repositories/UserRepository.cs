@@ -5,7 +5,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace eCommerce.Infrastructure.Repositories;
 
-public class UserRepository: IUserRepository
+public class UserRepository : IUserRepository
 {
         private readonly AppDbContext _context;
     public UserRepository(AppDbContext context)
@@ -63,7 +63,6 @@ public class UserRepository: IUserRepository
 
         return result > 0;
     }
+    
 
-    
-    
 }

@@ -48,10 +48,10 @@ public class UserService : IUserService
         if (!updated)
             return ServiceResult<bool>.Fail("Şifre güncellenirken hata oluştu", HttpStatusCode.InternalServerError);
 
-        return ServiceResult<bool>.Success(true, HttpStatusCode.OK);
+        return ServiceResult<bool>.Success(true, status:HttpStatusCode.OK);
     }
 
-    public async Task<ServiceResult<UserDto>> GetProductByIdAsync(string token)
+    public async Task<ServiceResult<UserDto>> GetUserByIdAsync(string token)
     {
         int userId;
         try
@@ -77,8 +77,10 @@ public class UserService : IUserService
             Role = user.Role
         };
 
-        return ServiceResult<UserDto>.Success(userDto, HttpStatusCode.OK);
+        return ServiceResult<UserDto>.Success(userDto, status:HttpStatusCode.OK);
     }
+
+
     
     
 

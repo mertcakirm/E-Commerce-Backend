@@ -17,5 +17,10 @@ namespace eCommerce.Infrastructure.Repositories
                 .Where(w => w.UserId == userId)
                 .ToListAsync();
         }
+
+        public async Task<Wishlist?> GetByProductIdAsync(int productId)
+        {
+            return await _context.Wishlists.FirstOrDefaultAsync(w=>w.ProductId == productId);
+        }
     }
 }

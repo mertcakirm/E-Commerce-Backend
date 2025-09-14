@@ -295,7 +295,7 @@ namespace eCommerce.Application.Services
             try
             {
                 await _productRepository.DeleteImageAsync(id);
-                return ServiceResult.Success(HttpStatusCode.NoContent);
+                return ServiceResult.Success(status:HttpStatusCode.NoContent);
             }
             catch (Exception ex)
             {

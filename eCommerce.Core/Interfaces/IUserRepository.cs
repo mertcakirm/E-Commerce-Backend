@@ -1,5 +1,4 @@
 using eCommerce.Core.Entities;
-
 namespace eCommerce.Core.Interfaces;
 
 public interface IUserRepository
@@ -9,4 +8,5 @@ public interface IUserRepository
     Task<bool> IsUser(int id);
     Task<bool> DeleteUserAsync(int userId);
     Task<bool> UpdatePassword(int userId, string newPassword);
+
 }

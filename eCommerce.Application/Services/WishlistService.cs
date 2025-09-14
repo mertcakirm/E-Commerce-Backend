@@ -31,7 +31,6 @@ namespace eCommerce.Application.Services
                 .Take(pageSize)
                 .ToList();
 
-            // Wishlist -> ProductResponseDto dönüştür
             var productDtos = pagedItems.Select(w => new ProductResponseDto
             {
                 Id = w.Product.Id,
@@ -60,7 +59,7 @@ namespace eCommerce.Application.Services
 
             var pagedResult = new PagedResult<ProductResponseDto>(productDtos, totalCount, pageNumber, pageSize);
 
-            return ServiceResult<PagedResult<ProductResponseDto>>.Success(pagedResult, HttpStatusCode.OK);
+            return ServiceResult<PagedResult<ProductResponseDto>>.Success(pagedResult, status:HttpStatusCode.OK);
         }
 
         public async Task<ServiceResult> AddToWishlistAsync(int productId, string token)
@@ -69,32 +68,45 @@ namespace eCommerce.Application.Services
             if (userId == null)
                 return ServiceResult.Fail("Geçersiz token", HttpStatusCode.Unauthorized);
 
-            var wishlistItem = new Wishlist
+            // Kullanıcının wishlist'inde aynı ürünü ara
+            var existingItem = await _wishlistRepository.FindAsync(w => w.UserId == userId && w.ProductId == productId);
+            var wishlistItem = existingItem.FirstOrDefault();
+
+            if (wishlistItem != null)
             {
-                UserId = userId,
-                ProductId = productId
-            };
-
-            await _wishlistRepository.AddAsync(wishlistItem);
-            await _wishlistRepository.SaveChangesAsync();
-
-            return ServiceResult.Success(HttpStatusCode.OK);
+                // Ürün varsa sil
+                _wishlistRepository.RemoveAsync(wishlistItem);
+                await _wishlistRepository.SaveChangesAsync();
+                return ServiceResult.Success( "Ürün wishlist'ten çıkarıldı",HttpStatusCode.OK);
+            }
+            else
+            {
+                // Ürün yoksa ekle
+                wishlistItem = new Wishlist
+                {
+                    UserId = userId,
+                    ProductId = productId
+                };
+                await _wishlistRepository.AddAsync(wishlistItem);
+                await _wishlistRepository.SaveChangesAsync();
+                return ServiceResult.Success( "Ürün wishlist'e eklendi",HttpStatusCode.OK);
+            }
         }
 
-        public async Task<ServiceResult> RemoveFromWishlistAsync(int wishlistId, string token)
+        public async Task<ServiceResult> RemoveFromWishlistAsync(int productId, string token)
         {
             var userId = _tokenService.GetUserIdFromToken(token);
             if (userId == null)
                 return ServiceResult.Fail("Geçersiz token", HttpStatusCode.Unauthorized);
 
-            var wishlistItem = await _wishlistRepository.GetByIdAsync(wishlistId);
+            var wishlistItem = await _wishlistRepository.GetByProductIdAsync(productId);
             if (wishlistItem == null || wishlistItem.UserId != userId)
                 return ServiceResult.Fail("Bu wishlist öğesine erişim yetkiniz yok", HttpStatusCode.Forbidden);
 
             await _wishlistRepository.RemoveAsync(wishlistItem);
             await _wishlistRepository.SaveChangesAsync();
 
-            return ServiceResult.Success(HttpStatusCode.OK);
+            return ServiceResult.Success(status:HttpStatusCode.OK);
         }
     }
 }

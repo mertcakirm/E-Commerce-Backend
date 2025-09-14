@@ -54,7 +54,7 @@ public class AdminService : IAdminService
 
         var pagedResult = new PagedResult<UserDto>(pagedUsers, totalCount, pageNumber, pageSize);
 
-        return ServiceResult<PagedResult<UserDto>>.Success(pagedResult, HttpStatusCode.OK);
+        return ServiceResult<PagedResult<UserDto>>.Success(pagedResult, status:HttpStatusCode.OK);
     }
 
     public async Task<ServiceResult> DeleteUser(string token, int userId)
@@ -67,7 +67,7 @@ public class AdminService : IAdminService
             return ServiceResult.Fail("User not found", HttpStatusCode.NotFound);
 
         await _userRepository.DeleteUserAsync(userId);
-        return ServiceResult.Success(HttpStatusCode.OK);
+        return ServiceResult.Success(status:HttpStatusCode.OK);
     }
     
     public async Task<ServiceResult> DiscountProduct(string token, int productId, int discountRate)
@@ -81,6 +81,6 @@ public class AdminService : IAdminService
 
         await _productRepository.DiscountProductAsync(productId,discountRate);
 
-        return ServiceResult.Success(HttpStatusCode.OK);
+        return ServiceResult.Success(status:HttpStatusCode.OK);
     }
 }

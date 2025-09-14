@@ -48,7 +48,7 @@ public class UserController: ControllerBase
     {
         var token = Request.Headers["Authorization"].ToString().Replace("Bearer ", "");
 
-        var result = await _userService.GetProductByIdAsync(token);
+        var result = await _userService.GetUserByIdAsync(token);
 
         if (result.IsFail)
             return StatusCode((int)result.Status, result.ErrorMessage);
