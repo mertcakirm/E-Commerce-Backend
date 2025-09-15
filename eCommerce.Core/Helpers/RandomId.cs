@@ -1,12 +1,13 @@
-using System;
 using System.Security.Cryptography;
 using System.Text;
+
+namespace eCommerce.Core.Helpers;
 
 public static class IdHelper
 {
     public static string GenerateGuidId()
     {
-        return Guid.NewGuid().ToString("N"); // N => 32 karakter, '-' yok
+        return Guid.NewGuid().ToString("N"); 
     }
 
     public static string GenerateRandomAlphaNumeric(int length = 10)

@@ -43,7 +43,6 @@ public class CartService : ICartService
                     Id = ci.ProductVariant.Product.Id,
                     Name = ci.ProductVariant.Product.Name,
                     Description = ci.ProductVariant.Product.Description,
-                    BasePrice = ci.ProductVariant.Product.BasePrice,
                     DiscountRate = ci.ProductVariant.Product.DiscountRate,
                     Price = ci.ProductVariant.Product.Price * (1 - (ci.ProductVariant.Product.DiscountRate / 100m )),
                     CategoryId = ci.ProductVariant.Product.CategoryId,

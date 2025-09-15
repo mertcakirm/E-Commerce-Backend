@@ -37,7 +37,6 @@ namespace eCommerce.Application.Services
                 Name = w.Product.Name,
                 Description = w.Product.Description,
                 DiscountRate = w.Product.DiscountRate,
-                BasePrice = w.Product.BasePrice,
                 CategoryName = w.Product.Category.Name,
                 Price = w.Product.Price,
                 AverageRating = w.Product.AverageRating,

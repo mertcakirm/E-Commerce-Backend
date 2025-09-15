@@ -1,8 +1,12 @@
+using System.Net;
+using eCommerce.Application;
 using eCommerce.Application.DTOs;
 using eCommerce.Application.Interfaces;
 using eCommerce.Core.Entities;
+using eCommerce.Core.Helpers;
 using eCommerce.Core.Interfaces;
 using Microsoft.EntityFrameworkCore;
+using System.Linq;
 
 public class OrderService : IOrderService
 {
@@ -18,6 +22,77 @@ public class OrderService : IOrderService
         _userRepo = userRepo;
         _tokenService = tokenService;
     }
+
+    public async Task<ServiceResult<List<OrderResponseDto>>> GetUserOrderAsync(string token)
+    {
+        var userId = _tokenService.GetUserIdFromToken(token);
+        var user = await _userRepo.GetByIdUser(userId);
+
+        if (user == null)
+            return new ServiceResult<List<OrderResponseDto>>
+            {
+                ErrorMessage = new List<string> { "Kullanıcı bulunamadı" },
+                Status = HttpStatusCode.NotFound
+            };
+
+        var orders = await _orderRepo.GetUserOrdersAsync(userId);
+
+        var lastOrder = orders
+            .OrderByDescending(o => o.OrderDate)
+            .FirstOrDefault();
+
+        if (lastOrder == null)
+            return new ServiceResult<List<OrderResponseDto>>
+            {
+                ErrorMessage = new List<string> { "Kullanıcının siparişi bulunamadı" },
+                Status = HttpStatusCode.NotFound
+            };
+
+
+        var orderDtos = orders.Select(o => new OrderResponseDto
+        {
+            Id = o.Id,
+            OrderDate = o.OrderDate,
+            TotalAmount = o.TotalAmount,
+            Status = o.Status,
+            Payment = o.Payment != null 
+                ? new List<PaymentResponseDto>
+                {
+                    new PaymentResponseDto
+                    {
+                        PaymentId = o.Payment.Id,
+                        PaymentMethod = o.Payment.PaymentMethod,
+                        PaymentStatus = o.Payment.PaymentStatus
+                    }
+                }
+                : new List<PaymentResponseDto>(),
+
+            OrderItem = (o.OrderItems ?? new List<OrderItem>()).Select(i => new OrderItemResponseDto
+            {
+                Price = i.Price,
+                Quantity = i.Quantity,
+                OrderItemProduct = new List<OrderItemProductResponseDto>
+                {
+                    new OrderItemProductResponseDto
+                    {
+                        Name = i.ProductVariant?.Product?.Name ?? "",
+                        Description = i.ProductVariant?.Product?.Description ?? "",
+                        DiscountRate = i.ProductVariant?.Product?.DiscountRate ?? 0,
+                        AverageRating = i.ProductVariant?.Product?.AverageRating ?? 0,
+                        CategoryName = i.ProductVariant?.Product?.Category?.Name ?? "",
+                        Price = i.ProductVariant?.Product?.Price ?? 0
+                    }
+                }
+            }).ToList()
+        }).ToList();
+
+        return new ServiceResult<List<OrderResponseDto>>
+        {
+            Data = orderDtos,
+            Status = HttpStatusCode.OK
+        };
+    }
+    
 
     public async Task<Order> CreateOrderAsync(OrderCreateDto dto, string token)
     {

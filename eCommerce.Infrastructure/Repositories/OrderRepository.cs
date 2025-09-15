@@ -15,6 +15,7 @@ namespace eCommerce.Infrastructure.Repositories
             return await _dbSet
                 .Include(o => o.OrderItems)
                     .ThenInclude(oi => oi.ProductVariant)
+                    .ThenInclude(oi=>oi.Product)
                 .Include(o => o.Payment)
                 .Where(o => o.UserId == userId && !EF.Property<bool>(o, "IsDeleted"))
                 .OrderByDescending(o => o.OrderDate)
@@ -83,7 +84,6 @@ namespace eCommerce.Infrastructure.Repositories
                 .FirstOrDefaultAsync( o => o.Id == OrderId && !EF.Property<bool>(o, "IsDeleted"));
                 
         }
-        
         
     }
 }

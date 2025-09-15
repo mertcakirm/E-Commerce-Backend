@@ -32,6 +32,22 @@ namespace eCommerce.API.Controllers
             }
         }
 
+        [HttpGet]
+        [Authorize]
+        public async Task<IActionResult> GetMyOrders([FromHeader(Name = "Authorization")] string token)
+        {
+            try
+            {
+                var order = await _orderService.GetUserOrderAsync(token);
+                return Ok(new { Success = true, data = order });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { Success = false, Message = ex.Message });
+            }
+        }
+        
+
         // PUT: api/Orders/{orderId}/payment
         [HttpPut("{orderId}/payment")]
         [Authorize]
