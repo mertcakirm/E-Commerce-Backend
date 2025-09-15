@@ -12,5 +12,6 @@ namespace eCommerce.Core.Interfaces
         Task<bool> DiscountProductAsync(int productId, int discountRate);
         Task<Product?> GetByIdWithDetailsAsync(int id);
         Task<bool> DeleteImageAsync(int id);
+        Task<ProductVariant?> GetVariantById(int variantId);
     }
 }

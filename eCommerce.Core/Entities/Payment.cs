@@ -7,5 +7,5 @@ public class Payment : BaseEntity
 
     public string PaymentMethod { get; set; } // CreditCard, Paypal, etc.
     public string PaymentStatus { get; set; } = "Pending"; // Pending, Paid, Failed
-    public string TransactionId { get; set; }
+    public string? TransactionId { get; set; }
 }

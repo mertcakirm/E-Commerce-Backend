@@ -73,6 +73,16 @@ namespace eCommerce.Infrastructure.Repositories
                 .Take(count)
                 .ToListAsync();
         }
+
+        public async Task<Order?> GetOrderByIdAsync(int OrderId)
+        {
+            return await _context.Orders
+                .Include(o=>o.Payment)
+                .Include(o => o.OrderItems)
+                .ThenInclude(oi => oi.ProductVariant)
+                .FirstOrDefaultAsync( o => o.Id == OrderId && !EF.Property<bool>(o, "IsDeleted"));
+                
+        }
         
         
     }

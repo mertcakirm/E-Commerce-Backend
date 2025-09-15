@@ -2,6 +2,7 @@ using eCommerce.Application.DTOs;
 using eCommerce.Application.Interfaces;
 using eCommerce.Core.Entities;
 using eCommerce.Core.Interfaces;
+using Microsoft.EntityFrameworkCore;
 
 public class OrderService : IOrderService
 {
@@ -18,61 +19,76 @@ public class OrderService : IOrderService
         _tokenService = tokenService;
     }
 
-    public async Task<Order> CreateOrderAsync(OrderCreateDto dto,string token)
+    public async Task<Order> CreateOrderAsync(OrderCreateDto dto, string token)
     {
-        var user = await _userRepo.GetByIdUser(dto.UserId);
         var userId = _tokenService.GetUserIdFromToken(token);
-        
-        if (user == null || dto.UserId != userId) throw new Exception("Kullanıcı bulunamadı");
+        var user = await _userRepo.GetByIdUser(userId);
+
+        if (user == null)
+            throw new Exception("Kullanıcı bulunamadı");
 
         var order = new Order
         {
             UserId = user.Id,
             OrderDate = DateTime.UtcNow,
             Status = "Pending",
-            OrderItems = new List<OrderItem>(),
-            TotalAmount = 0
+            OrderItems = new List<OrderItem>()
         };
 
+        decimal totalAmount = 0;
+        
         foreach (var item in dto.Items)
         {
-            var variant = await _productRepo.GetByIdAsync(item.ProductVariantId);
-            if (variant == null) throw new Exception("Ürün bulunamadı");
+            var variant = await _productRepo.GetVariantById(item.ProductVariantId);
+            if (variant == null)
+                throw new Exception($"Ürün varyantı {item.ProductVariantId} bulunamadı");
 
             var orderItem = new OrderItem
             {
-                ProductVariantId = variant.Id,
+                ProductVariantId = item.ProductVariantId,
                 Quantity = item.Quantity,
-                Price = variant.Price
+                Price = (variant.Product.Price * (1 - (variant.Product.DiscountRate / 100m )))
+                
+                
             };
 
             order.OrderItems.Add(orderItem);
-            order.TotalAmount += orderItem.Price * orderItem.Quantity;
+            totalAmount += orderItem.Price * orderItem.Quantity;
         }
 
-        // Ödeme bilgisi oluştur
+        order.TotalAmount = totalAmount;
+
+        // Payment ekleniyor
         order.Payment = new Payment
         {
-            PaymentMethod = dto.PaymentMethod,
-            PaymentStatus = "Pending"
+            PaymentMethod = dto.PaymentMethod ?? throw new Exception("Payment method boş olamaz"),
+            PaymentStatus = "Pending",
+            TransactionId = IdHelper.GenerateRandomAlphaNumeric(9)
         };
 
-        await _orderRepo.AddAsync(order);
+        try
+        {
+            await _orderRepo.AddAsync(order);
+        }
+        catch (DbUpdateException ex)
+        {
+            throw new Exception($"EF SaveChanges hatası: {ex.InnerException?.Message ?? ex.Message}");
+        }
+
         return order;
     }
 
-    public async Task UpdatePaymentStatusAsync(int orderId, string status, string token, string transactionId = null )
+    public async Task UpdatePaymentStatusAsync(int orderId, string status, string token )
     {
         
         var userId = _tokenService.GetUserIdFromToken(token);
-        var order = await _orderRepo.GetByIdAsync(orderId);
+        var order = await _orderRepo.GetOrderByIdAsync(orderId);
         
         if(userId != order.UserId) throw new Exception("Kullanıcı bulunamadı");
         
         if (order == null || order.Payment == null) throw new Exception("Sipariş bulunamadı");
 
         order.Payment.PaymentStatus = status;
-        if (!string.IsNullOrEmpty(transactionId)) order.Payment.TransactionId = transactionId;
 
         await _orderRepo.UpdateAsync(order);
     }

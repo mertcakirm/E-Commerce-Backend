@@ -44,7 +44,8 @@ public class CartService : ICartService
                     Name = ci.ProductVariant.Product.Name,
                     Description = ci.ProductVariant.Product.Description,
                     BasePrice = ci.ProductVariant.Product.BasePrice,
-                    Price = ci.ProductVariant.Product.Price,
+                    DiscountRate = ci.ProductVariant.Product.DiscountRate,
+                    Price = ci.ProductVariant.Product.Price * (1 - (ci.ProductVariant.Product.DiscountRate / 100m )),
                     CategoryId = ci.ProductVariant.Product.CategoryId,
                     Variants = ci.ProductVariant.Product.Variants.Select(v => new ProductVariantResponseDto
                     {

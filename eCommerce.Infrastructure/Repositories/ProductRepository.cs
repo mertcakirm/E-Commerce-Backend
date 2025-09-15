@@ -91,5 +91,13 @@ namespace eCommerce.Infrastructure.Repositories
                 .Include(p=>p.Category)
                 .ToListAsync();
         }
+
+        public async Task<ProductVariant?> GetVariantById(int variantId)
+        {
+            return await _context.ProductVariants
+                .Include(v => v.Product)
+                .FirstOrDefaultAsync(v => v.Id == variantId);
+        }
+        
         }
     }

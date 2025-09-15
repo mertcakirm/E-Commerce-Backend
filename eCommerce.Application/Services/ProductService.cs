@@ -86,7 +86,7 @@ namespace eCommerce.Application.Services
                     AverageRating = p.AverageRating,
                     BasePrice = p.BasePrice,
                     DiscountRate = p.DiscountRate,
-                    Price = p.BasePrice * (1 - (p.DiscountRate / 100m )),
+                    Price = p.Price * (1 - (p.DiscountRate / 100m )),
                     CategoryId = p.CategoryId,
                     CategoryName = p.Category.Name,
                     Variants = p.Variants.Select(v => new ProductVariantResponseDto
@@ -127,7 +127,7 @@ namespace eCommerce.Application.Services
                 BasePrice = product.BasePrice,
                 AverageRating = product.AverageRating,
                 DiscountRate = product.DiscountRate,
-                Price = product.BasePrice * (1 - (product.DiscountRate / 100m)),
+                Price = product.Price * (1 - (product.DiscountRate / 100m)),
                 CategoryId = product.CategoryId,
                 CategoryName = product.Category.Name,
                 Variants = product.Variants.Select(v => new ProductVariantResponseDto
