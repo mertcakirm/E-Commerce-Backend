@@ -10,13 +10,13 @@ namespace eCommerce.Application.Services
     {
         private readonly IGenericRepository<Product> _productRepo;
         private readonly IProductRepository _productRepository;
-        private readonly ITokenService _tokenService;
+        private readonly UserValidator _userValidator;
 
-        public ProductService(IGenericRepository<Product> productRepo, IProductRepository productRepository, ITokenService tokenService)
+        public ProductService(IGenericRepository<Product> productRepo, IProductRepository productRepository, UserValidator userValidator)
         {
             _productRepo = productRepo;
             _productRepository = productRepository;
-            _tokenService = tokenService;
+            _userValidator = userValidator;
         }
 
         public async Task<ServiceResult<PagedResult<ProductResponseDto>>> GetAllProductsAsync(int pageNumber, int pageSize)
@@ -143,14 +143,12 @@ namespace eCommerce.Application.Services
 
             return ServiceResult<ProductResponseDto>.Success(dto);
         }
-        public async Task<ServiceResult<ProductDto>> CreateProductAsync(ProductDto dto,string token)
-        {
-            var checkToken = await _tokenService.IsUserAsync(token);
-            if (!checkToken)
-            {
-                return ServiceResult<ProductDto>.Fail("Geçersiz kullanıcı", HttpStatusCode.Unauthorized);
-                
-            }
+        
+        public async Task<ServiceResult<ProductDto>> CreateProductAsync(ProductDto dto, string token)
+{
+            var isAdmin = await _userValidator.IsAdminAsync(token);
+            if (isAdmin.IsFail || !isAdmin.Data) return ServiceResult<ProductDto>.Fail("Yetkisiz giriş!", HttpStatusCode.Forbidden);
+
             var product = new Product
             {
                 Name = dto.Name,
@@ -197,18 +195,13 @@ namespace eCommerce.Application.Services
             return ServiceResult<ProductDto>.SuccessAsCreated(resultDto, $"/api/products/{product.Id}");
         }
 
-        public async Task<ServiceResult<ProductDto>> UpdateProductAsync(int id, ProductDto dto,string token)
+        public async Task<ServiceResult<ProductDto>> UpdateProductAsync(int id, ProductDto dto, string token)
         {
-            var checkToken = await _tokenService.IsUserAsync(token);
-            if (!checkToken)
-            {
-                return ServiceResult<ProductDto>.Fail("Geçersiz kullanıcı", HttpStatusCode.Unauthorized);
-                
-            }
-            
+            var isAdmin = await _userValidator.IsAdminAsync(token);
+            if (isAdmin.IsFail || !isAdmin.Data) return ServiceResult<ProductDto>.Fail("Yetkisiz giriş!", HttpStatusCode.Forbidden);
+
             var existing = await _productRepository.GetByIdWithDetailsAsync(id); 
-            if (existing == null)
-                return ServiceResult<ProductDto>.Fail("Ürün bulunamadı", HttpStatusCode.NotFound);
+            if (existing == null) return ServiceResult<ProductDto>.Fail("Ürün bulunamadı", HttpStatusCode.NotFound);
 
             existing.Name = dto.Name;
             existing.Price = dto.Price;
@@ -263,36 +256,29 @@ namespace eCommerce.Application.Services
             return ServiceResult<ProductDto>.Success(updatedDto);
         }
 
-        public async Task<ServiceResult> DeleteProductAsync(int id,string token)
+        public async Task<ServiceResult> DeleteProductAsync(int id, string token)
         {
-            var checkToken = await _tokenService.IsUserAsync(token);
-            if (!checkToken)
-            {
-                return ServiceResult.Fail("Geçersiz kullanıcı", HttpStatusCode.Unauthorized);
-                
-            }
+            var isAdmin = await _userValidator.IsAdminAsync(token);
+            if (isAdmin.IsFail || !isAdmin.Data) return ServiceResult.Fail("Yetkisiz giriş!", HttpStatusCode.Forbidden);
+
             var existing = await _productRepo.GetByIdAsync(id);
-            if (existing == null)
-                return ServiceResult.Fail("Ürün bulunamadı", HttpStatusCode.NotFound);
+            if (existing == null) return ServiceResult.Fail("Ürün bulunamadı", HttpStatusCode.NotFound);
 
             await _productRepo.RemoveAsync(existing);
             await _productRepo.SaveChangesAsync();
 
             return ServiceResult.NoContent();
         }
-        
-        public async Task<ServiceResult> DeleteImageAsync(int id,string token)
+
+        public async Task<ServiceResult> DeleteImageAsync(int id, string token)
         {
-            var checkToken = await _tokenService.IsUserAsync(token);
-            if (!checkToken)
-            {
-                return ServiceResult.Fail("Geçersiz kullanıcı", HttpStatusCode.Unauthorized);
-                
-            }
+            var isAdmin = await _userValidator.IsAdminAsync(token);
+            if (isAdmin.IsFail || !isAdmin.Data) return ServiceResult.Fail("Yetkisiz giriş!", HttpStatusCode.Forbidden);
+
             try
             {
                 await _productRepository.DeleteImageAsync(id);
-                return ServiceResult.Success(status:HttpStatusCode.NoContent);
+                return ServiceResult.Success(status: HttpStatusCode.NoContent);
             }
             catch (Exception ex)
             {

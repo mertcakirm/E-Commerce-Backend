@@ -16,7 +16,7 @@ public class AdminController : ControllerBase
         }
     
     [Authorize]
-    [HttpGet("get-all")]
+    [HttpGet("users/get-all")]
     public async Task<IActionResult> GetAllUsers([FromHeader(Name = "Authorization")] string token,[FromQuery] int pageNumber=1, [FromQuery] int pageSize=10)
     {
         if (string.IsNullOrEmpty(token))

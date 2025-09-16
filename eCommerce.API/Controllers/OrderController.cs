@@ -24,7 +24,7 @@ namespace eCommerce.API.Controllers
             try
             {
                 var order = await _orderService.CreateOrderAsync(dto, token);
-                return Ok(new { Success = true, OrderId = order.Id, TotalAmount = order.TotalAmount });
+                return Ok(new { Success = true, OrderId = order.Data.Id, TotalAmount = order.Data.TotalAmount });
             }
             catch (Exception ex)
             {

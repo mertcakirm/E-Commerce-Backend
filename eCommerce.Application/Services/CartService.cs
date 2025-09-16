@@ -9,25 +9,23 @@ namespace eCommerce.Application.Services;
 public class CartService : ICartService
 {
     private readonly ICartRepository _cartRepository;
-    private readonly ITokenService _tokenService;
+    private readonly UserValidator _userValidator;
 
-    public CartService(ICartRepository cartRepository, ITokenService tokenService)
+    public CartService(ICartRepository cartRepository, UserValidator userValidator)
     {
         _cartRepository = cartRepository;
-        _tokenService = tokenService;
+        _userValidator = userValidator;
     }
 
     public async Task<ServiceResult<CartResponseDto>> GetUserCartAsync(string token)
     {
-        var checkToken = await _tokenService.IsUserAsync(token);
-        var userId = _tokenService.GetUserIdFromToken(token);
+        var validation = await _userValidator.ValidateAsync(token);
+        if (validation.IsFail) return ServiceResult<CartResponseDto>.Fail(validation.ErrorMessage!, validation.Status);
 
-        if (!checkToken)
-            return ServiceResult<CartResponseDto>.Fail("Geçersiz kullanıcı", HttpStatusCode.Unauthorized);
+        var userId = validation.Data!.Id;
 
         var cart = await _cartRepository.GetUserCartAsync(userId);
-        if (cart == null)
-            return ServiceResult<CartResponseDto>.Fail("Sepet bulunamadı", HttpStatusCode.NotFound);
+        if (cart == null) return ServiceResult<CartResponseDto>.Fail("Sepet bulunamadı", HttpStatusCode.NotFound);
 
         var cartDto = new CartResponseDto
         {
@@ -67,11 +65,12 @@ public class CartService : ICartService
     
     public async Task<ServiceResult> AddItemAsync(string token, int productId, int productVariantId)
     {
-        var checkToken = await _tokenService.IsUserAsync(token);
-        var userId = _tokenService.GetUserIdFromToken(token);
+        var validation = await _userValidator.ValidateAsync(token);
+        if (validation.IsFail) return ServiceResult.Fail(validation.ErrorMessage!, validation.Status);
 
-        if (!checkToken || userId == null)
-            return ServiceResult.Fail("Geçersiz kullanıcı", HttpStatusCode.Unauthorized);
+        var userId = validation.Data!.Id;
+
+        if (userId == null) return ServiceResult.Fail("Geçersiz kullanıcı", HttpStatusCode.Unauthorized);
 
         await _cartRepository.AddItemAsync(userId, productId, productVariantId, 1);
 
@@ -80,28 +79,26 @@ public class CartService : ICartService
 
     public async Task<ServiceResult> ClearCartAsync(string token)
     {
-        var checkToken = await _tokenService.IsUserAsync(token);
-        var userId = _tokenService.GetUserIdFromToken(token);
+        var validation = await _userValidator.ValidateAsync(token);
+        if (validation.IsFail) return ServiceResult.Fail(validation.ErrorMessage!, validation.Status);
 
-        if (!checkToken)
-            return ServiceResult.Fail("Geçersiz kullanıcı", HttpStatusCode.Unauthorized);
-
+        var userId = validation.Data!.Id;
+        
         await _cartRepository.ClearCartAsync(userId);
         return ServiceResult.Success();
     }
 
     public async Task<ServiceResult> IncreaseItemAsync(int productId, string token)
     {
-        var userId = _tokenService.GetUserIdFromToken(token);
-        if (userId == null)
-            return ServiceResult.Fail("Geçersiz kullanıcı", HttpStatusCode.Unauthorized);
+        var validation = await _userValidator.ValidateAsync(token);
+        if (validation.IsFail) return ServiceResult.Fail(validation.ErrorMessage!, validation.Status);
+
+        var userId = validation.Data!.Id;
 
         var cart = await _cartRepository.GetUserCartAsync(userId);
-        if (cart == null)
-            return ServiceResult.Fail("Cart bulunamadı", HttpStatusCode.NotFound);
+        if (cart == null) return ServiceResult.Fail("Kart bulunamadı", HttpStatusCode.NotFound);
 
-        if (cart.UserId != userId)
-            return ServiceResult.Fail("Bu işlem için yetkiniz yok", HttpStatusCode.Forbidden);
+        if (cart.UserId != userId) return ServiceResult.Fail("Bu işlem için yetkiniz yok", HttpStatusCode.Forbidden);
 
         await _cartRepository.IncreaseItemByProductIdAsync(userId, productId);
         return ServiceResult.Success();
@@ -109,16 +106,15 @@ public class CartService : ICartService
 
     public async Task<ServiceResult> DecreaseItemAsync(int productId, string token)
     {
-        var userId = _tokenService.GetUserIdFromToken(token);
-        if (userId == null)
-            return ServiceResult.Fail("Geçersiz kullanıcı", HttpStatusCode.Unauthorized);
+        var validation = await _userValidator.ValidateAsync(token);
+        if (validation.IsFail) return ServiceResult.Fail(validation.ErrorMessage!, validation.Status);
+
+        var userId = validation.Data!.Id;
 
         var cart = await _cartRepository.GetUserCartAsync(userId);
-        if (cart == null)
-            return ServiceResult.Fail("Cart bulunamadı", HttpStatusCode.NotFound);
+        if (cart == null) return ServiceResult.Fail("Kart bulunamadı", HttpStatusCode.NotFound);
 
-        if (cart.UserId != userId)
-            return ServiceResult.Fail("Bu işlem için yetkiniz yok", HttpStatusCode.Forbidden);
+        if (cart.UserId != userId) return ServiceResult.Fail("Bu işlem için yetkiniz yok", HttpStatusCode.Forbidden);
 
         await _cartRepository.DecreaseItemByProductIdAsync(userId, productId);
         return ServiceResult.Success();

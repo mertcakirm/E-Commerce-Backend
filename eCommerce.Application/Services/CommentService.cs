@@ -9,14 +9,14 @@ namespace eCommerce.Application.Services
     public class CommentService : ICommentService
     {
         private readonly ICommentRepository _commentRepository;
-        private readonly ITokenService _tokenService;
         private readonly IProductRepository  _productRepository;
+        private readonly UserValidator _userValidator;
 
-        public CommentService(ICommentRepository commentRepository, ITokenService tokenService, IProductRepository  productRepository)
+        public CommentService(ICommentRepository commentRepository , IProductRepository  productRepository, UserValidator userValidator)
         {
             _commentRepository = commentRepository;
-            _tokenService = tokenService;
             _productRepository = productRepository;
+            _userValidator = userValidator;
         }
 
         public async Task<Comment?> GetByIdAsync(int id)
@@ -51,10 +51,12 @@ namespace eCommerce.Application.Services
             return ServiceResult<PagedResult<CommentListDto>>.Success(pagedResult);
         }
         
-        public async Task<Comment?> AddCommentAsync(CommentCreateDto commentDto, string token)
+        public async Task<ServiceResult<Comment?>> AddCommentAsync(CommentCreateDto commentDto, string token)
         {
-            var userId = _tokenService.GetUserIdFromToken(token);
-            if (userId == null) return null;
+            var validation = await _userValidator.ValidateAsync(token);
+            if (validation.IsFail) return ServiceResult<Comment?>.Fail(validation.ErrorMessage!, validation.Status);
+
+            var userId = validation.Data!.Id;
 
             var newComment = new Comment
             {
@@ -78,17 +80,18 @@ namespace eCommerce.Application.Services
                 await _productRepository.SaveChangesAsync();
             }
 
-            return newComment;
+            return ServiceResult<Comment?>.Success(newComment, "Yorum eklendi");
         }
 
-        public async Task<bool> DeleteCommentAsync(int id, string token)
+        public async Task<ServiceResult<bool>> DeleteCommentAsync(int id, string token)
         {
-            var userId = _tokenService.GetUserIdFromToken(token);
-            if (userId == null) return false;
+            var validation = await _userValidator.ValidateAsync(token);
+            if (validation.IsFail) return ServiceResult<bool>.Fail(validation.ErrorMessage!, validation.Status);
+
+            var userId = validation.Data!.Id;
 
             var comment = await _commentRepository.GetByIdAsync(id);
-            if (comment == null || comment.UserId != userId)
-                return false;
+            if (comment == null || comment.UserId != userId) return ServiceResult<bool>.Fail("Yorum bulunamadı veya yetkisiz", HttpStatusCode.NotFound);
 
             await _commentRepository.DeleteCommentAsync(id);
 
@@ -103,7 +106,7 @@ namespace eCommerce.Application.Services
                 await _productRepository.SaveChangesAsync();
             }
 
-            return true;
+            return ServiceResult<bool>.Success(true, "Yorum silindi");
         }
     }
 }

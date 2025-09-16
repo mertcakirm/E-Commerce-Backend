@@ -9,20 +9,22 @@ namespace eCommerce.Application.Services;
 public class UserAddressService : IUserAddressService
 {
     private readonly IUserAddressRepository _userAddressRepository;
-    private readonly ITokenService _tokenService;
+    private readonly UserValidator _userValidator;
 
-    public UserAddressService(IUserAddressRepository userAddressRepository, ITokenService tokenService)
+    public UserAddressService(IUserAddressRepository userAddressRepository, UserValidator userValidator)
     {
         _userAddressRepository = userAddressRepository;
-        _tokenService = tokenService;
+        _userValidator = userValidator;
+        
     }
 
     public async Task<ServiceResult<UserAddressDto>> CreateUserAddressAsync(UserAddressDto userAddressDto, string token)
     {
-        var userId = _tokenService.GetUserIdFromToken(token);
-        if (userId == null)
-            return ServiceResult<UserAddressDto>.Fail("Kullanıcı bulunamadı", HttpStatusCode.NotFound);
+        var validation = await _userValidator.ValidateAsync(token);
+        if (validation.IsFail) return ServiceResult<UserAddressDto>.Fail(validation.ErrorMessage!, validation.Status);
 
+        var userId = validation.Data!.Id;
+        
         var newAddress = new UserAddress
         {
             UserId = userId,
@@ -34,8 +36,7 @@ public class UserAddressService : IUserAddressService
         };
 
         var success = await _userAddressRepository.CreateUserAddressAsync(newAddress);
-        if (!success)
-            return ServiceResult<UserAddressDto>.Fail("Adres oluşturulamadı", HttpStatusCode.BadRequest);
+        if (!success) return ServiceResult<UserAddressDto>.Fail("Adres oluşturulamadı", HttpStatusCode.BadRequest);
 
         var resultDto = new UserAddressDto
         {
@@ -51,9 +52,10 @@ public class UserAddressService : IUserAddressService
 
     public async Task<ServiceResult<IEnumerable<UserAddressDto>>> GetUserAddressesAsync(string token)
     {
-        var userId = _tokenService.GetUserIdFromToken(token);
-        if (userId == null)
-            return ServiceResult<IEnumerable<UserAddressDto>>.Fail("Kullanıcı bulunamadı", HttpStatusCode.NotFound);
+        var validation = await _userValidator.ValidateAsync(token);
+        if (validation.IsFail) return ServiceResult<IEnumerable<UserAddressDto>>.Fail(validation.ErrorMessage!, validation.Status);
+
+        var userId = validation.Data!.Id;
 
         var addresses = await _userAddressRepository.GetUserAddressAll(userId);
 
@@ -66,20 +68,22 @@ public class UserAddressService : IUserAddressService
             PhoneNumber = a.PhoneNumber
         });
 
-        return ServiceResult<IEnumerable<UserAddressDto>>.Success(dtoList, status:HttpStatusCode.OK);
+        return ServiceResult<IEnumerable<UserAddressDto>>.Success(dtoList, status: HttpStatusCode.OK);
     }
 
-    public async Task<ServiceResult<UserAddressDto>> UpdateUserAddressAsync(int addressId, UserAddressDto userAddressDto)
+    public async Task<ServiceResult<UserAddressDto>> UpdateUserAddressAsync(int addressId, UserAddressDto userAddressDto,string token)
     {
-        var existingAddress = await _userAddressRepository.GetByIdAsync(addressId);
-        if (existingAddress == null)
-            return ServiceResult<UserAddressDto>.Fail("Adres bulunamadı", HttpStatusCode.NotFound);
+        var validation = await _userValidator.ValidateAsync(token);
+        if (validation.IsFail) return ServiceResult<UserAddressDto>.Fail(validation.ErrorMessage!, validation.Status);
 
-        existingAddress.AddressLine = userAddressDto.AddressLine;
-        existingAddress.City = userAddressDto.City;
-        existingAddress.Country = userAddressDto.Country;
-        existingAddress.PostalCode = userAddressDto.PostalCode;
-        existingAddress.PhoneNumber = userAddressDto.PhoneNumber;
+        var existingAddress = await _userAddressRepository.GetByIdAsync(addressId);
+        if (existingAddress == null) return ServiceResult<UserAddressDto>.Fail("Adres bulunamadı", HttpStatusCode.NotFound);
+
+            existingAddress.AddressLine = userAddressDto.AddressLine;
+            existingAddress.City = userAddressDto.City;
+            existingAddress.Country = userAddressDto.Country;
+            existingAddress.PostalCode = userAddressDto.PostalCode;
+            existingAddress.PhoneNumber = userAddressDto.PhoneNumber;
 
         var success = await _userAddressRepository.UpdateUserAddressAsync(existingAddress, addressId);
         if (!success)
@@ -97,15 +101,16 @@ public class UserAddressService : IUserAddressService
         return ServiceResult<UserAddressDto>.Success(resultDto, status:HttpStatusCode.OK);
     }
 
-    public async Task<ServiceResult<bool>> DeleteUserAddressAsync(int addressId)
+    public async Task<ServiceResult<bool>> DeleteUserAddressAsync(int addressId,string token)
     {
+        var validation = await _userValidator.ValidateAsync(token);
+        if (validation.IsFail) return ServiceResult<bool>.Fail(validation.ErrorMessage!, validation.Status);
+
         var existingAddress = await _userAddressRepository.GetByIdAsync(addressId);
-        if (existingAddress == null)
-            return ServiceResult<bool>.Fail("Adres bulunamadı", HttpStatusCode.NotFound);
+        if (existingAddress == null) return ServiceResult<bool>.Fail("Adres bulunamadı", HttpStatusCode.NotFound);
 
         var success = await _userAddressRepository.DeleteUserAddressAsync(addressId);
-        if (!success)
-            return ServiceResult<bool>.Fail("Adres silinemedi", HttpStatusCode.BadRequest);
+        if (!success) return ServiceResult<bool>.Fail("Adres silinemedi", HttpStatusCode.BadRequest);
 
         return ServiceResult<bool>.Success(true, status:HttpStatusCode.OK);
     }

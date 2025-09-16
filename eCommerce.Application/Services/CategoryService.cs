@@ -9,12 +9,12 @@ namespace eCommerce.Application.Services
     public class CategoryService : ICategoryService
     {
         private readonly ICategoryRepository _categoryRepository;
-        private readonly ITokenService _tokenService;
+        private readonly UserValidator _userValidator;
 
-        public CategoryService(ICategoryRepository categoryRepository, ITokenService tokenService)
+        public CategoryService(ICategoryRepository categoryRepository, UserValidator userValidator)
         {
             _categoryRepository = categoryRepository;
-            _tokenService = tokenService;
+            _userValidator = userValidator;
         }
 
         public async Task<ServiceResult<IEnumerable<CategoryDto>>> GetAllCategoriesAsync()
@@ -33,8 +33,7 @@ namespace eCommerce.Application.Services
         public async Task<ServiceResult<CategoryDto>> GetCategoryByIdAsync(int id)
         {
             var category = await _categoryRepository.GetCategoryWithSubCategoriesAsync(id);
-            if (category == null)
-                return ServiceResult<CategoryDto>.Fail("Kategori bulunamadı", HttpStatusCode.NotFound);
+            if (category == null) return ServiceResult<CategoryDto>.Fail("Kategori bulunamadı", HttpStatusCode.NotFound);
 
             var dto = new CategoryDto
             {
@@ -49,11 +48,12 @@ namespace eCommerce.Application.Services
 
         public async Task<ServiceResult<CategoryDto>> AddCategoryAsync(CategoryRequestDto categoryReqDto, string token)
         {
-            var userId = _tokenService.GetUserIdFromToken(token);
+            var validation = await _userValidator.ValidateAsync(token);
+            if (validation.IsFail) return ServiceResult<CategoryDto>.Fail(validation.ErrorMessage!, validation.Status);
 
-            if (userId == null || userId <= 0)
-                return ServiceResult<CategoryDto>.Fail("Token geçersiz veya yetkisiz", HttpStatusCode.Unauthorized);
-
+            var isAdmin = await _userValidator.IsAdminAsync(token);
+            if (isAdmin.IsFail || !isAdmin.Data) return ServiceResult<CategoryDto>.Fail("Yetkisiz giriş!", HttpStatusCode.Forbidden);
+            
             var category = new Category
             {
                 Name = categoryReqDto.Name,
@@ -74,14 +74,12 @@ namespace eCommerce.Application.Services
 
         public async Task<ServiceResult> DeleteCategoryAsync(int id, string token)
         {
-            var userId = _tokenService.GetUserIdFromToken(token);
+            var validation = await _userValidator.ValidateAsync(token);
+            if (validation.IsFail) return ServiceResult.Fail(validation.ErrorMessage!, validation.Status);
 
-            if (userId == null || userId <= 0)
-                return ServiceResult.Fail("Token geçersiz veya yetkisiz", HttpStatusCode.Unauthorized);
 
             var category = await _categoryRepository.GetByIdAsync(id);
-            if (category == null)
-                return ServiceResult.Fail("Kategori bulunamadı", HttpStatusCode.NotFound);
+            if (category == null) return ServiceResult.Fail("Kategori bulunamadı", HttpStatusCode.NotFound);
 
             await _categoryRepository.RemoveAsync(category);
             return ServiceResult.Success();

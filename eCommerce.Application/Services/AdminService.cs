@@ -8,32 +8,27 @@ namespace eCommerce.Application.Services;
 public class AdminService : IAdminService
 {
     private readonly IUserRepository _userRepository;
-    private readonly ITokenService _tokenService;
     private readonly IOrderRepository _orderRepository;
     private readonly IProductRepository _productRepository;
+    private readonly UserValidator _userValidator;
 
     public AdminService(
         IUserRepository userRepository,
-        ITokenService tokenService,
         IProductRepository productRepository,
-        IOrderRepository  orderRepository)
+        IOrderRepository orderRepository,
+        UserValidator userValidator)
     {
         _userRepository = userRepository;
-        _tokenService = tokenService;
         _productRepository = productRepository;
         _orderRepository = orderRepository;
-    }
-
-    private bool IsAdmin(string token)
-    {
-        var role = _tokenService.GetRoleFromToken(token);
-        return role == "Admin";
+        _userValidator = userValidator;
     }
 
     public async Task<ServiceResult<PagedResult<UserDto>>> GetAllUsers(string token, int pageNumber, int pageSize)
     {
-        if (!IsAdmin(token))
-            return ServiceResult<PagedResult<UserDto>>.Fail("You do not have permission for this action!", HttpStatusCode.Forbidden);
+        var isAdmin = await _userValidator.IsAdminAsync(token);
+        if (isAdmin.IsFail || !isAdmin.Data)
+            return ServiceResult<PagedResult<UserDto>>.Fail("Yetkisiz giriş!", HttpStatusCode.Forbidden);
 
         if (pageNumber <= 0) pageNumber = 1;
         if (pageSize <= 0) pageSize = 10;
@@ -57,48 +52,46 @@ public class AdminService : IAdminService
 
         var pagedResult = new PagedResult<UserDto>(pagedUsers, totalCount, pageNumber, pageSize);
 
-        return ServiceResult<PagedResult<UserDto>>.Success(pagedResult, status:HttpStatusCode.OK);
+        return ServiceResult<PagedResult<UserDto>>.Success(pagedResult, status: HttpStatusCode.OK);
     }
 
     public async Task<ServiceResult> DeleteUser(string token, int userId)
     {
-        if (!IsAdmin(token))
-            return ServiceResult.Fail("You do not have permission for this action!", HttpStatusCode.Forbidden);
+        var isAdmin = await _userValidator.IsAdminAsync(token);
+        if (isAdmin.IsFail || !isAdmin.Data)
+            return ServiceResult.Fail("Yetkisiz giriş!", HttpStatusCode.Forbidden);
 
         var user = await _userRepository.GetByIdUser(userId);
-        if (user == null)
-            return ServiceResult.Fail("User not found", HttpStatusCode.NotFound);
+        if (user == null) return ServiceResult.Fail("Kullanıcı bulunamadı", HttpStatusCode.NotFound);
 
         await _userRepository.DeleteUserAsync(userId);
-        return ServiceResult.Success(status:HttpStatusCode.OK);
+        return ServiceResult.Success(status: HttpStatusCode.OK);
     }
-    
+
     public async Task<ServiceResult> DiscountProduct(string token, int productId, int discountRate)
     {
-        if (!IsAdmin(token))
-            return ServiceResult.Fail("You do not have permission for this action!", HttpStatusCode.Forbidden);
+        var isAdmin = await _userValidator.IsAdminAsync(token);
+        if (isAdmin.IsFail || !isAdmin.Data)
+            return ServiceResult.Fail("Yetkisiz giriş!", HttpStatusCode.Forbidden);
 
         var product = await _productRepository.GetByIdAsync(productId);
-        if (product == null)
-            return ServiceResult.Fail("Product not found", HttpStatusCode.NotFound);
+        if (product == null) return ServiceResult.Fail("Ürün bulunamadı!", HttpStatusCode.NotFound);
 
-        await _productRepository.DiscountProductAsync(productId,discountRate);
-
-        return ServiceResult.Success(status:HttpStatusCode.OK);
+        await _productRepository.DiscountProductAsync(productId, discountRate);
+        return ServiceResult.Success(status: HttpStatusCode.OK);
     }
-    
-    public async Task UpdateOrderStatusAsync(int orderId, string status, string token)
+
+    public async Task<ServiceResult> UpdateOrderStatusAsync(int orderId, string status, string token)
     {
-        var role = _tokenService.GetRoleFromToken(token);
-        
-        
-        
+        var isAdmin = await _userValidator.IsAdminAsync(token);
+        if (isAdmin.IsFail || !isAdmin.Data)
+            return ServiceResult.Fail("Yetkisiz giriş!", HttpStatusCode.Forbidden);
+
         var order = await _orderRepository.GetByIdAsync(orderId);
-        if (order == null) throw new Exception("Sipariş bulunamadı");
+        if (order == null) return ServiceResult.Fail("Sipariş bulunamadı", HttpStatusCode.NotFound);
 
         order.Status = status;
         await _orderRepository.UpdateAsync(order);
+        return ServiceResult.Success(status: HttpStatusCode.OK, message: "Sipariş durumu güncellendi!");
     }
-    
-    
 }

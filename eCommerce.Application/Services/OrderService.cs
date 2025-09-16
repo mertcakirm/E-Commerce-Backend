@@ -8,34 +8,26 @@ using eCommerce.Core.Interfaces;
 using Microsoft.EntityFrameworkCore;
 using System.Linq;
 
+namespace eCommerce.Application.Services;
 public class OrderService : IOrderService
 {
     private readonly IOrderRepository _orderRepo;
     private readonly IProductRepository _productRepo;
-    private readonly IUserRepository _userRepo;
-    private readonly ITokenService _tokenService;
-
-    public OrderService(IOrderRepository orderRepo, IProductRepository productRepo, IUserRepository userRepo,ITokenService tokenService)
+    private readonly UserValidator _userValidator;
+    
+    public OrderService(IOrderRepository orderRepo, IProductRepository productRepo,UserValidator userValidator)
     {
         _orderRepo = orderRepo;
         _productRepo = productRepo;
-        _userRepo = userRepo;
-        _tokenService = tokenService;
+        _userValidator = userValidator;
     }
 
     public async Task<ServiceResult<List<OrderResponseDto>>> GetUserOrderAsync(string token)
     {
-        var userId = _tokenService.GetUserIdFromToken(token);
-        var user = await _userRepo.GetByIdUser(userId);
+        var validation = await _userValidator.ValidateAsync(token);
+        if (validation.IsFail) return ServiceResult<List<OrderResponseDto>>.Fail(validation.ErrorMessage!, validation.Status);
 
-        if (user == null)
-            return new ServiceResult<List<OrderResponseDto>>
-            {
-                ErrorMessage = new List<string> { "Kullanıcı bulunamadı" },
-                Status = HttpStatusCode.NotFound
-            };
-
-        var orders = await _orderRepo.GetUserOrdersAsync(userId);
+        var orders = await _orderRepo.GetUserOrdersAsync(validation.Data!.Id);
 
         var lastOrder = orders
             .OrderByDescending(o => o.OrderDate)
@@ -94,14 +86,12 @@ public class OrderService : IOrderService
     }
     
 
-    public async Task<Order> CreateOrderAsync(OrderCreateDto dto, string token)
+    public async Task<ServiceResult<Order>> CreateOrderAsync(OrderCreateDto dto, string token)
     {
-        var userId = _tokenService.GetUserIdFromToken(token);
-        var user = await _userRepo.GetByIdUser(userId);
+        var validation = await _userValidator.ValidateAsync(token);
+        if (validation.IsFail) return ServiceResult<Order>.Fail(validation.ErrorMessage!, validation.Status);
 
-        if (user == null)
-            throw new Exception("Kullanıcı bulunamadı");
-
+        var user = validation.Data!;
         var order = new Order
         {
             UserId = user.Id,
@@ -109,7 +99,6 @@ public class OrderService : IOrderService
             Status = "Pending",
             OrderItems = new List<OrderItem>()
         };
-
         decimal totalAmount = 0;
         
         foreach (var item in dto.Items)
@@ -150,22 +139,27 @@ public class OrderService : IOrderService
             throw new Exception($"EF SaveChanges hatası: {ex.InnerException?.Message ?? ex.Message}");
         }
 
-        return order;
+        return ServiceResult<Order>.Success(order);
     }
-
-    public async Task UpdatePaymentStatusAsync(int orderId, string status, string token )
+    
+    public async Task<ServiceResult> UpdatePaymentStatusAsync(int orderId, string status, string token)
     {
-        
-        var userId = _tokenService.GetUserIdFromToken(token);
+        var validation = await _userValidator.ValidateAsync(token);
+        if (validation.IsFail) return ServiceResult.Fail(validation.ErrorMessage!, validation.Status);
+
+        var userId = validation.Data!.Id;
         var order = await _orderRepo.GetOrderByIdAsync(orderId);
-        
-        if(userId != order.UserId) throw new Exception("Kullanıcı bulunamadı");
-        
-        if (order == null || order.Payment == null) throw new Exception("Sipariş bulunamadı");
+
+        if (order == null) return ServiceResult.Fail("Sipariş bulunamadı", HttpStatusCode.NotFound);
+
+        if (order.UserId != userId) return ServiceResult.Fail("Kullanıcı yetkisiz", HttpStatusCode.Unauthorized);
+
+        if (order.Payment == null) return ServiceResult.Fail("Ödeme bilgisi bulunamadı", HttpStatusCode.BadRequest);
 
         order.Payment.PaymentStatus = status;
-
         await _orderRepo.UpdateAsync(order);
+
+        return ServiceResult.Success("Ödeme durumu güncellendi");
     }
 
 

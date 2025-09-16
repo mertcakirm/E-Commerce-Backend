@@ -9,20 +9,21 @@ namespace eCommerce.Application.Services
     public class WishlistService : IWishlistService
     {
         private readonly IWishlistRepository _wishlistRepository;
-        private readonly ITokenService _tokenService;
+        private readonly UserValidator _userValidator;
 
-        public WishlistService(IWishlistRepository wishlistRepository, ITokenService tokenService)
+        public WishlistService(IWishlistRepository wishlistRepository, UserValidator userValidator)
         {
             _wishlistRepository = wishlistRepository;
-            _tokenService = tokenService;
+            _userValidator = userValidator;
         }
 
         public async Task<ServiceResult<PagedResult<ProductResponseDto>>> GetUserWishlistAsync(string token, int pageNumber, int pageSize)
         {
-            var userId = _tokenService.GetUserIdFromToken(token);
-            if (userId == null)
-                return ServiceResult<PagedResult<ProductResponseDto>>.Fail("Geçersiz token", HttpStatusCode.Unauthorized);
+            var validation = await _userValidator.ValidateAsync(token);
+            if (validation.IsFail) return ServiceResult<PagedResult<ProductResponseDto>>.Fail(validation.ErrorMessage!, validation.Status);
 
+            var userId = validation.Data!.Id;
+            
             var allItems = await _wishlistRepository.GetUserWishlistAsync(userId);
 
             var totalCount = allItems.Count();
@@ -63,11 +64,10 @@ namespace eCommerce.Application.Services
 
         public async Task<ServiceResult> AddToWishlistAsync(int productId, string token)
         {
-            var userId = _tokenService.GetUserIdFromToken(token);
-            if (userId == null)
-                return ServiceResult.Fail("Geçersiz token", HttpStatusCode.Unauthorized);
+            var validation = await _userValidator.ValidateAsync(token);
+            if (validation.IsFail) return ServiceResult.Fail(validation.ErrorMessage!, validation.Status);
 
-            // Kullanıcının wishlist'inde aynı ürünü ara
+            var userId = validation.Data!.Id;
             var existingItem = await _wishlistRepository.FindAsync(w => w.UserId == userId && w.ProductId == productId);
             var wishlistItem = existingItem.FirstOrDefault();
 
@@ -94,13 +94,13 @@ namespace eCommerce.Application.Services
 
         public async Task<ServiceResult> RemoveFromWishlistAsync(int productId, string token)
         {
-            var userId = _tokenService.GetUserIdFromToken(token);
-            if (userId == null)
-                return ServiceResult.Fail("Geçersiz token", HttpStatusCode.Unauthorized);
+            var validation = await _userValidator.ValidateAsync(token);
+            if (validation.IsFail) return ServiceResult.Fail(validation.ErrorMessage!, validation.Status);
 
+            var userId = validation.Data!.Id;
+            
             var wishlistItem = await _wishlistRepository.GetByProductIdAsync(productId);
-            if (wishlistItem == null || wishlistItem.UserId != userId)
-                return ServiceResult.Fail("Bu wishlist öğesine erişim yetkiniz yok", HttpStatusCode.Forbidden);
+            if (wishlistItem == null || wishlistItem.UserId != userId) return ServiceResult.Fail("Bu wishlist öğesine erişim yetkiniz yok", HttpStatusCode.Forbidden);
 
             await _wishlistRepository.RemoveAsync(wishlistItem);
             await _wishlistRepository.SaveChangesAsync();

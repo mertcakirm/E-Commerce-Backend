@@ -7,6 +7,6 @@ public interface ICommentService
 {
     Task<Comment?> GetByIdAsync(int id);
     Task<ServiceResult<PagedResult<CommentListDto>>> GetCommentsByProductIdAsync(int productId, int pageNumber, int pageSize);
-    Task<Comment?> AddCommentAsync(CommentCreateDto commentDto, string token);
-    Task<bool> DeleteCommentAsync(int id, string token);
+    Task<ServiceResult<Comment?>>  AddCommentAsync(CommentCreateDto commentDto, string token);
+    Task<ServiceResult<bool>> DeleteCommentAsync(int id, string token);
 }

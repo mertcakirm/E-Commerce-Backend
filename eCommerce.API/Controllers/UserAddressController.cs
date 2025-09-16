@@ -19,9 +19,8 @@ namespace eCommerce.API.Controllers
 
         // GET: api/UserAddress
         [HttpGet]
-        public async Task<IActionResult> GetAddresses()
+        public async Task<IActionResult> GetAddresses([FromHeader(Name = "Authorization")] string token)
         {
-            var token = Request.Headers["Authorization"].ToString().Replace("Bearer ", "");
             var result = await _userAddressService.GetUserAddressesAsync(token);
 
             if (!result.IsSuccess)
@@ -32,9 +31,8 @@ namespace eCommerce.API.Controllers
 
         // POST: api/UserAddress
         [HttpPost]
-        public async Task<IActionResult> CreateAddress([FromBody] UserAddressDto userAddressDto)
+        public async Task<IActionResult> CreateAddress([FromHeader(Name = "Authorization")] string token,[FromBody] UserAddressDto userAddressDto)
         {
-            var token = Request.Headers["Authorization"].ToString().Replace("Bearer ", "");
             var result = await _userAddressService.CreateUserAddressAsync(userAddressDto, token);
 
             if (!result.IsSuccess)
@@ -45,9 +43,9 @@ namespace eCommerce.API.Controllers
 
         // PUT: api/UserAddress/{id}
         [HttpPut("{id}")]
-        public async Task<IActionResult> UpdateAddress(int id, [FromBody] UserAddressDto userAddressDto)
+        public async Task<IActionResult> UpdateAddress([FromHeader(Name = "Authorization")] string token,int id, [FromBody] UserAddressDto userAddressDto)
         {
-            var result = await _userAddressService.UpdateUserAddressAsync(id, userAddressDto);
+            var result = await _userAddressService.UpdateUserAddressAsync(id, userAddressDto,token);
 
             if (!result.IsSuccess)
                 return StatusCode((int)result.Status, result.ErrorMessage);
@@ -57,9 +55,9 @@ namespace eCommerce.API.Controllers
 
         // DELETE: api/UserAddress/{id}
         [HttpDelete("{id}")]
-        public async Task<IActionResult> DeleteAddress(int id)
+        public async Task<IActionResult> DeleteAddress([FromHeader(Name = "Authorization")] string token,int id)
         {
-            var result = await _userAddressService.DeleteUserAddressAsync(id);
+            var result = await _userAddressService.DeleteUserAddressAsync(id,token);
 
             if (!result.IsSuccess)
                 return StatusCode((int)result.Status, result.ErrorMessage);

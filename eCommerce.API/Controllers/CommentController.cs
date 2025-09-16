@@ -54,9 +54,8 @@ namespace eCommerce.API.Controllers
             [FromHeader(Name = "Authorization")] string token)
         {
             var success = await _commentService.DeleteCommentAsync(id, token);
-            if (!success)
-                return Forbid();
-
+            if (!success.IsSuccess) return Forbid();
+            
             return NoContent();
         }
     }
