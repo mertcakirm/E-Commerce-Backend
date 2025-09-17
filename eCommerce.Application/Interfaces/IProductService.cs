@@ -12,4 +12,6 @@ public interface IProductService
     Task<ServiceResult<ProductDto>> UpdateProductAsync(int id, ProductDto product,string token);
     Task<ServiceResult> DeleteProductAsync(int id,string token);
     Task<ServiceResult> DeleteImageAsync(int id,string token);
+    Task<ServiceResult> DiscountProduct(string token, int productId, int discountRate);
+    
 }

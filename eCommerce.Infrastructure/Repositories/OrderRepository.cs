@@ -22,8 +22,32 @@ namespace eCommerce.Infrastructure.Repositories
                 .ToListAsync();
         }
 
+        public async Task<IEnumerable<Order>> GetNotCompletedOrdersAsync()
+        {
+            return await _dbSet
+                .Include(o => o.OrderItems)
+                .ThenInclude(oi => oi.ProductVariant)
+                .ThenInclude(oi=>oi.Product)
+                .Include(o => o.Payment)
+                .Where(o => o.IsComplete == false && !EF.Property<bool>(o, "IsDeleted"))
+                .OrderByDescending(o => o.OrderDate)
+                .ToListAsync();
+        }
+        
+        public async Task<IEnumerable<Order>> GetCompletedOrdersAsync()
+        {
+            return await _dbSet
+                .Include(o => o.OrderItems)
+                .ThenInclude(oi => oi.ProductVariant)
+                .ThenInclude(oi=>oi.Product)
+                .Include(o => o.Payment)
+                .Where(o => o.IsComplete == true && !EF.Property<bool>(o, "IsDeleted"))
+                .OrderByDescending(o => o.OrderDate)
+                .ToListAsync();
+        }
+
         // Siparişe ait detayları getir
-        public async Task<Order?> GetOrderDetailsAsync(int orderId)
+        public async Task<Order?> GetOrderDetailsByIdAsync(int orderId)
         {
             return await _dbSet
                 .Include(o => o.OrderItems)

@@ -33,28 +33,5 @@ namespace eCommerce.API.Controllers
 
             return Ok(result.Data);
         }
-        
-
-        [Authorize]
-        [HttpPost]
-        public async Task<IActionResult> Add([FromHeader(Name = "Authorization")] string token,[FromBody] CategoryRequestDto categoryDto)
-        {
-            var result = await _categoryService.AddCategoryAsync(categoryDto, token);
-
-            if (result.IsFail) return StatusCode((int)result.Status, result.ErrorMessage);
-
-            return Created(result.UrlAsCreated, result.Data);
-        }
-
-        [Authorize]
-        [HttpDelete("{id}")]
-        public async Task<IActionResult> Delete([FromHeader(Name = "Authorization")] string token,int id)
-        {
-            var result = await _categoryService.DeleteCategoryAsync(id, token);
-
-            if (result.IsFail) return StatusCode((int)result.Status, result.ErrorMessage);
-
-            return NoContent();
-        }
     }
 }

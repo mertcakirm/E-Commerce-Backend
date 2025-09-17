@@ -324,5 +324,27 @@ namespace eCommerce.Application.Services
                 return ServiceResult.Fail($"Silme işlemi sırasında hata oluştu: {ex.Message}", HttpStatusCode.InternalServerError);
             }
         }
+        
+        public async Task<ServiceResult> DiscountProduct(string token, int productId, int discountRate)
+        {
+            var isAdmin = await _userValidator.IsAdminAsync(token);
+            var user = await _userValidator.ValidateAsync(token);
+        
+            if (isAdmin.IsFail || !isAdmin.Data)
+                return ServiceResult.Fail("Yetkisiz giriş!", HttpStatusCode.Forbidden);
+
+            var product = await _productRepository.GetByIdAsync(productId);
+            if (product == null) return ServiceResult.Fail("Ürün bulunamadı!", HttpStatusCode.NotFound);
+
+            await _productRepository.DiscountProductAsync(productId, discountRate);
+            await _auditLogService.LogAsync(
+                userId: null,
+                action: "DiscountProduct",
+                entityName: "Product",
+                entityId: productId,
+                details: $"Ürüne indirim yapıldı: {user.Data!.Email}"
+            );
+            return ServiceResult.Success(status: HttpStatusCode.OK);
+        }
     }
 }

@@ -27,9 +27,6 @@ namespace eCommerce.API.Extensions;
             services.AddScoped<ICartRepository, CartRepository>();
             services.AddScoped<ICartService, CartService>();
 
-            // Admin
-            services.AddScoped<IAdminService, AdminService>();
-
             // Comment
             services.AddScoped<ICommentRepository, CommentRepository>();
             services.AddScoped<ICommentService, CommentService>();

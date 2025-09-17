@@ -58,51 +58,6 @@ namespace eCommerce.API.Controllers
             return Ok(result); 
         }
 
-        // POST: api/products
-        [Authorize]
-        [HttpPost]
-        public async Task<IActionResult> Create([FromHeader(Name = "Authorization")] string token,[FromBody] ProductDto product)
-        {
-            var result = await _productService.CreateProductAsync(product,token);
-            if (result.IsFail)
-                return StatusCode((int)result.Status, result);
 
-            return Created(result.UrlAsCreated!, result);
-        }
-        
-        // PUT: api/products/5
-        [Authorize]
-        [HttpPut("{id}")]
-        public async Task<IActionResult> Update([FromHeader(Name = "Authorization")] string token,int id, [FromBody] ProductDto product)
-        {
-            var result = await _productService.UpdateProductAsync(id, product,token);
-            if (result.IsFail)
-                return StatusCode((int)result.Status, result);
-
-            return Ok(result);
-        }
-
-        // DELETE: api/products/5
-        [Authorize]
-        [HttpDelete("{id}")]
-        public async Task<IActionResult> Delete([FromHeader(Name = "Authorization")] string token,int id)
-        {
-            var result = await _productService.DeleteProductAsync(id,token);
-            if (result.IsFail)
-                return StatusCode((int)result.Status, result);
-
-            return NoContent();
-        }
-        
-        [Authorize]
-        [HttpDelete("image/{id}")]
-        public async Task<IActionResult> DeleteImage([FromHeader(Name = "Authorization")] string token,int id)
-        {
-            var result = await _productService.DeleteImageAsync(id,token);
-            if (result.IsFail)
-                return StatusCode((int)result.Status, result);
-
-            return NoContent();
-        }
     }
 }
