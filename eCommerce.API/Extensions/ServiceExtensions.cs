@@ -49,5 +49,10 @@ namespace eCommerce.API.Extensions;
             // Order
             services.AddScoped<IOrderRepository, OrderRepository>();
             services.AddScoped<IOrderService, OrderService>();
+            
+            //Audit Log
+            services.AddScoped<IAuditLogService, AuditLogService>();
+            services.AddScoped<IAuditLogRepository, AuditLogRepository>();
+            
         }
     }
