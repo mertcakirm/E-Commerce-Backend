@@ -1,3 +1,4 @@
+using eCommerce.Application.DTOs;
 using eCommerce.Application.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -48,5 +49,52 @@ public class AdminController : ControllerBase
         return StatusCode((int)result.Status, result.IsFail ? result.ErrorMessage : null);
     }
 
+    // PUT: api/Orders/{orderId}/payment
+    [HttpPut("{orderId}/payment")]
+    [Authorize]
+    public async Task<IActionResult> UpdatePaymentStatus([FromHeader(Name = "Authorization")] string token,int orderId, [FromBody] PaymentUpdateDto dto)
+    {
+        try
+        {
+            await _adminService.UpdatePaymentStatusAsync(orderId, dto.Status, token);
+            return Ok(new { Success = true, Message = "Ödeme durumu güncellendi" });
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(new { Success = false, Message = ex.Message });
+        }
+    }
+        
+        
+    // PUT: api/Orders/{orderId}/payment
+    [HttpPut("{orderId}/order")]
+    [Authorize]
+    public async Task<IActionResult> UpdateOrderStatus([FromHeader(Name = "Authorization")] string token,int orderId, [FromBody] PaymentUpdateDto dto)
+    {
+        try
+        {
+            await _adminService.UpdateOrderStatusAsync(orderId, dto.Status, token);
+            return Ok(new { Success = true, Message = "Sipariş durumu güncellendi" });
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(new { Success = false, Message = ex.Message });
+        }
+    }
+        
+    [HttpPut("{orderId}/order/complete")]
+    [Authorize]
+    public async Task<IActionResult> CompleteOrderStatus([FromHeader(Name = "Authorization")] string token,int orderId)
+    {
+        try
+        {
+            await _adminService.CompleteOrderStatusAsync(orderId, token);
+            return Ok(new { Success = true, Message = "Sipariş durumu güncellendi" });
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(new { Success = false, Message = ex.Message });
+        }
+    }
     
 }

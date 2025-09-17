@@ -8,5 +8,7 @@ public interface IAdminService
     Task<ServiceResult> DiscountProduct(string token, int productId, int discountRate);
     Task<ServiceResult> DeleteUser(string token, int userId);
     Task<ServiceResult> UpdateOrderStatusAsync(int orderId, string status, string token);
+    Task<ServiceResult> UpdatePaymentStatusAsync(int orderId, string status, string token);
+    Task<ServiceResult> CompleteOrderStatusAsync(int orderId, string token);
 
 }

@@ -100,26 +100,96 @@ public class AdminService : IAdminService
         );
         return ServiceResult.Success(status: HttpStatusCode.OK);
     }
+    
+    public async Task<ServiceResult> UpdatePaymentStatusAsync(int orderId, string status, string token)
+    {
+        var isAdmin = await _userValidator.IsAdminAsync(token);
+        var validation = await _userValidator.ValidateAsync(token);
+        
+        var userId = validation.Data!.Id;
+        
+        if (isAdmin.IsFail || !isAdmin.Data) return ServiceResult.Fail("Yetkisiz giriş!", HttpStatusCode.Forbidden);
 
+        var order = await _orderRepository.GetOrderByIdAsync(orderId);
+
+        if (order == null) return ServiceResult.Fail("Sipariş bulunamadı", HttpStatusCode.NotFound);
+
+        if (order.UserId != userId) return ServiceResult.Fail("Kullanıcı yetkisiz", HttpStatusCode.Unauthorized);
+
+        if (order.Payment == null) return ServiceResult.Fail("Ödeme bilgisi bulunamadı", HttpStatusCode.BadRequest);
+
+        order.Payment.PaymentStatus = status;
+        await _orderRepository.UpdateAsync(order);
+        await _auditLogService.LogAsync(
+            userId: userId,
+            action: "UpdatePaymentStatus",
+            entityName: "Payment",
+            entityId: orderId,
+            details: $"Ödeme durumu güncellendi: {validation.Data!.Email}"
+        );
+
+        return ServiceResult.Success("Ödeme durumu güncellendi");
+    }
+    
     public async Task<ServiceResult> UpdateOrderStatusAsync(int orderId, string status, string token)
     {
         var isAdmin = await _userValidator.IsAdminAsync(token);
-        var user = await _userValidator.ValidateAsync(token);
-        if (isAdmin.IsFail || !isAdmin.Data)
-            return ServiceResult.Fail("Yetkisiz giriş!", HttpStatusCode.Forbidden);
+        var validation = await _userValidator.ValidateAsync(token);
+        
+        var userId = validation.Data!.Id;
+        
+        if (isAdmin.IsFail || !isAdmin.Data) return ServiceResult.Fail("Yetkisiz giriş!", HttpStatusCode.Forbidden);
+        
+        if (validation.IsFail) return ServiceResult.Fail(validation.ErrorMessage!, validation.Status);
 
-        var order = await _orderRepository.GetByIdAsync(orderId);
+        var order = await _orderRepository.GetOrderByIdAsync(orderId);
+
         if (order == null) return ServiceResult.Fail("Sipariş bulunamadı", HttpStatusCode.NotFound);
 
-        order.Status = status;
-        await _orderRepository.UpdateAsync(order);
+        if (order.UserId != userId) return ServiceResult.Fail("Kullanıcı yetkisiz", HttpStatusCode.Unauthorized);
+
+        if (order.Payment == null) return ServiceResult.Fail("Sipariş bilgisi bulunamadı", HttpStatusCode.BadRequest);
+
+        order.Payment.PaymentStatus = status;
+        await _orderRepository.UpdateOrderStatusAsync(orderId, status);
         await _auditLogService.LogAsync(
-            userId: null,
+            userId: userId,
             action: "UpdateOrderStatus",
             entityName: "Order",
             entityId: orderId,
-            details: $"Sipariş durumu güncellendi: {user.Data!.Email}"
+            details: $"Sipariş durumu oluşturuldu: {validation.Data!.Email}"
         );
-        return ServiceResult.Success(status: HttpStatusCode.OK, message: "Sipariş durumu güncellendi!");
+
+        return ServiceResult.Success("Sipariş durumu güncellendi");
+    }
+    
+    public async Task<ServiceResult> CompleteOrderStatusAsync(int orderId, string token)
+    {
+        var isAdmin = await _userValidator.IsAdminAsync(token);
+        var validation = await _userValidator.ValidateAsync(token);
+        
+        var userId = validation.Data!.Id;
+        
+        if (isAdmin.IsFail || !isAdmin.Data) return ServiceResult.Fail("Yetkisiz giriş!", HttpStatusCode.Forbidden);
+
+        if (validation.IsFail) return ServiceResult.Fail(validation.ErrorMessage!, validation.Status);
+
+        var order = await _orderRepository.GetOrderByIdAsync(orderId);
+
+        if (order == null) return ServiceResult.Fail("Sipariş bulunamadı", HttpStatusCode.NotFound);
+
+        if (order.UserId != userId) return ServiceResult.Fail("Kullanıcı yetkisiz", HttpStatusCode.Unauthorized);
+
+        if (order.Payment == null) return ServiceResult.Fail("Ödeme bilgisi bulunamadı", HttpStatusCode.NotFound);
+
+        await _orderRepository.CompleteOrderStatusAsync(orderId);
+        await _auditLogService.LogAsync(
+            userId: userId,
+            action: "CompleteOrderStatus",
+            entityName: "Order",
+            entityId: orderId,
+            details: $"Sipariş tamamlandı: {validation.Data!.Email}"
+        );
+        return ServiceResult.Success("Sipariş tamamlandı!");
     }
 }
