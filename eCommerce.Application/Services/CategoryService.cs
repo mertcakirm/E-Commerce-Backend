@@ -10,11 +10,13 @@ namespace eCommerce.Application.Services
     {
         private readonly ICategoryRepository _categoryRepository;
         private readonly UserValidator _userValidator;
+        private readonly IAuditLogService _auditLogService;
 
-        public CategoryService(ICategoryRepository categoryRepository, UserValidator userValidator)
+        public CategoryService(ICategoryRepository categoryRepository, UserValidator userValidator, IAuditLogService auditLogService)
         {
             _categoryRepository = categoryRepository;
             _userValidator = userValidator;
+            _auditLogService = auditLogService;
         }
 
         public async Task<ServiceResult<IEnumerable<CategoryDto>>> GetAllCategoriesAsync()
@@ -61,7 +63,13 @@ namespace eCommerce.Application.Services
             };
 
             await _categoryRepository.AddAsync(category);
-
+            await _auditLogService.LogAsync(
+                userId: validation.Data!.Id,
+                action: "AddCategory",
+                entityName: "Category",
+                entityId: null,
+                details: $"Kategori eklendi: {validation.Data!.Email}"
+            );
             var resultDto = new CategoryDto
             {
                 Id = category.Id,
@@ -82,6 +90,13 @@ namespace eCommerce.Application.Services
             if (category == null) return ServiceResult.Fail("Kategori bulunamadı", HttpStatusCode.NotFound);
 
             await _categoryRepository.RemoveAsync(category);
+            await _auditLogService.LogAsync(
+                userId: validation.Data!.Id,
+                action: "RemoveCategory",
+                entityName: "Category",
+                entityId: id,
+                details: $"Kategori silindi: {validation.Data!.Email}"
+            );
             return ServiceResult.Success();
         }
     }

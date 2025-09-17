@@ -10,11 +10,13 @@ public class CartService : ICartService
 {
     private readonly ICartRepository _cartRepository;
     private readonly UserValidator _userValidator;
+    private readonly IAuditLogService _auditLogService;
 
-    public CartService(ICartRepository cartRepository, UserValidator userValidator)
+    public CartService(ICartRepository cartRepository, UserValidator userValidator, IAuditLogService auditLogService)
     {
         _cartRepository = cartRepository;
         _userValidator = userValidator;
+        _auditLogService = auditLogService;
     }
 
     public async Task<ServiceResult<CartResponseDto>> GetUserCartAsync(string token)
@@ -73,7 +75,13 @@ public class CartService : ICartService
         if (userId == null) return ServiceResult.Fail("Geçersiz kullanıcı", HttpStatusCode.Unauthorized);
 
         await _cartRepository.AddItemAsync(userId, productId, productVariantId, 1);
-
+        await _auditLogService.LogAsync(
+            userId: null,
+            action: "AddToCart",
+            entityName: "ProductCart",
+            entityId: productId,
+            details: $"Ürün sepete eklendi: {validation.Data!.Email}"
+        );
         return ServiceResult.Success();
     }
 
@@ -85,6 +93,13 @@ public class CartService : ICartService
         var userId = validation.Data!.Id;
         
         await _cartRepository.ClearCartAsync(userId);
+        await _auditLogService.LogAsync(
+            userId: null,
+            action: "ClearCart",
+            entityName: "ProductCartClear",
+            entityId: null,
+            details: $"Sepet temizlendi: {validation.Data!.Email}"
+        );
         return ServiceResult.Success();
     }
 
@@ -101,6 +116,13 @@ public class CartService : ICartService
         if (cart.UserId != userId) return ServiceResult.Fail("Bu işlem için yetkiniz yok", HttpStatusCode.Forbidden);
 
         await _cartRepository.IncreaseItemByProductIdAsync(userId, productId);
+        await _auditLogService.LogAsync(
+            userId: null,
+            action: "IncreaseCart",
+            entityName: "ProductCartIncrease",
+            entityId: productId,
+            details: $"Sepetteki ürün sayısı arttırıldı: {validation.Data!.Email}"
+        );
         return ServiceResult.Success();
     }
 
@@ -117,6 +139,13 @@ public class CartService : ICartService
         if (cart.UserId != userId) return ServiceResult.Fail("Bu işlem için yetkiniz yok", HttpStatusCode.Forbidden);
 
         await _cartRepository.DecreaseItemByProductIdAsync(userId, productId);
+        await _auditLogService.LogAsync(
+            userId: null,
+            action: "DecreaseCart",
+            entityName: "ProductCartDecrease",
+            entityId: productId,
+            details: $"Sepetteki ürün sayısı azaltıldı: {validation.Data!.Email}"
+        );
         return ServiceResult.Success();
     }
 }

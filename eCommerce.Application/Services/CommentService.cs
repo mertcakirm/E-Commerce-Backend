@@ -11,12 +11,14 @@ namespace eCommerce.Application.Services
         private readonly ICommentRepository _commentRepository;
         private readonly IProductRepository  _productRepository;
         private readonly UserValidator _userValidator;
+        private readonly IAuditLogService _auditLogService;
 
-        public CommentService(ICommentRepository commentRepository , IProductRepository  productRepository, UserValidator userValidator)
+        public CommentService(ICommentRepository commentRepository , IProductRepository  productRepository, UserValidator userValidator, IAuditLogService auditLogService)
         {
             _commentRepository = commentRepository;
             _productRepository = productRepository;
             _userValidator = userValidator;
+            _auditLogService = auditLogService;
         }
 
         public async Task<Comment?> GetByIdAsync(int id)
@@ -79,7 +81,13 @@ namespace eCommerce.Application.Services
                 await _productRepository.UpdateAsync(product);
                 await _productRepository.SaveChangesAsync();
             }
-
+            await _auditLogService.LogAsync(
+                userId: userId,
+                action: "AddComment",
+                entityName: "Comment",
+                entityId: commentDto.ProductId,
+                details: $"Yorum eklendi: {validation.Data!.Email}"
+            );
             return ServiceResult<Comment?>.Success(newComment, "Yorum eklendi");
         }
 
@@ -105,7 +113,13 @@ namespace eCommerce.Application.Services
                 await _productRepository.UpdateAsync(product);
                 await _productRepository.SaveChangesAsync();
             }
-
+            await _auditLogService.LogAsync(
+                userId: userId,
+                action: "RemoveComment",
+                entityName: "Comment",
+                entityId: id,
+                details: $"Yorum silindi: {validation.Data!.Email}"
+            );
             return ServiceResult<bool>.Success(true, "Yorum silindi");
         }
     }

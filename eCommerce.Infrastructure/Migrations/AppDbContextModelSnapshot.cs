@@ -216,6 +216,9 @@ namespace eCommerce.Infrastructure.Migrations
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime(6)");
 
+                    b.Property<bool>("IsComplete")
+                        .HasColumnType("tinyint(1)");
+
                     b.Property<bool>("IsDeleted")
                         .HasColumnType("tinyint(1)");
 
@@ -262,7 +265,7 @@ namespace eCommerce.Infrastructure.Migrations
                     b.Property<decimal>("Price")
                         .HasColumnType("decimal(65,30)");
 
-                    b.Property<int?>("ProductId")
+                    b.Property<int>("ProductId")
                         .HasColumnType("int");
 
                     b.Property<int>("ProductVariantId")
@@ -311,7 +314,6 @@ namespace eCommerce.Infrastructure.Migrations
                         .HasColumnType("longtext");
 
                     b.Property<string>("TransactionId")
-                        .IsRequired()
                         .HasColumnType("longtext");
 
                     b.Property<DateTime?>("UpdatedAt")
@@ -651,7 +653,9 @@ namespace eCommerce.Infrastructure.Migrations
 
                     b.HasOne("eCommerce.Core.Entities.Product", null)
                         .WithMany("OrderItems")
-                        .HasForeignKey("ProductId");
+                        .HasForeignKey("ProductId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
 
                     b.HasOne("eCommerce.Core.Entities.ProductVariant", "ProductVariant")
                         .WithMany("OrderItems")

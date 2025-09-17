@@ -85,5 +85,16 @@ namespace eCommerce.Infrastructure.Repositories
                 
         }
         
+        public async Task CompleteOrderStatusAsync(int orderId)
+        {
+            var order = await _dbSet.FirstOrDefaultAsync(o => o.Id == orderId && !EF.Property<bool>(o, "IsDeleted"));
+            if (order != null)
+            {
+                order.IsComplete = true;
+                _dbSet.Update(order);
+                await _context.SaveChangesAsync();
+            }
+        }
+        
     }
 }

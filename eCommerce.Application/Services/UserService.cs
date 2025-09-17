@@ -11,11 +11,13 @@ public class UserService : IUserService
 {
     private readonly IUserRepository _userRepository;
     private readonly ITokenService _tokenService;
+    private readonly IAuditLogService _auditLogService;
     
-    public UserService(IUserRepository userRepository, ITokenService tokenService)
+    public UserService(IUserRepository userRepository, ITokenService tokenService, IAuditLogService auditLogService)
         {
         _userRepository = userRepository;
         _tokenService = tokenService;
+        _auditLogService = auditLogService;
         }
    
     
@@ -48,6 +50,13 @@ public class UserService : IUserService
         if (!updated)
             return ServiceResult<bool>.Fail("Şifre güncellenirken hata oluştu", HttpStatusCode.InternalServerError);
 
+        await _auditLogService.LogAsync(
+            userId: userId,
+            action: "UpdatePassword",
+            entityName: "User",
+            entityId: null,
+            details: $"Şifre güncellendi: {user.Email}"
+        );
         return ServiceResult<bool>.Success(true, status:HttpStatusCode.OK);
     }
 

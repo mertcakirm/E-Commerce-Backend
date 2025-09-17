@@ -11,17 +11,20 @@ public class AdminService : IAdminService
     private readonly IOrderRepository _orderRepository;
     private readonly IProductRepository _productRepository;
     private readonly UserValidator _userValidator;
+    private readonly IAuditLogService _auditLogService;
 
     public AdminService(
         IUserRepository userRepository,
         IProductRepository productRepository,
         IOrderRepository orderRepository,
-        UserValidator userValidator)
+        UserValidator userValidator,
+        IAuditLogService auditLogService)
     {
         _userRepository = userRepository;
         _productRepository = productRepository;
         _orderRepository = orderRepository;
         _userValidator = userValidator;
+        _auditLogService = auditLogService;
     }
 
     public async Task<ServiceResult<PagedResult<UserDto>>> GetAllUsers(string token, int pageNumber, int pageSize)
@@ -65,12 +68,22 @@ public class AdminService : IAdminService
         if (user == null) return ServiceResult.Fail("Kullanıcı bulunamadı", HttpStatusCode.NotFound);
 
         await _userRepository.DeleteUserAsync(userId);
+        await _auditLogService.LogAsync(
+            userId: null,
+            action: "DeleteUser",
+            entityName: "User",
+            entityId: userId,
+            details: $"Kullanıcı silindi: {user.Email}"
+        );
+        
         return ServiceResult.Success(status: HttpStatusCode.OK);
     }
 
     public async Task<ServiceResult> DiscountProduct(string token, int productId, int discountRate)
     {
         var isAdmin = await _userValidator.IsAdminAsync(token);
+        var user = await _userValidator.ValidateAsync(token);
+        
         if (isAdmin.IsFail || !isAdmin.Data)
             return ServiceResult.Fail("Yetkisiz giriş!", HttpStatusCode.Forbidden);
 
@@ -78,12 +91,20 @@ public class AdminService : IAdminService
         if (product == null) return ServiceResult.Fail("Ürün bulunamadı!", HttpStatusCode.NotFound);
 
         await _productRepository.DiscountProductAsync(productId, discountRate);
+        await _auditLogService.LogAsync(
+            userId: null,
+            action: "DiscountProduct",
+            entityName: "Product",
+            entityId: productId,
+            details: $"Ürüne indirim yapıldı: {user.Data!.Email}"
+        );
         return ServiceResult.Success(status: HttpStatusCode.OK);
     }
 
     public async Task<ServiceResult> UpdateOrderStatusAsync(int orderId, string status, string token)
     {
         var isAdmin = await _userValidator.IsAdminAsync(token);
+        var user = await _userValidator.ValidateAsync(token);
         if (isAdmin.IsFail || !isAdmin.Data)
             return ServiceResult.Fail("Yetkisiz giriş!", HttpStatusCode.Forbidden);
 
@@ -92,6 +113,13 @@ public class AdminService : IAdminService
 
         order.Status = status;
         await _orderRepository.UpdateAsync(order);
+        await _auditLogService.LogAsync(
+            userId: null,
+            action: "UpdateOrderStatus",
+            entityName: "Order",
+            entityId: orderId,
+            details: $"Sipariş durumu güncellendi: {user.Data!.Email}"
+        );
         return ServiceResult.Success(status: HttpStatusCode.OK, message: "Sipariş durumu güncellendi!");
     }
 }

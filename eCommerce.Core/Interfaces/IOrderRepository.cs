@@ -7,5 +7,8 @@ namespace eCommerce.Core.Interfaces
         Task<IEnumerable<Order>> GetUserOrdersAsync(int userId);
         Task<IEnumerable<Product>> GetTopProductsAsync(int count);
         Task<Order?> GetOrderByIdAsync(int OrderId);
+        Task<Order?> GetOrderDetailsAsync(int orderId);
+        Task UpdateOrderStatusAsync(int orderId, string newStatus);
+        Task CompleteOrderStatusAsync(int orderId);
     }
 }

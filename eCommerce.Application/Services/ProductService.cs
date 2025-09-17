@@ -11,12 +11,14 @@ namespace eCommerce.Application.Services
         private readonly IGenericRepository<Product> _productRepo;
         private readonly IProductRepository _productRepository;
         private readonly UserValidator _userValidator;
+        private readonly IAuditLogService _auditLogService;
 
-        public ProductService(IGenericRepository<Product> productRepo, IProductRepository productRepository, UserValidator userValidator)
+        public ProductService(IGenericRepository<Product> productRepo, IProductRepository productRepository, UserValidator userValidator, IAuditLogService auditLogService)
         {
             _productRepo = productRepo;
             _productRepository = productRepository;
             _userValidator = userValidator;
+            _auditLogService = auditLogService;
         }
 
         public async Task<ServiceResult<PagedResult<ProductResponseDto>>> GetAllProductsAsync(int pageNumber, int pageSize)
@@ -147,6 +149,8 @@ namespace eCommerce.Application.Services
         public async Task<ServiceResult<ProductDto>> CreateProductAsync(ProductDto dto, string token)
 {
             var isAdmin = await _userValidator.IsAdminAsync(token);
+            var validation = await _userValidator.ValidateAsync(token);
+            
             if (isAdmin.IsFail || !isAdmin.Data) return ServiceResult<ProductDto>.Fail("Yetkisiz giriş!", HttpStatusCode.Forbidden);
 
             var product = new Product
@@ -191,6 +195,13 @@ namespace eCommerce.Application.Services
                     IsMain = i.IsMain
                 }).ToList()
             };
+            await _auditLogService.LogAsync(
+                userId: validation.Data!.Id,
+                action: "CreateProduct",
+                entityName: "Product",
+                entityId: null,
+                details: $"Ürün oluşturuldu: {validation.Data!.Email}"
+            );
 
             return ServiceResult<ProductDto>.SuccessAsCreated(resultDto, $"/api/products/{product.Id}");
         }
@@ -198,8 +209,10 @@ namespace eCommerce.Application.Services
         public async Task<ServiceResult<ProductDto>> UpdateProductAsync(int id, ProductDto dto, string token)
         {
             var isAdmin = await _userValidator.IsAdminAsync(token);
-            if (isAdmin.IsFail || !isAdmin.Data) return ServiceResult<ProductDto>.Fail("Yetkisiz giriş!", HttpStatusCode.Forbidden);
+            var validation = await _userValidator.ValidateAsync(token);
 
+            if (isAdmin.IsFail || !isAdmin.Data) return ServiceResult<ProductDto>.Fail("Yetkisiz giriş!", HttpStatusCode.Forbidden);
+            
             var existing = await _productRepository.GetByIdWithDetailsAsync(id); 
             if (existing == null) return ServiceResult<ProductDto>.Fail("Ürün bulunamadı", HttpStatusCode.NotFound);
 
@@ -252,6 +265,14 @@ namespace eCommerce.Application.Services
                     IsMain = i.IsMain
                 }).ToList()
             };
+            await _auditLogService.LogAsync(
+                userId: validation.Data!.Id,
+                action: "UpdateProduct",
+                entityName: "Product",
+                entityId: null,
+                details: $"Ürün güncellendi: {validation.Data!.Email}"
+            );
+
 
             return ServiceResult<ProductDto>.Success(updatedDto);
         }
@@ -259,6 +280,8 @@ namespace eCommerce.Application.Services
         public async Task<ServiceResult> DeleteProductAsync(int id, string token)
         {
             var isAdmin = await _userValidator.IsAdminAsync(token);
+            var validation = await _userValidator.ValidateAsync(token);
+            
             if (isAdmin.IsFail || !isAdmin.Data) return ServiceResult.Fail("Yetkisiz giriş!", HttpStatusCode.Forbidden);
 
             var existing = await _productRepo.GetByIdAsync(id);
@@ -266,6 +289,13 @@ namespace eCommerce.Application.Services
 
             await _productRepo.RemoveAsync(existing);
             await _productRepo.SaveChangesAsync();
+            await _auditLogService.LogAsync(
+                userId: validation.Data!.Id,
+                action: "DeleteProduct",
+                entityName: "Product",
+                entityId: id,
+                details: $"Ürün silindi: {validation.Data!.Email}"
+            );
 
             return ServiceResult.NoContent();
         }
@@ -273,11 +303,20 @@ namespace eCommerce.Application.Services
         public async Task<ServiceResult> DeleteImageAsync(int id, string token)
         {
             var isAdmin = await _userValidator.IsAdminAsync(token);
+            var validation = await _userValidator.ValidateAsync(token);
+            
             if (isAdmin.IsFail || !isAdmin.Data) return ServiceResult.Fail("Yetkisiz giriş!", HttpStatusCode.Forbidden);
 
             try
             {
                 await _productRepository.DeleteImageAsync(id);
+                await _auditLogService.LogAsync(
+                    userId: validation.Data!.Id,
+                    action: "DeleteProductImage",
+                    entityName: "ProductImage",
+                    entityId: id,
+                    details: $"Ürün görseli silindi: {validation.Data!.Email}"
+                );
                 return ServiceResult.Success(status: HttpStatusCode.NoContent);
             }
             catch (Exception ex)

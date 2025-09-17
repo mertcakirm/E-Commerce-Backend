@@ -5,6 +5,7 @@ public class OrderResponseDto
     public int Id { get; set; }
     public DateTime OrderDate { get; set; } = DateTime.UtcNow;
     public decimal TotalAmount { get; set; }
+    public bool IsComplete { get; set; }
     public string Status { get; set; }
     
     public List<PaymentResponseDto> Payment { get; set; } = new();

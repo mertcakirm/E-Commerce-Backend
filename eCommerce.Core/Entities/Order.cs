@@ -7,6 +7,7 @@ public class Order : BaseEntity
 
     public DateTime OrderDate { get; set; } = DateTime.UtcNow;
     public decimal TotalAmount { get; set; }
+    public bool IsComplete { get; set; } = false;
     public string Status { get; set; } = "Pending"; // Pending, Shipped, Delivered, Cancelled
 
     public ICollection<OrderItem> OrderItems { get; set; }

@@ -10,11 +10,13 @@ namespace eCommerce.Application.Services
     {
         private readonly IWishlistRepository _wishlistRepository;
         private readonly UserValidator _userValidator;
+        private readonly IAuditLogService _auditLogService;
 
-        public WishlistService(IWishlistRepository wishlistRepository, UserValidator userValidator)
+        public WishlistService(IWishlistRepository wishlistRepository, UserValidator userValidator, IAuditLogService auditLogService)
         {
             _wishlistRepository = wishlistRepository;
             _userValidator = userValidator;
+            _auditLogService = auditLogService;
         }
 
         public async Task<ServiceResult<PagedResult<ProductResponseDto>>> GetUserWishlistAsync(string token, int pageNumber, int pageSize)
@@ -74,8 +76,15 @@ namespace eCommerce.Application.Services
             if (wishlistItem != null)
             {
                 // Ürün varsa sil
-                _wishlistRepository.RemoveAsync(wishlistItem);
+                await _wishlistRepository.RemoveAsync(wishlistItem);
                 await _wishlistRepository.SaveChangesAsync();
+                await _auditLogService.LogAsync(
+                    userId: userId,
+                    action: "RemoveProductToWishlist",
+                    entityName: "Wishlist",
+                    entityId: productId,
+                    details: $"Ürün favorilerden silindi: {validation.Data!.Email}"
+                );
                 return ServiceResult.Success( "Ürün wishlist'ten çıkarıldı",HttpStatusCode.OK);
             }
             else
@@ -88,6 +97,13 @@ namespace eCommerce.Application.Services
                 };
                 await _wishlistRepository.AddAsync(wishlistItem);
                 await _wishlistRepository.SaveChangesAsync();
+                await _auditLogService.LogAsync(
+                    userId: userId,
+                    action: "AddProductToWishlist",
+                    entityName: "Wishlist",
+                    entityId: productId,
+                    details: $"Ürün favorilere eklendi: {validation.Data!.Email}"
+                );
                 return ServiceResult.Success( "Ürün wishlist'e eklendi",HttpStatusCode.OK);
             }
         }
@@ -104,7 +120,13 @@ namespace eCommerce.Application.Services
 
             await _wishlistRepository.RemoveAsync(wishlistItem);
             await _wishlistRepository.SaveChangesAsync();
-
+            await _auditLogService.LogAsync(
+                userId: userId,
+                action: "RemoveProductToWishlist",
+                entityName: "Wishlist",
+                entityId: productId,
+                details: $"Ürün favorilerden silindi: {validation.Data!.Email}"
+            );
             return ServiceResult.Success(status:HttpStatusCode.OK);
         }
     }

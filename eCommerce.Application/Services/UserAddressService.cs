@@ -10,12 +10,13 @@ public class UserAddressService : IUserAddressService
 {
     private readonly IUserAddressRepository _userAddressRepository;
     private readonly UserValidator _userValidator;
+    private readonly IAuditLogService _auditLogService;
 
-    public UserAddressService(IUserAddressRepository userAddressRepository, UserValidator userValidator)
+    public UserAddressService(IUserAddressRepository userAddressRepository, UserValidator userValidator, IAuditLogService auditLogService)
     {
         _userAddressRepository = userAddressRepository;
         _userValidator = userValidator;
-        
+        _auditLogService = auditLogService;
     }
 
     public async Task<ServiceResult<UserAddressDto>> CreateUserAddressAsync(UserAddressDto userAddressDto, string token)
@@ -46,6 +47,13 @@ public class UserAddressService : IUserAddressService
             PostalCode = newAddress.PostalCode,
             PhoneNumber = newAddress.PhoneNumber
         };
+        await _auditLogService.LogAsync(
+            userId: userId,
+            action: "CreaateAddress",
+            entityName: "UserAddresses",
+            entityId: null,
+            details: $"Adres eklendi: {validation.Data!.Email}"
+        );
 
         return ServiceResult<UserAddressDto>.Success(resultDto, status:HttpStatusCode.Created);
     }
@@ -97,6 +105,14 @@ public class UserAddressService : IUserAddressService
             PostalCode = existingAddress.PostalCode,
             PhoneNumber = existingAddress.PhoneNumber
         };
+        
+        await _auditLogService.LogAsync(
+            userId: validation.Data!.Id,
+            action: "UpdateAddress",
+            entityName: "UserAddresses",
+            entityId: addressId,
+            details: $"Adres güncellendi: {validation.Data!.Email}"
+        );
 
         return ServiceResult<UserAddressDto>.Success(resultDto, status:HttpStatusCode.OK);
     }
@@ -111,7 +127,13 @@ public class UserAddressService : IUserAddressService
 
         var success = await _userAddressRepository.DeleteUserAddressAsync(addressId);
         if (!success) return ServiceResult<bool>.Fail("Adres silinemedi", HttpStatusCode.BadRequest);
-
+        await _auditLogService.LogAsync(
+            userId: validation.Data!.Id,
+            action: "RemoveAddress",
+            entityName: "UserAddresses",
+            entityId: addressId,
+            details: $"Adres silindi: {validation.Data!.Email}"
+        );
         return ServiceResult<bool>.Success(true, status:HttpStatusCode.OK);
     }
 }

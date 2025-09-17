@@ -1,12 +1,10 @@
 using System.Net;
-using eCommerce.Application;
 using eCommerce.Application.DTOs;
 using eCommerce.Application.Interfaces;
 using eCommerce.Core.Entities;
 using eCommerce.Core.Helpers;
 using eCommerce.Core.Interfaces;
 using Microsoft.EntityFrameworkCore;
-using System.Linq;
 
 namespace eCommerce.Application.Services;
 public class OrderService : IOrderService
@@ -14,12 +12,16 @@ public class OrderService : IOrderService
     private readonly IOrderRepository _orderRepo;
     private readonly IProductRepository _productRepo;
     private readonly UserValidator _userValidator;
+    private readonly ICartRepository _cartRepo;
+    private readonly IAuditLogService _auditLogService;
     
-    public OrderService(IOrderRepository orderRepo, IProductRepository productRepo,UserValidator userValidator)
+    public OrderService(IOrderRepository orderRepo, IProductRepository productRepo,UserValidator userValidator,ICartRepository cartRepo,IAuditLogService auditLogService)
     {
         _orderRepo = orderRepo;
         _productRepo = productRepo;
         _userValidator = userValidator;
+        _cartRepo = cartRepo;
+        _auditLogService = auditLogService;
     }
 
     public async Task<ServiceResult<List<OrderResponseDto>>> GetUserOrderAsync(string token)
@@ -45,6 +47,7 @@ public class OrderService : IOrderService
         {
             Id = o.Id,
             OrderDate = o.OrderDate,
+            IsComplete = o.IsComplete,
             TotalAmount = o.TotalAmount,
             Status = o.Status,
             Payment = o.Payment != null 
@@ -85,69 +88,88 @@ public class OrderService : IOrderService
         };
     }
     
+public async Task<ServiceResult<Order>> CreateOrderAsync(OrderCreateDto dto, string token)
+{
+    var validation = await _userValidator.ValidateAsync(token);
+    if (validation.IsFail)
+        return ServiceResult<Order>.Fail(validation.ErrorMessage!, validation.Status);
 
-    public async Task<ServiceResult<Order>> CreateOrderAsync(OrderCreateDto dto, string token)
+    var user = validation.Data!;
+
+    var cart = await _cartRepo.GetUserCartAsync(user.Id);
+    if (cart == null || cart.CartItems == null || !cart.CartItems.Any())
+        return ServiceResult<Order>.Fail("Sepetiniz boş, sipariş oluşturulamaz.", HttpStatusCode.BadRequest);
+
+    var order = new Order
     {
-        var validation = await _userValidator.ValidateAsync(token);
-        if (validation.IsFail) return ServiceResult<Order>.Fail(validation.ErrorMessage!, validation.Status);
+        UserId = user.Id,
+        OrderDate = DateTime.UtcNow,
+        Status = "Pending",
+        OrderItems = new List<OrderItem>()
+    };
 
-        var user = validation.Data!;
-        var order = new Order
-        {
-            UserId = user.Id,
-            OrderDate = DateTime.UtcNow,
-            Status = "Pending",
-            OrderItems = new List<OrderItem>()
-        };
-        decimal totalAmount = 0;
+    decimal totalAmount = 0;
+
+    foreach (var cartItem in cart.CartItems)
+    {
+        var product = await _productRepo.GetByIdWithDetailsAsync(cartItem.ProductId);
+        if (product == null)
+            return ServiceResult<Order>.Fail($"Ürün bilgisi cartItem {cartItem.Id} için bulunamadı.", HttpStatusCode.NotFound);
         
-        foreach (var item in dto.Items)
+        decimal discountedPrice = product.Price * (1 - (product.DiscountRate / 100m));
+
+        order.OrderItems.Add(new OrderItem
         {
-            var variant = await _productRepo.GetVariantById(item.ProductVariantId);
-            if (variant == null)
-                throw new Exception($"Ürün varyantı {item.ProductVariantId} bulunamadı");
+            ProductVariantId = cartItem.ProductVariantId,
+            Quantity = cartItem.Quantity,
+            Price = discountedPrice * cartItem.Quantity,
+            ProductId = cartItem.ProductId
+            
+        });
 
-            var orderItem = new OrderItem
-            {
-                ProductVariantId = item.ProductVariantId,
-                Quantity = item.Quantity,
-                Price = (variant.Product.Price * (1 - (variant.Product.DiscountRate / 100m )))
-                
-                
-            };
+        totalAmount += discountedPrice * cartItem.Quantity;
+    }
+    order.TotalAmount = totalAmount;
 
-            order.OrderItems.Add(orderItem);
-            totalAmount += orderItem.Price * orderItem.Quantity;
-        }
-
-        order.TotalAmount = totalAmount;
-
-        // Payment ekleniyor
-        order.Payment = new Payment
-        {
-            PaymentMethod = dto.PaymentMethod ?? throw new Exception("Payment method boş olamaz"),
-            PaymentStatus = "Pending",
-            TransactionId = IdHelper.GenerateRandomAlphaNumeric(9)
-        };
-
-        try
-        {
-            await _orderRepo.AddAsync(order);
-        }
-        catch (DbUpdateException ex)
-        {
-            throw new Exception($"EF SaveChanges hatası: {ex.InnerException?.Message ?? ex.Message}");
-        }
-
-        return ServiceResult<Order>.Success(order);
+    order.Payment = new Payment
+    {
+        PaymentMethod = dto.PaymentMethod ?? throw new Exception("Payment method boş olamaz"),
+        PaymentStatus = "Pending",
+        TransactionId = IdHelper.GenerateRandomAlphaNumeric(9)
+    };
+    try
+    {
+        await _orderRepo.AddAsync(order);
+        cart.CartItems.Clear();
+        await _cartRepo.UpdateAsync(cart);
+    }
+    catch (DbUpdateException ex)
+    {
+        throw new Exception($"EF SaveChanges hatası: {ex.InnerException?.Message ?? ex.Message}");
     }
     
+    await _auditLogService.LogAsync(
+        userId: user.Id,
+        action: "CreateOrder",
+        entityName: "Order",
+        entityId: null,
+        details: $"Sipariş oluşturuldu: {user.Email}"
+    );
+
+    return ServiceResult<Order>.Success(order);
+}
+
+
+
     public async Task<ServiceResult> UpdatePaymentStatusAsync(int orderId, string status, string token)
     {
+        var isAdmin = await _userValidator.IsAdminAsync(token);
         var validation = await _userValidator.ValidateAsync(token);
-        if (validation.IsFail) return ServiceResult.Fail(validation.ErrorMessage!, validation.Status);
-
+        
         var userId = validation.Data!.Id;
+        
+        if (isAdmin.IsFail || !isAdmin.Data) return ServiceResult.Fail("Yetkisiz giriş!", HttpStatusCode.Forbidden);
+
         var order = await _orderRepo.GetOrderByIdAsync(orderId);
 
         if (order == null) return ServiceResult.Fail("Sipariş bulunamadı", HttpStatusCode.NotFound);
@@ -158,8 +180,77 @@ public class OrderService : IOrderService
 
         order.Payment.PaymentStatus = status;
         await _orderRepo.UpdateAsync(order);
+        await _auditLogService.LogAsync(
+            userId: userId,
+            action: "UpdatePaymentStatus",
+            entityName: "Payment",
+            entityId: orderId,
+            details: $"Ödeme durumu güncellendi: {validation.Data!.Email}"
+        );
 
         return ServiceResult.Success("Ödeme durumu güncellendi");
+    }
+    
+    public async Task<ServiceResult> UpdateOrderStatusAsync(int orderId, string status, string token)
+    {
+        var isAdmin = await _userValidator.IsAdminAsync(token);
+        var validation = await _userValidator.ValidateAsync(token);
+        
+        var userId = validation.Data!.Id;
+        
+        if (isAdmin.IsFail || !isAdmin.Data) return ServiceResult.Fail("Yetkisiz giriş!", HttpStatusCode.Forbidden);
+        
+        if (validation.IsFail) return ServiceResult.Fail(validation.ErrorMessage!, validation.Status);
+
+        var order = await _orderRepo.GetOrderByIdAsync(orderId);
+
+        if (order == null) return ServiceResult.Fail("Sipariş bulunamadı", HttpStatusCode.NotFound);
+
+        if (order.UserId != userId) return ServiceResult.Fail("Kullanıcı yetkisiz", HttpStatusCode.Unauthorized);
+
+        if (order.Payment == null) return ServiceResult.Fail("Sipariş bilgisi bulunamadı", HttpStatusCode.BadRequest);
+
+        order.Payment.PaymentStatus = status;
+        await _orderRepo.UpdateOrderStatusAsync(orderId, status);
+        await _auditLogService.LogAsync(
+            userId: userId,
+            action: "UpdateOrderStatus",
+            entityName: "Order",
+            entityId: orderId,
+            details: $"Sipariş durumu oluşturuldu: {validation.Data!.Email}"
+        );
+
+        return ServiceResult.Success("Sipariş durumu güncellendi");
+    }
+    
+    public async Task<ServiceResult> CompleteOrderStatusAsync(int orderId, string token)
+    {
+        var isAdmin = await _userValidator.IsAdminAsync(token);
+        var validation = await _userValidator.ValidateAsync(token);
+        
+        var userId = validation.Data!.Id;
+        
+        if (isAdmin.IsFail || !isAdmin.Data) return ServiceResult.Fail("Yetkisiz giriş!", HttpStatusCode.Forbidden);
+
+        if (validation.IsFail) return ServiceResult.Fail(validation.ErrorMessage!, validation.Status);
+
+        var order = await _orderRepo.GetOrderByIdAsync(orderId);
+
+        if (order == null) return ServiceResult.Fail("Sipariş bulunamadı", HttpStatusCode.NotFound);
+
+        if (order.UserId != userId) return ServiceResult.Fail("Kullanıcı yetkisiz", HttpStatusCode.Unauthorized);
+
+        if (order.Payment == null) return ServiceResult.Fail("Ödeme bilgisi bulunamadı", HttpStatusCode.NotFound);
+
+        await _orderRepo.CompleteOrderStatusAsync(orderId);
+        await _auditLogService.LogAsync(
+            userId: userId,
+            action: "CompleteOrderStatus",
+            entityName: "Order",
+            entityId: orderId,
+            details: $"Sipariş tamamlandı: {validation.Data!.Email}"
+        );
+        return ServiceResult.Success("Sipariş tamamlandı!");
     }
 
 
