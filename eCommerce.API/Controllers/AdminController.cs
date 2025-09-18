@@ -89,6 +89,34 @@ public class AdminController : ControllerBase
         }
     }
     
+    [HttpGet("notCompleted")]
+    public async Task<IActionResult> GetNotCompletedOrders([FromHeader(Name = "Authorization")] string token)
+    {
+        if (string.IsNullOrEmpty(token))
+            return Unauthorized("Token eksik.");
+
+        var result = await _orderService.GetNotCompletedOrdersAsync(token);
+
+        if (result.IsFail)
+            return StatusCode((int)result.Status, new { errors = result.ErrorMessage });
+
+        return Ok(result.Data);
+    }
+
+    [HttpGet("completed")]
+    public async Task<IActionResult> GetCompletedOrders([FromHeader(Name = "Authorization")] string token)
+    {
+        if (string.IsNullOrEmpty(token))
+            return Unauthorized("Token eksik.");
+
+        var result = await _orderService.GetCompletedOrdersAsync(token);
+
+        if (result.IsFail)
+            return StatusCode((int)result.Status, new { errors = result.ErrorMessage });
+
+        return Ok(result.Data);
+    }
+    
     
     [Authorize]
     [HttpPost("product")]

@@ -58,24 +58,6 @@ namespace eCommerce.Infrastructure.Repositories
                 .FirstOrDefaultAsync(o => o.Id == orderId && !EF.Property<bool>(o, "IsDeleted"));
         }
 
-        // Ödeme durumunu güncelle
-        public async Task UpdatePaymentStatusAsync(int orderId, string newStatus, string transactionId = null)
-        {
-            var order = await _dbSet
-                .Include(o => o.Payment)
-                .FirstOrDefaultAsync(o => o.Id == orderId && !EF.Property<bool>(o, "IsDeleted"));
-
-            if (order != null && order.Payment != null)
-            {
-                order.Payment.PaymentStatus = newStatus;
-                if (!string.IsNullOrEmpty(transactionId))
-                    order.Payment.TransactionId = transactionId;
-
-                _dbSet.Update(order);
-                await _context.SaveChangesAsync();
-            }
-        }
-
         // Sipariş durumunu güncelle
         public async Task UpdateOrderStatusAsync(int orderId, string newStatus)
         {
@@ -87,7 +69,6 @@ namespace eCommerce.Infrastructure.Repositories
                 await _context.SaveChangesAsync();
             }
         }
-
         // En çok satılan ürünleri getir
         public async Task<IEnumerable<Product>> GetTopProductsAsync(int count)
         {

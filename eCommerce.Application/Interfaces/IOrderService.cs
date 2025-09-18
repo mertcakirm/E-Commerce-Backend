@@ -10,4 +10,7 @@ public interface IOrderService
     Task<ServiceResult> UpdateOrderStatusAsync(int orderId, string status, string token);
     Task<ServiceResult> UpdatePaymentStatusAsync(int orderId, string status, string token);
     Task<ServiceResult> CompleteOrderStatusAsync(int orderId, string token);
+    Task<ServiceResult<List<OrderResponseDto>>> GetNotCompletedOrdersAsync(string token);
+    Task<ServiceResult<List<OrderResponseDto>>> GetCompletedOrdersAsync(string token);
+
 }

@@ -251,6 +251,106 @@ public async Task<ServiceResult<Order>> CreateOrderAsync(OrderCreateDto dto, str
         return ServiceResult.Success("Sipariş tamamlandı!");
     }
 
+    public async Task<ServiceResult<List<OrderResponseDto>>> GetNotCompletedOrdersAsync(string token)
+    {
+        // Admin kontrolü
+        var isAdmin = await _userValidator.IsAdminAsync(token);
+        if (isAdmin.IsFail || !isAdmin.Data)
+            return ServiceResult<List<OrderResponseDto>>.Fail("Yetkisiz giriş!", HttpStatusCode.Forbidden);
+
+        var orders = await _orderRepo.GetNotCompletedOrdersAsync();
+        if (!orders.Any())
+            return ServiceResult<List<OrderResponseDto>>.Fail("Tamamlanmamış sipariş bulunamadı", HttpStatusCode.NotFound);
+
+        var dtoList = orders.Select(o => new OrderResponseDto
+        {
+            Id = o.Id,
+            OrderDate = o.OrderDate,
+            IsComplete = o.IsComplete,
+            TotalAmount = o.TotalAmount,
+            Status = o.Status,
+            Payment = o.Payment != null
+                ? new List<PaymentResponseDto>
+                {
+                    new PaymentResponseDto
+                    {
+                        PaymentId = o.Payment.Id,
+                        PaymentMethod = o.Payment.PaymentMethod,
+                        PaymentStatus = o.Payment.PaymentStatus
+                    }
+                }
+                : new List<PaymentResponseDto>(),
+            OrderItem = (o.OrderItems ?? new List<OrderItem>()).Select(i => new OrderItemResponseDto
+            {
+                Price = i.Price,
+                Quantity = i.Quantity,
+                OrderItemProduct = new List<OrderItemProductResponseDto>
+                {
+                    new OrderItemProductResponseDto
+                    {
+                        Name = i.ProductVariant?.Product?.Name ?? "",
+                        Description = i.ProductVariant?.Product?.Description ?? "",
+                        DiscountRate = i.ProductVariant?.Product?.DiscountRate ?? 0,
+                        AverageRating = i.ProductVariant?.Product?.AverageRating ?? 0,
+                        CategoryName = i.ProductVariant?.Product?.Category?.Name ?? "",
+                        Price = i.ProductVariant?.Product?.Price ?? 0
+                    }
+                }
+            }).ToList()
+        }).ToList();
+
+        return ServiceResult<List<OrderResponseDto>>.Success(dtoList);
+    }
+
+    public async Task<ServiceResult<List<OrderResponseDto>>> GetCompletedOrdersAsync(string token)
+    {
+        var isAdmin = await _userValidator.IsAdminAsync(token);
+        if (isAdmin.IsFail || !isAdmin.Data)
+            return ServiceResult<List<OrderResponseDto>>.Fail("Yetkisiz giriş!", HttpStatusCode.Forbidden);
+
+        var orders = await _orderRepo.GetCompletedOrdersAsync();
+        if (!orders.Any())
+            return ServiceResult<List<OrderResponseDto>>.Fail("Tamamlanmış sipariş bulunamadı", HttpStatusCode.NotFound);
+
+        var dtoList = orders.Select(o => new OrderResponseDto
+        {
+            Id = o.Id,
+            OrderDate = o.OrderDate,
+            IsComplete = o.IsComplete,
+            TotalAmount = o.TotalAmount,
+            Status = o.Status,
+            Payment = o.Payment != null
+                ? new List<PaymentResponseDto>
+                {
+                    new PaymentResponseDto
+                    {
+                        PaymentId = o.Payment.Id,
+                        PaymentMethod = o.Payment.PaymentMethod,
+                        PaymentStatus = o.Payment.PaymentStatus
+                    }
+                }
+                : new List<PaymentResponseDto>(),
+            OrderItem = (o.OrderItems ?? new List<OrderItem>()).Select(i => new OrderItemResponseDto
+            {
+                Price = i.Price,
+                Quantity = i.Quantity,
+                OrderItemProduct = new List<OrderItemProductResponseDto>
+                {
+                    new OrderItemProductResponseDto
+                    {
+                        Name = i.ProductVariant?.Product?.Name ?? "",
+                        Description = i.ProductVariant?.Product?.Description ?? "",
+                        DiscountRate = i.ProductVariant?.Product?.DiscountRate ?? 0,
+                        AverageRating = i.ProductVariant?.Product?.AverageRating ?? 0,
+                        CategoryName = i.ProductVariant?.Product?.Category?.Name ?? "",
+                        Price = i.ProductVariant?.Product?.Price ?? 0
+                    }
+                }
+            }).ToList()
+        }).ToList();
+
+        return ServiceResult<List<OrderResponseDto>>.Success(dtoList);
+    }
 
 
 
