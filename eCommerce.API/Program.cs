@@ -1,18 +1,14 @@
-using eCommerce.Core.Interfaces;
-using eCommerce.Infrastructure.Data;
-using eCommerce.Infrastructure.Repositories;
-using Microsoft.EntityFrameworkCore;
-using eCommerce.Application.Interfaces;
-using eCommerce.Application.Services;
-using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.IdentityModel.Tokens;
-using Microsoft.OpenApi.Models;
 using System.Text;
 using eCommerce.API.Extensions;
+using eCommerce.Infrastructure.Data;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
+using Microsoft.OpenApi.Models;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
+// Add services to the container
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddControllers()
@@ -23,12 +19,23 @@ builder.Services.AddControllers()
         options.JsonSerializerOptions.WriteIndented = true;
     });
 
-// Swagger + JWT Authorize
+// CORS
+builder.Services.AddCorsPolicy(); // ⚡ burada ekliyoruz
+
+// Kestrel
+builder.WebHost.ConfigureKestrel(options =>
+{
+    options.ListenAnyIP(5050); // HTTP
+    options.ListenAnyIP(7050, listenOptions =>
+    {
+        listenOptions.UseHttps(); // dev sertifika otomatik
+    });
+});
+
+// Swagger + JWT
 builder.Services.AddSwaggerGen(c =>
 {
     c.SwaggerDoc("v1", new OpenApiInfo { Title = "eCommerce API", Version = "v1" });
-
-    // JWT Authorization Header
     c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
     {
         Name = "Authorization",
@@ -44,11 +51,7 @@ builder.Services.AddSwaggerGen(c =>
         {
             new OpenApiSecurityScheme
             {
-                Reference = new OpenApiReference 
-                {
-                    Type = ReferenceType.SecurityScheme,
-                    Id = "Bearer"
-                }
+                Reference = new OpenApiReference { Type = ReferenceType.SecurityScheme, Id = "Bearer" }
             },
             Array.Empty<string>()
         }
@@ -98,6 +101,12 @@ builder.Services.AddAuthorization();
 
 var app = builder.Build();
 
+app.UseCorsPolicy();
+app.UseStaticFiles();
+app.UseHttpsRedirection();
+app.UseAuthentication();
+app.UseAuthorization();
+
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
@@ -107,11 +116,6 @@ if (app.Environment.IsDevelopment())
         c.RoutePrefix = string.Empty;
     });
 }
-
-app.UseHttpsRedirection();
-
-app.UseAuthentication();
-app.UseAuthorization();
 
 app.MapControllers();
 

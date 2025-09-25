@@ -146,65 +146,97 @@ namespace eCommerce.Application.Services
             return ServiceResult<ProductResponseDto>.Success(dto);
         }
         
-        public async Task<ServiceResult<ProductDto>> CreateProductAsync(ProductDto dto, string token)
+public async Task<ServiceResult<ProductDto>> CreateProductAsync(ProductCreateDto dto, string token)
 {
-            var isAdmin = await _userValidator.IsAdminAsync(token);
-            var validation = await _userValidator.ValidateAsync(token);
-            
-            if (isAdmin.IsFail || !isAdmin.Data) return ServiceResult<ProductDto>.Fail("Yetkisiz giriş!", HttpStatusCode.Forbidden);
+    var isAdmin = await _userValidator.IsAdminAsync(token);
+    var validation = await _userValidator.ValidateAsync(token);
+    if (isAdmin.IsFail || !isAdmin.Data)
+        return ServiceResult<ProductDto>.Fail("Yetkisiz giriş!", HttpStatusCode.Forbidden);
 
-            var product = new Product
+    // --- 1) Resimleri Kaydet ---
+    var imageEntities = new List<ProductImage>();
+    if (dto.Images != null && dto.Images.Count > 0)
+    {
+        var uploadPath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "images", "products");
+        if (!Directory.Exists(uploadPath))
+            Directory.CreateDirectory(uploadPath);
+
+        foreach (var file in dto.Images)
+        {
+            if (file.Length <= 0) continue;
+
+            var extension = Path.GetExtension(file.FileName);
+            var fileName = $"{Guid.NewGuid()}{extension}";
+            var filePath = Path.Combine(uploadPath, fileName);
+
+            using (var stream = new FileStream(filePath, FileMode.Create))
             {
-                Name = dto.Name,
-                Description = dto.Description,
-                BasePrice = dto.BasePrice,
-                Price = dto.Price,
-                DiscountRate = 0,
-                AverageRating = 0,
-                CategoryId = dto.CategoryId,
-                Variants = dto.Variants.Select(v => new ProductVariant
-                {
-                    Size = v.Size,
-                    Stock = v.Stock,
-                }).ToList(),
-                Images = dto.Images.Select(i => new ProductImage
-                {
-                    ImageUrl = i.ImageUrl,
-                    IsMain = i.IsMain
-                }).ToList()
-            };
+                await file.CopyToAsync(stream);
+            }
 
-            await _productRepo.AddAsync(product);
-            await _productRepo.SaveChangesAsync();
-
-            var resultDto = new ProductDto
+            imageEntities.Add(new ProductImage
             {
-                Name = product.Name,
-                Description = product.Description,
-                BasePrice = product.BasePrice,
-                Price = product.Price,
-                CategoryId = product.CategoryId,
-                Variants = product.Variants.Select(v => new ProductVariantDto
-                {
-                    Size = v.Size,
-                    Stock = v.Stock,
-                }).ToList(),
-                Images = product.Images.Select(i => new ProductImageDto
-                {
-                    ImageUrl = i.ImageUrl,
-                    IsMain = i.IsMain
-                }).ToList()
-            };
-            await _auditLogService.LogAsync(
-                userId: validation.Data!.Id,
-                action: "CreateProduct",
-                entityName: "Product",
-                entityId: null,
-                details: $"Ürün oluşturuldu: {validation.Data!.Email}"
-            );
-
-            return ServiceResult<ProductDto>.SuccessAsCreated(resultDto, $"/api/products/{product.Id}");
+                ImageUrl = $"/images/products/{fileName}", // <-- Veritabanına bu yazılacak
+                IsMain = false
+            });
         }
+
+        // İlk resmi ana resim olarak işaretleyebilirsiniz:
+        if (imageEntities.Count > 0)
+            imageEntities[0].IsMain = true;
+    }
+
+    // --- 2) Product nesnesi ---
+    var product = new Product
+    {
+        Name = dto.Name,
+        Description = dto.Description,
+        BasePrice = dto.BasePrice,
+        Price = dto.Price,
+        DiscountRate = 0,
+        AverageRating = 0,
+        CategoryId = dto.CategoryId,
+        Variants = dto.Variants.Select(v => new ProductVariant
+        {
+            Size = v.Size,
+            Stock = v.Stock
+        }).ToList(),
+        Images = imageEntities
+    };
+
+    await _productRepo.AddAsync(product);
+    await _productRepo.SaveChangesAsync();
+
+    // --- 3) DTO geri dönüş ---
+    var resultDto = new ProductDto
+    {
+        Name = product.Name,
+        Description = product.Description,
+        BasePrice = product.BasePrice,
+        Price = product.Price,
+        CategoryId = product.CategoryId,
+        Variants = product.Variants.Select(v => new eCommerce.Application.DTOs.ProductVariantDto
+        {
+            Size = v.Size,
+            Stock = v.Stock
+        }).ToList(),
+        Images = product.Images.Select(i => new ProductImageDto
+        {
+            ImageUrl = i.ImageUrl,
+            IsMain = i.IsMain
+        }).ToList()
+    };
+
+    await _auditLogService.LogAsync(
+        userId: validation.Data!.Id,
+        action: "CreateProduct",
+        entityName: "Product",
+        entityId: product.Id,
+        details: $"Ürün oluşturuldu: {validation.Data.Email}"
+    );
+
+    return ServiceResult<ProductDto>.SuccessAsCreated(resultDto, $"/api/products/{product.Id}");
+}
 
         public async Task<ServiceResult<ProductDto>> UpdateProductAsync(int id, ProductDto dto, string token)
         {
@@ -254,10 +286,10 @@ namespace eCommerce.Application.Services
                 BasePrice = existing.BasePrice,
                 Price = existing.Price,
                 CategoryId = existing.CategoryId,
-                Variants = existing.Variants.Select(v => new ProductVariantDto
+                Variants = existing.Variants.Select(v => new eCommerce.Application.DTOs.ProductVariantDto
                 {
                     Size = v.Size,
-                    Stock = v.Stock,
+                    Stock = v.Stock
                 }).ToList(),
                 Images = existing.Images.Select(i => new ProductImageDto
                 {
@@ -281,6 +313,7 @@ namespace eCommerce.Application.Services
         {
             var isAdmin = await _userValidator.IsAdminAsync(token);
             var validation = await _userValidator.ValidateAsync(token);
+            Console.WriteLine(isAdmin);
             
             if (isAdmin.IsFail || !isAdmin.Data) return ServiceResult.Fail("Yetkisiz giriş!", HttpStatusCode.Forbidden);
 

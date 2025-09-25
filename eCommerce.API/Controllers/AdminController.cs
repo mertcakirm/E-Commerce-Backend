@@ -120,9 +120,12 @@ public class AdminController : ControllerBase
     
     [Authorize]
     [HttpPost("product")]
-    public async Task<IActionResult> CreateProduct([FromHeader(Name = "Authorization")] string token,[FromBody] ProductDto product)
+    [RequestSizeLimit(50_000_000)] // 50 MB örnek
+    public async Task<IActionResult> CreateProduct(
+        [FromHeader(Name = "Authorization")] string token,
+        [FromForm] ProductCreateDto product) 
     {
-        var result = await _productService.CreateProductAsync(product,token);
+        var result = await _productService.CreateProductAsync(product, token);
         if (result.IsFail)
             return StatusCode((int)result.Status, result);
 
@@ -176,11 +179,13 @@ public class AdminController : ControllerBase
     
     [Authorize]
     [HttpPost("category")]
-    public async Task<IActionResult> AddCategory([FromHeader(Name = "Authorization")] string token,[FromBody] CategoryRequestDto categoryDto)
+    public async Task<IActionResult> AddCategory(
+        [FromHeader(Name = "Authorization")] string token,
+        [FromForm] CategoryRequestDto categoryDto)
     {
         var result = await _categoryService.AddCategoryAsync(categoryDto, token);
-
-        if (result.IsFail) return StatusCode((int)result.Status, result.ErrorMessage);
+        if (result.IsFail)
+            return StatusCode((int)result.Status, result.ErrorMessage);
 
         return Created(result.UrlAsCreated, result.Data);
     }
