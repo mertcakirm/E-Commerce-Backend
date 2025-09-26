@@ -71,13 +71,13 @@ public class AdminController : ControllerBase
     }
         
         
-    [HttpPut("{orderId}/order")]
+    [HttpPut("order/{orderId}/status/{status}")]
     [Authorize]
-    public async Task<IActionResult> UpdateOrderStatus([FromHeader(Name = "Authorization")] string token,int orderId, [FromBody] PaymentUpdateDto dto)
+    public async Task<IActionResult> UpdateOrderStatus([FromHeader(Name = "Authorization")] string token,int orderId,string status)
     {
         try
         {
-            await _orderService.UpdateOrderStatusAsync(orderId, dto.Status, token);
+            await _orderService.UpdateOrderStatusAsync(orderId,status, token);
             return Ok(new { Success = true, Message = "Sipariş durumu güncellendi" });
         }
         catch (Exception ex)
@@ -132,7 +132,7 @@ public class AdminController : ControllerBase
     
     [Authorize]
     [HttpPost("product")]
-    [RequestSizeLimit(50_000_000)] // 50 MB örnek
+    [RequestSizeLimit(50_000_000)]
     public async Task<IActionResult> CreateProduct(
         [FromHeader(Name = "Authorization")] string token,
         [FromForm] ProductCreateDto product) 

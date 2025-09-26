@@ -29,6 +29,7 @@ namespace eCommerce.Infrastructure.Repositories
                 .ThenInclude(oi => oi.ProductVariant)
                 .ThenInclude(oi=>oi.Product)
                 .Include(o => o.Payment)
+                .Include(o=> o.User)
                 .Where(o => o.IsComplete == false && !EF.Property<bool>(o, "IsDeleted"))
                 .OrderByDescending(o => o.OrderDate)
                 .ToListAsync();

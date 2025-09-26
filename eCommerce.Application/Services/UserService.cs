@@ -150,8 +150,6 @@ public class UserService : IUserService
         if (isAdmin.IsFail || !isAdmin.Data)
             return ServiceResult.Fail("Yetkisiz giriş!", HttpStatusCode.Forbidden);
 
-        var user = await _userRepository.GetByIdUser(userId);
-        if (user == null) return ServiceResult.Fail("Kullanıcı bulunamadı", HttpStatusCode.NotFound);
 
         await _userRepository.UpdateUserStatusAsync(userId);
         await _auditLogService.LogAsync(
@@ -159,7 +157,7 @@ public class UserService : IUserService
             action: "UserStatusUpdate",
             entityName: "User",
             entityId: userId,
-            details: $"Kullanıcı durumu güncellendi: {user.Email}"
+            details: $"Kullanıcı durumu güncellendi : {userId}"
         );
         
         return ServiceResult.Success(status: HttpStatusCode.OK);

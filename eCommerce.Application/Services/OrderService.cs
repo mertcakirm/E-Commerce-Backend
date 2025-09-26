@@ -43,43 +43,61 @@ public class OrderService : IOrderService
             };
 
 
-        var orderDtos = orders.Select(o => new OrderResponseDto
+var orderDtos = orders.Select(o => new OrderResponseDto
+{
+    Id = o.Id,
+    OrderDate = o.OrderDate,
+    IsComplete = o.IsComplete,
+    TotalAmount = o.TotalAmount,
+    ShippingAddress = o.ShippingAddress,
+    Status = o.Status,
+    UserEmail = o.User.Email,
+    Payment = o.Payment != null 
+        ? new List<PaymentResponseDto>
         {
-            Id = o.Id,
-            OrderDate = o.OrderDate,
-            IsComplete = o.IsComplete,
-            TotalAmount = o.TotalAmount,
-            Status = o.Status,
-            Payment = o.Payment != null 
-                ? new List<PaymentResponseDto>
-                {
-                    new PaymentResponseDto
-                    {
-                        PaymentId = o.Payment.Id,
-                        PaymentMethod = o.Payment.PaymentMethod,
-                        PaymentStatus = o.Payment.PaymentStatus
-                    }
-                }
-                : new List<PaymentResponseDto>(),
-
-            OrderItem = (o.OrderItems ?? new List<OrderItem>()).Select(i => new OrderItemResponseDto
+            new PaymentResponseDto
             {
-                Price = i.Price,
-                Quantity = i.Quantity,
-                OrderItemProduct = new List<OrderItemProductResponseDto>
+                PaymentId = o.Payment.Id,
+                PaymentMethod = o.Payment.PaymentMethod,
+                PaymentStatus = o.Payment.PaymentStatus
+            }
+        }
+        : new List<PaymentResponseDto>(),
+
+    OrderItem = (o.OrderItems ?? new List<OrderItem>()).Select(i => new OrderItemResponseDto
+    {
+        OrderItemId = i.Id, // buraya OrderItemId atıyoruz
+        Price = i.Price,
+        Quantity = i.Quantity,
+        
+        // Eğer ProductVariantOrder dönmesi gerekiyorsa:
+        ProductVariantOrder = (i.ProductVariant != null)
+            ? new List<ProductVariantOrderResponseDto>
+            {
+                new ProductVariantOrderResponseDto
                 {
-                    new OrderItemProductResponseDto
-                    {
-                        Name = i.ProductVariant?.Product?.Name ?? "",
-                        Description = i.ProductVariant?.Product?.Description ?? "",
-                        DiscountRate = i.ProductVariant?.Product?.DiscountRate ?? 0,
-                        AverageRating = i.ProductVariant?.Product?.AverageRating ?? 0,
-                        CategoryName = i.ProductVariant?.Product?.Category?.Name ?? "",
-                        Price = i.ProductVariant?.Product?.Price ?? 0
-                    }
+                    Size = i.ProductVariant.Size
                 }
-            }).ToList()
-        }).ToList();
+            }
+            : new List<ProductVariantOrderResponseDto>(),
+
+        OrderItemProduct = (i.ProductVariant?.Product != null)
+            ? new List<OrderItemProductResponseDto>
+            {
+                new OrderItemProductResponseDto
+                {
+                    Id = i.ProductVariant.ProductId, 
+                    Name = i.ProductVariant.Product.Name,
+                    Description = i.ProductVariant.Product.Description,
+                    DiscountRate = i.ProductVariant.Product.DiscountRate,
+                    AverageRating = i.ProductVariant.Product.AverageRating,
+                    CategoryName = i.ProductVariant.Product.Category?.Name ?? "",
+                    Price = i.ProductVariant.Product.Price
+                }
+            }
+            : new List<OrderItemProductResponseDto>()
+    }).ToList()
+}).ToList();
 
         return new ServiceResult<List<OrderResponseDto>>
         {
@@ -105,6 +123,7 @@ public async Task<ServiceResult<Order>> CreateOrderAsync(OrderCreateDto dto, str
         UserId = user.Id,
         OrderDate = DateTime.UtcNow,
         Status = "Pending",
+        ShippingAddress = dto.ShippingAddress,
         OrderItems = new List<OrderItem>()
     };
 
@@ -262,41 +281,59 @@ public async Task<ServiceResult<Order>> CreateOrderAsync(OrderCreateDto dto, str
         if (!orders.Any())
             return ServiceResult<List<OrderResponseDto>>.Fail("Tamamlanmamış sipariş bulunamadı", HttpStatusCode.NotFound);
 
-        var dtoList = orders.Select(o => new OrderResponseDto
+       var dtoList = orders.Select(o => new OrderResponseDto
         {
-            Id = o.Id,
-            OrderDate = o.OrderDate,
-            IsComplete = o.IsComplete,
+            Id          = o.Id,
+            OrderDate   = o.OrderDate,
+            IsComplete  = o.IsComplete,
             TotalAmount = o.TotalAmount,
-            Status = o.Status,
+            ShippingAddress = o.ShippingAddress,
+            Status      = o.Status,
+            UserEmail   = o.User.Email,
+
             Payment = o.Payment != null
                 ? new List<PaymentResponseDto>
-                {
-                    new PaymentResponseDto
-                    {
-                        PaymentId = o.Payment.Id,
-                        PaymentMethod = o.Payment.PaymentMethod,
-                        PaymentStatus = o.Payment.PaymentStatus
-                    }
-                }
+                  {
+                      new PaymentResponseDto
+                      {
+                          PaymentId     = o.Payment.Id,
+                          PaymentMethod = o.Payment.PaymentMethod,
+                          PaymentStatus = o.Payment.PaymentStatus
+                      }
+                  }
                 : new List<PaymentResponseDto>(),
-            OrderItem = (o.OrderItems ?? new List<OrderItem>()).Select(i => new OrderItemResponseDto
-            {
-                Price = i.Price,
-                Quantity = i.Quantity,
-                OrderItemProduct = new List<OrderItemProductResponseDto>
+
+            OrderItem = (o.OrderItems ?? new List<OrderItem>())
+                .Select(i => new OrderItemResponseDto
                 {
-                    new OrderItemProductResponseDto
+                    OrderItemId = i.Id,
+                    Price       = i.Price,
+                    Quantity    = i.Quantity,
+
+                    ProductVariantOrder = i.ProductVariant == null
+                        ? new List<ProductVariantOrderResponseDto>()
+                        : new List<ProductVariantOrderResponseDto>
+                        {
+                            new ProductVariantOrderResponseDto
+                            {
+                                Size = i.ProductVariant.Size
+                            }
+                        },
+                    OrderItemProduct = new List<OrderItemProductResponseDto>
                     {
-                        Name = i.ProductVariant?.Product?.Name ?? "",
-                        Description = i.ProductVariant?.Product?.Description ?? "",
-                        DiscountRate = i.ProductVariant?.Product?.DiscountRate ?? 0,
-                        AverageRating = i.ProductVariant?.Product?.AverageRating ?? 0,
-                        CategoryName = i.ProductVariant?.Product?.Category?.Name ?? "",
-                        Price = i.ProductVariant?.Product?.Price ?? 0
+                        new OrderItemProductResponseDto
+                        {
+                            Id = i.ProductId,
+                            Name         = i.ProductVariant?.Product?.Name ?? "",
+                            Description  = i.ProductVariant?.Product?.Description ?? "",
+                            DiscountRate = i.ProductVariant?.Product?.DiscountRate ?? 0,
+                            AverageRating= i.ProductVariant?.Product?.AverageRating ?? 0,
+                            CategoryName = i.ProductVariant?.Product?.Category?.Name ?? "",
+                            Price        = i.ProductVariant?.Product?.Price ?? 0
+                        }
                     }
-                }
-            }).ToList()
+                })
+                .ToList()
         }).ToList();
 
         return ServiceResult<List<OrderResponseDto>>.Success(dtoList);
@@ -318,7 +355,10 @@ public async Task<ServiceResult<Order>> CreateOrderAsync(OrderCreateDto dto, str
             OrderDate = o.OrderDate,
             IsComplete = o.IsComplete,
             TotalAmount = o.TotalAmount,
+            ShippingAddress = o.ShippingAddress,
+            UserEmail = o.User.Email,
             Status = o.Status,
+            
             Payment = o.Payment != null
                 ? new List<PaymentResponseDto>
                 {
