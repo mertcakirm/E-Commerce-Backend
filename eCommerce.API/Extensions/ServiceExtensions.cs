@@ -51,5 +51,7 @@ namespace eCommerce.API.Extensions;
             services.AddScoped<IAuditLogService, AuditLogService>();
             services.AddScoped<IAuditLogRepository, AuditLogRepository>();
             
+            
+            
         }
     }

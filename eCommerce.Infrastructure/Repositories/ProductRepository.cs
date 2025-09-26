@@ -98,6 +98,51 @@ namespace eCommerce.Infrastructure.Repositories
                 .Include(v => v.Product)
                 .FirstOrDefaultAsync(v => v.Id == variantId);
         }
+
+        public async Task<bool> AddStockAsync(int productId,string newSize ,int quantity)
+        {
+            var StokObj = new ProductVariant
+            {
+                Size = newSize,
+                Stock = quantity,
+                ProductId = productId
+            };
+
+            _context.ProductVariants.Add(StokObj);
+
+            var result = await _context.SaveChangesAsync();
+
+            return result > 0;
+        }
+        
+        public async Task<bool> RemoveStockAsync(int variantId)
+        {
+            var variant = await _context.ProductVariants.FirstOrDefaultAsync(v => v.Id == variantId);
+            
+            variant.IsDeleted = true;
+            
+            _context.ProductVariants.Update(variant);
+
+            var result = await _context.SaveChangesAsync();
+
+            return result > 0;
+        }
+        
+        
+        
+        public async Task<ProductImage> AddImageAsync(ProductImage image)
+        {
+            _context.ProductImages.Add(image);
+            await _context.SaveChangesAsync();
+            return image;
+        }
+        
+        public async Task<List<ProductImage>> GetImageByProductIdAsync(int productId)
+        {
+            return await _context.ProductImages
+                .Where(x => x.ProductId == productId)
+                .ToListAsync();
+        }
         
         }
     }

@@ -3,6 +3,7 @@ using eCommerce.API.Extensions;
 using eCommerce.Infrastructure.Data;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.FileProviders;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 
@@ -67,7 +68,9 @@ builder.Services.AddDbContext<AppDbContext>(options =>
 );
 
 // DI: Repository ve Service
-builder.Services.AddApplicationServices();
+builder.Services.AddApplicationServices(); 
+builder.Services.AddSingleton<IWebHostEnvironment>(builder.Environment);
+
 
 // JWT Ayarları
 var jwtSettings = builder.Configuration.GetSection("Jwt");
@@ -102,7 +105,13 @@ builder.Services.AddAuthorization();
 var app = builder.Build();
 
 app.UseCorsPolicy();
-app.UseStaticFiles();
+app.UseStaticFiles(new StaticFileOptions
+{
+    FileProvider = new PhysicalFileProvider(
+        Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "images")
+    ),
+    RequestPath = "/images"
+});
 app.UseHttpsRedirection();
 app.UseAuthentication();
 app.UseAuthorization();

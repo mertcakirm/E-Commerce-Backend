@@ -107,7 +107,8 @@ public class UserService : IUserService
             Id = u.Id,
             Name = u.Name,
             Email = u.Email,
-            Role = u.Role
+            Role = u.Role,
+            IsDeleted = u.IsDeleted
         }).ToList();
 
         var totalCount = usersDto.Count;

@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Http;
+using System.Collections.Generic;
 
 public class ProductCreateDto
 {
@@ -8,6 +9,7 @@ public class ProductCreateDto
     public decimal Price { get; set; }
     public int CategoryId { get; set; }
 
+    // 🔑 JSON array olarak direkt gelecek
     public List<ProductVariantCreateDto> Variants { get; set; } = new();
 
     public List<IFormFile> Images { get; set; } = new();

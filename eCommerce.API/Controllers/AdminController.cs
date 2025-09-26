@@ -1,5 +1,6 @@
 using eCommerce.Application.DTOs;
 using eCommerce.Application.Interfaces;
+using eCommerce.Core.Entities;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -13,13 +14,14 @@ public class AdminController : ControllerBase
     private readonly ICategoryService _categoryService;
     private readonly IOrderService _orderService;
     private readonly IUserService _userService;
-    
-    public AdminController(IProductService productService, ICategoryService categoryService, IOrderService orderService, IUserService userService)
+    private readonly IWebHostEnvironment _env;
+    public AdminController(IProductService productService, ICategoryService categoryService, IOrderService orderService, IUserService userService, IWebHostEnvironment env)
         {
         _productService = productService;
         _categoryService = categoryService;
         _orderService = orderService;
         _userService = userService;
+        _env = env;
         }
     
     [Authorize]
@@ -146,7 +148,7 @@ public class AdminController : ControllerBase
         
     [Authorize]
     [HttpPut("product/{id}")]
-    public async Task<IActionResult> UpdateProduct([FromHeader(Name = "Authorization")] string token,int id, [FromBody] ProductDto product)
+    public async Task<IActionResult> UpdateProduct([FromHeader(Name = "Authorization")] string token,int id, [FromBody] UpdateProductDto product)
     {
         var result = await _productService.UpdateProductAsync(id, product,token);
         if (result.IsFail)
@@ -177,6 +179,69 @@ public class AdminController : ControllerBase
         return NoContent();
     }
     
+  [Authorize]
+  [HttpPost("{productId}/upload-image")]
+  [Consumes("multipart/form-data")]
+  public async Task<IActionResult> UploadProductImage(
+      int productId,
+      [FromForm] UploadProductImageRequest request,
+      [FromHeader(Name = "Authorization")] string token)
+  {
+      if (request.File == null || request.File.Length == 0)
+          return BadRequest("Dosya geçersiz");
+  
+      if (string.IsNullOrEmpty(token))
+          return Unauthorized("Token bulunamadı");
+  
+      // Dosya kaydetme işlemi
+      var uploadsFolder = Path.Combine(_env.WebRootPath, "images", "products");
+      if (!Directory.Exists(uploadsFolder))
+          Directory.CreateDirectory(uploadsFolder);
+  
+      var fileName = $"{Guid.NewGuid()}{Path.GetExtension(request.File.FileName)}";
+      var filePath = Path.Combine(uploadsFolder, fileName);
+  
+      using (var stream = new FileStream(filePath, FileMode.Create))
+      {
+          await request.File.CopyToAsync(stream);
+      }
+  
+      var productImage = new ProductImage
+      {
+          ProductId = productId,
+          ImageUrl = $"/images/products/{fileName}"
+      };
+  
+      var result = await _productService.AddProductImageAsync(productImage, token);
+  
+      if (!result.IsSuccess)
+          return StatusCode((int)result.Status, result.ErrorMessage);
+  
+      return Ok(result.Data);
+  }
+    
+    [Authorize]
+    [HttpPost("product/{productId}/stock/{size}/{quantity}")]
+    public async Task<IActionResult> AddStock([FromHeader(Name = "Authorization")] string token,int productId, string size, int quantity)
+    {
+        var result = await _productService.AddStock(productId,size,quantity,token);
+        if (result.IsFail)
+            return StatusCode((int)result.Status, result);
+
+        return NoContent();
+    }
+    
+    [Authorize]
+    [HttpDelete("product/stock/{variantId}")]
+    public async Task<IActionResult> RemoveStock([FromHeader(Name = "Authorization")] string token,int variantId)
+    {
+        var result = await _productService.RemoveStock(variantId,token);
+        if (result.IsFail)
+            return StatusCode((int)result.Status, result);
+
+        return NoContent();
+    }
+    
     [Authorize]
     [HttpPost("category")]
     public async Task<IActionResult> AddCategory(
@@ -200,5 +265,8 @@ public class AdminController : ControllerBase
 
         return NoContent();
     }
+    
+    
+    
     
 }

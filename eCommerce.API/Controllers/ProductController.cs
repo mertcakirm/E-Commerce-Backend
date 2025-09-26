@@ -24,8 +24,7 @@ namespace eCommerce.API.Controllers
             [FromQuery] int pageSize = 10)
         {
             var result = await _productService.GetAllProductsAsync(pageNumber, pageSize);
-            if (result.IsFail)
-                return StatusCode((int)result.Status, result);
+            if (result.IsFail) return StatusCode((int)result.Status, result);
 
             return Ok(result);
         }

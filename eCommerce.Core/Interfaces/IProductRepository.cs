@@ -13,5 +13,9 @@ namespace eCommerce.Core.Interfaces
         Task<Product?> GetByIdWithDetailsAsync(int id);
         Task<bool> DeleteImageAsync(int id);
         Task<ProductVariant?> GetVariantById(int variantId);
+        Task<bool> AddStockAsync(int productId, string newSize, int quantity);
+        Task<bool> RemoveStockAsync(int VariantId);
+        Task<ProductImage> AddImageAsync(ProductImage image);
+        Task<List<ProductImage>> GetImageByProductIdAsync(int productId);
     }
 }

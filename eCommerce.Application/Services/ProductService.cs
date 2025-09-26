@@ -3,6 +3,7 @@ using eCommerce.Core.Entities;
 using eCommerce.Core.Interfaces;
 using System.Net;
 using eCommerce.Application.DTOs;
+using Microsoft.AspNetCore.Http;
 
 namespace eCommerce.Application.Services
 {
@@ -238,7 +239,7 @@ public async Task<ServiceResult<ProductDto>> CreateProductAsync(ProductCreateDto
     return ServiceResult<ProductDto>.SuccessAsCreated(resultDto, $"/api/products/{product.Id}");
 }
 
-        public async Task<ServiceResult<ProductDto>> UpdateProductAsync(int id, ProductDto dto, string token)
+        public async Task<ServiceResult<ProductDto>> UpdateProductAsync(int id, UpdateProductDto dto, string token)
         {
             var isAdmin = await _userValidator.IsAdminAsync(token);
             var validation = await _userValidator.ValidateAsync(token);
@@ -254,27 +255,6 @@ public async Task<ServiceResult<ProductDto>> CreateProductAsync(ProductCreateDto
             existing.Description = dto.Description;
             existing.CategoryId = dto.CategoryId;
 
-            existing.Variants.Clear();
-            foreach (var variantDto in dto.Variants)
-            {
-                existing.Variants.Add(new ProductVariant
-                {
-                    Size = variantDto.Size,
-                    Stock = variantDto.Stock,
-                    ProductId = existing.Id
-                });
-            }
-
-            existing.Images.Clear();
-            foreach (var imageDto in dto.Images)
-            {
-                existing.Images.Add(new ProductImage
-                {
-                    ImageUrl = imageDto.ImageUrl,
-                    IsMain = imageDto.IsMain,
-                    ProductId = existing.Id
-                });
-            }
 
             await _productRepo.UpdateAsync(existing);
             await _productRepo.SaveChangesAsync();
@@ -378,6 +358,71 @@ public async Task<ServiceResult<ProductDto>> CreateProductAsync(ProductCreateDto
                 details: $"Ürüne indirim yapıldı: {user.Data!.Email}"
             );
             return ServiceResult.Success(status: HttpStatusCode.OK);
+        }
+
+        public async Task<ServiceResult> AddStock(int productId, string newSize, int quantity, string token)
+        {
+            var isAdmin = await _userValidator.IsAdminAsync(token);
+            var user = await _userValidator.ValidateAsync(token);
+        
+            if (isAdmin.IsFail || !isAdmin.Data)
+                return ServiceResult.Fail("Yetkisiz giriş!", HttpStatusCode.Forbidden);
+            
+            var product = await _productRepository.GetByIdAsync(productId);
+            if (product == null) return ServiceResult.Fail("Ürün bulunamadı!", HttpStatusCode.NotFound);
+
+            await _productRepository.AddStockAsync(productId, newSize, quantity);
+            await _auditLogService.LogAsync(
+                userId: user.Data!.Id,
+                action: "AddStock",
+                entityName: "ProductVariant",
+                entityId: productId,
+                details: $"Ürüne stok eklendi: {user.Data!.Email}"
+            );
+            return ServiceResult.Success(status: HttpStatusCode.OK);
+        }
+        
+        public async Task<ServiceResult> RemoveStock(int variantId, string token)
+        {
+            var isAdmin = await _userValidator.IsAdminAsync(token);
+            var user = await _userValidator.ValidateAsync(token);
+        
+            if (isAdmin.IsFail || !isAdmin.Data)
+                return ServiceResult.Fail("Yetkisiz giriş!", HttpStatusCode.Forbidden);
+            
+            await _productRepository.RemoveStockAsync(variantId);
+            await _auditLogService.LogAsync(
+                userId: user.Data!.Id,
+                action: "RemoveStock",
+                entityName: "ProductVariant",
+                entityId: variantId,
+                details: $"Üründen stok kaldırıldı: {user.Data!.Email}"
+            );
+            return ServiceResult.Success(status: HttpStatusCode.OK);
+        }
+        
+        public async Task<ServiceResult<ProductImage>> AddProductImageAsync(ProductImage image, string token)
+        {
+            if (string.IsNullOrEmpty(token))
+                return ServiceResult<ProductImage>.Fail("Token bulunamadı", HttpStatusCode.Unauthorized);
+
+            var isAdmin = await _userValidator.IsAdminAsync(token);
+            var user = await _userValidator.ValidateAsync(token);
+
+            if (isAdmin.IsFail || !isAdmin.Data)
+                return ServiceResult<ProductImage>.Fail("Yetkisiz giriş!", HttpStatusCode.Forbidden);
+
+            var savedImage = await _productRepository.AddImageAsync(image);
+
+            await _auditLogService.LogAsync(
+                userId: user.Data!.Id,
+                action: "AddImages",
+                entityName: "ProductImage",
+                entityId: savedImage.Id,
+                details: $"Ürüne resim eklendi: {user.Data!.Email}"
+            );
+
+            return ServiceResult<ProductImage>.Success(savedImage);
         }
     }
 }
