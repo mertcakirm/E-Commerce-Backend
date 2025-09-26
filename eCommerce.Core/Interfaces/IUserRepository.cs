@@ -8,5 +8,6 @@ public interface IUserRepository
     Task<bool> IsUser(int id);
     Task<bool> DeleteUserAsync(int userId);
     Task<bool> UpdatePassword(int userId, string newPassword);
+    Task<bool> UpdateUserStatusAsync(int userId);
 
 }

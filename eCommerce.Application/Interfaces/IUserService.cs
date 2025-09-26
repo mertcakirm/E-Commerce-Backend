@@ -9,4 +9,5 @@ public interface IUserService
     Task<ServiceResult<bool>> UpdatePassword(string token, string oldPassword, string newPassword);
     Task<ServiceResult<UserDto>> GetUserByIdAsync(string token);
     Task<ServiceResult> DeleteUser(string token, int userId);
+    Task<ServiceResult> UpdateUserStatus(int userId, string token);
 }

@@ -15,7 +15,7 @@ public class UserRepository : IUserRepository
 
     public async Task<IEnumerable<User>> GetAllUsers()
     {
-        var users = await _context.Users.Where(u=>u.IsDeleted == false).ToListAsync();
+        var users = await _context.Users.ToListAsync();
         return users;
     }
     
@@ -61,6 +61,23 @@ public class UserRepository : IUserRepository
             
         var result = await _context.SaveChangesAsync();
 
+        return result > 0;
+    }
+
+    public async Task<bool> UpdateUserStatusAsync(int userId)
+    {
+        var user = await _context.Users.FirstOrDefaultAsync(u => u.Id == userId);
+        if (user == null) return false;
+        if (user.IsDeleted)
+        {
+            user.IsDeleted = false;
+        }
+        else
+        {
+            user.IsDeleted = true;
+        }
+        _context.Users.Update(user);
+        var result = await _context.SaveChangesAsync();
         return result > 0;
     }
     

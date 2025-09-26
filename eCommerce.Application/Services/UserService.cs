@@ -143,7 +143,26 @@ public class UserService : IUserService
         
         return ServiceResult.Success(status: HttpStatusCode.OK);
     }
-    
-    
+
+    public async Task<ServiceResult> UpdateUserStatus(int userId, string token)
+    {
+        var isAdmin = await _userValidator.IsAdminAsync(token);
+        if (isAdmin.IsFail || !isAdmin.Data)
+            return ServiceResult.Fail("Yetkisiz giriş!", HttpStatusCode.Forbidden);
+
+        var user = await _userRepository.GetByIdUser(userId);
+        if (user == null) return ServiceResult.Fail("Kullanıcı bulunamadı", HttpStatusCode.NotFound);
+
+        await _userRepository.UpdateUserStatusAsync(userId);
+        await _auditLogService.LogAsync(
+            userId: userId,
+            action: "UserStatusUpdate",
+            entityName: "User",
+            entityId: userId,
+            details: $"Kullanıcı durumu güncellendi: {user.Email}"
+        );
+        
+        return ServiceResult.Success(status: HttpStatusCode.OK);
+    }
 
 }
