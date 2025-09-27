@@ -112,6 +112,14 @@ app.UseStaticFiles(new StaticFileOptions
     ),
     RequestPath = "/images"
 });
+
+app.UseStaticFiles(new StaticFileOptions
+{
+    FileProvider = new PhysicalFileProvider(
+        Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "offers")
+    ),
+    RequestPath = "/offers"
+});
 app.UseHttpsRedirection();
 app.UseAuthentication();
 app.UseAuthorization();

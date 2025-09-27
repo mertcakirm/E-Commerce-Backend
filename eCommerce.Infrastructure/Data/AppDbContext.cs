@@ -1,6 +1,8 @@
 using eCommerce.Core.Entities;
 using Microsoft.EntityFrameworkCore;
 using System.Linq.Expressions;
+using Offer = eCommerce.Core.Entities.Offer;
+using Order = eCommerce.Core.Entities.Order;
 
 namespace eCommerce.Infrastructure.Data;
 
@@ -23,6 +25,8 @@ public class AppDbContext : DbContext
     public DbSet<UserAddress> UserAddresses { get; set; }
     public DbSet<AuditLog> AuditLogs { get; set; }
     public DbSet<Offer> Offers { get; set; }
+    public DbSet<CartContent> CartContents { get; set; }
+    public DbSet<SliderContent> SliderContents { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -38,19 +42,6 @@ public class AppDbContext : DbContext
                 modelBuilder.Entity(entityType.ClrType).HasQueryFilter((LambdaExpression)filter);
             }
         }
-        modelBuilder.Entity<ProductOffer>()
-            .HasKey(po => new { po.ProductId, po.OfferId });
-
-        modelBuilder.Entity<ProductOffer>()
-            .HasOne(po => po.Product)
-            .WithMany(p => p.ProductOffers)
-            .HasForeignKey(po => po.ProductId);
-
-        modelBuilder.Entity<ProductOffer>()
-            .HasOne(po => po.Offer)
-            .WithMany(o => o.ProductOffers)
-            .HasForeignKey(po => po.OfferId);
-
         // Category self-reference
         modelBuilder.Entity<Category>()
             .HasOne(c => c.ParentCategory)

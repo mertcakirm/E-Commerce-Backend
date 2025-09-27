@@ -18,35 +18,50 @@ public class OfferRepository : IOfferRepository
     {
         return await _context.Offers
             .AsNoTracking()
-            .FirstOrDefaultAsync(o => o.Id == offerId && o.IsActive);
+            .FirstOrDefaultAsync(o => o.Id == offerId);
     }
-
-    public async Task<List<Product>> GetProductsMatchingOfferDiscountAsync(int offerId)
+    
+    public async Task<List<Product>> GetProductsByDiscountAsync(decimal discountRate)
     {
-        var offer = await GetByIdAsync(offerId);
-        if (offer == null || !offer.IsActive || offer.DiscountRate == null)
-            return new List<Product>();
-
-        var discount = (int)Math.Round(offer.DiscountRate.Value);
-
-        var products = await _context.Products
-            .AsNoTracking()
-            .Include(p=>p.Variants)
-            .Include(p=>p.Images)
-            .Include(p => p.ProductOffers)
-            .ThenInclude(po => po.Offer)
-            .Where(p =>
-                p.IsActive &&
-                p.DiscountRate == discount &&
-                p.ProductOffers.Any(po =>
-                    po.OfferId == offerId &&
-                    po.Offer.IsActive))
+        return await _context.Products
+            .Where(p => p.IsActive && p.DiscountRate == discountRate)
+            .Include(p => p.Variants)
+            .Include(p => p.Images)
             .ToListAsync();
+    }
 
-        return products;
+    public async Task<List<Offer>> GetAllAsync()
+    {
+        return await _context.Offers.Where(o=>!o.IsDeleted).ToListAsync();
     }
     
+    public async Task<Offer> CreateOfferAsync(Offer offer)
+    {
+        _context.Offers.Add(offer);
+        await _context.SaveChangesAsync();
+        return offer;
+    }
     
-    
+    public async Task<bool> RemoveOfferAsync(int  offerId)
+    {
+        var offer = await _context.Offers.FirstOrDefaultAsync(o=>o.Id == offerId);
+        
+        if(offer == null) return false;
+        
+        offer.IsDeleted = true;
+        await _context.SaveChangesAsync();
+        return true;
+    }
+    public async Task<bool> ToggleOfferAsync(int offerId)
+    {
+        var offer = await _context.Offers.FirstOrDefaultAsync(o => o.Id == offerId);
+
+        if (offer == null) return false;
+
+        offer.IsActive = !offer.IsActive;
+
+        await _context.SaveChangesAsync();
+        return true;
+    }
     
 }

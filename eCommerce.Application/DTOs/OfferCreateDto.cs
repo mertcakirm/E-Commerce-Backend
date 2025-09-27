@@ -1,12 +1,15 @@
+using Microsoft.AspNetCore.Http;
+
 namespace eCommerce.Application.DTOs;
 
-public class OfferCreateDto
+public class CreateOfferDto
 {
-    public string Name { get; set; }
-    public string ImageUrl { get; set; }
-    public string Description { get; set; }
+    public string Name { get; set; } = string.Empty;
+    public string Description { get; set; } = string.Empty;
     public decimal? DiscountRate { get; set; }
     public DateTime StartDate { get; set; }
     public DateTime EndDate { get; set; }
-    public List<int> ProductIds { get; set; }
+
+    // Resim dosyası
+    public IFormFile? ImageFile { get; set; }
 }

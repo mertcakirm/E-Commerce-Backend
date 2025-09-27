@@ -11,5 +11,5 @@ public class Offer : BaseEntity
     public DateTime EndDate { get; set; }
     public bool IsActive { get; set; } = true;
 
-    public virtual List<ProductOffer> ProductOffers { get; set; } = new();
+    public virtual List<Product> Products { get; set; } = new();
 }

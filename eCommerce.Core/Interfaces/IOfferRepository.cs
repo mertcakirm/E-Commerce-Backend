@@ -5,5 +5,9 @@ namespace eCommerce.Core.Interfaces;
 public interface IOfferRepository
 {
     Task<Offer?> GetByIdAsync(int offerId);
-    Task<List<Product>> GetProductsMatchingOfferDiscountAsync(int offerId);
+    Task<List<Product>> GetProductsByDiscountAsync(decimal discountRate);
+    Task<List<Offer>> GetAllAsync();
+    Task<Offer> CreateOfferAsync(Offer offer);
+    Task<bool> RemoveOfferAsync(int offerId);
+    Task<bool> ToggleOfferAsync(int offerId);
 }
