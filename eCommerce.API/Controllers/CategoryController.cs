@@ -33,5 +33,32 @@ namespace eCommerce.API.Controllers
 
             return Ok(result.Data);
         }
+        
+        
+    
+    
+        [Authorize]
+        [HttpPost("category")]
+        public async Task<IActionResult> AddCategory(
+            [FromHeader(Name = "Authorization")] string token,
+            [FromForm] CategoryRequestDto categoryDto)
+        {
+            var result = await _categoryService.AddCategoryAsync(categoryDto, token);
+            if (result.IsFail)
+                return StatusCode((int)result.Status, result.ErrorMessage);
+
+            return Created(result.UrlAsCreated, result.Data);
+        }
+    
+        [Authorize]
+        [HttpDelete("category/{id}")]
+        public async Task<IActionResult> DeleteCategory([FromHeader(Name = "Authorization")] string token,int id)
+        {
+            var result = await _categoryService.DeleteCategoryAsync(id, token);
+
+            if (result.IsFail) return StatusCode((int)result.Status, result.ErrorMessage);
+
+            return NoContent();
+        }
     }
 }

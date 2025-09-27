@@ -1,6 +1,6 @@
 {
   "version": 2,
-  "dgSpecHash": "5ygD/zJvcsg=",
+  "dgSpecHash": "4XO3zQ+qMBc=",
   "success": true,
   "projectFilePath": "/Users/mertcakir/BackEnd-Projects/eCommerce/eCommerce.API/eCommerce.API.csproj",
   "expectedPackageFiles": [
@@ -65,7 +65,10 @@
     "/Users/mertcakir/.nuget/packages/system.runtime.compilerservices.unsafe/6.0.0/system.runtime.compilerservices.unsafe.6.0.0.nupkg.sha512",
     "/Users/mertcakir/.nuget/packages/system.text.encodings.web/9.0.0/system.text.encodings.web.9.0.0.nupkg.sha512",
     "/Users/mertcakir/.nuget/packages/system.text.json/9.0.0/system.text.json.9.0.0.nupkg.sha512",
-    "/Users/mertcakir/.nuget/packages/system.threading.channels/7.0.0/system.threading.channels.7.0.0.nupkg.sha512"
+    "/Users/mertcakir/.nuget/packages/system.threading.channels/7.0.0/system.threading.channels.7.0.0.nupkg.sha512",
+    "/Users/mertcakir/.nuget/packages/microsoft.netcore.app.ref/8.0.18/microsoft.netcore.app.ref.8.0.18.nupkg.sha512",
+    "/Users/mertcakir/.nuget/packages/microsoft.aspnetcore.app.ref/8.0.18/microsoft.aspnetcore.app.ref.8.0.18.nupkg.sha512",
+    "/Users/mertcakir/.nuget/packages/microsoft.netcore.app.host.osx-arm64/8.0.18/microsoft.netcore.app.host.osx-arm64.8.0.18.nupkg.sha512"
   ],
   "logs": []
 }

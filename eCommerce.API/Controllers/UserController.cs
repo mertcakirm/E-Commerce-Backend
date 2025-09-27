@@ -55,5 +55,39 @@ public class UserController: ControllerBase
 
         return Ok(result.Data);
     }
+    
+    
+    [Authorize]
+    [HttpGet("get-all")]
+    public async Task<IActionResult> GetAllUsers([FromHeader(Name = "Authorization")] string token,[FromQuery] int pageNumber=1, [FromQuery] int pageSize=10)
+    {
+        if (string.IsNullOrEmpty(token))
+            return Unauthorized("Token gerekli");
+
+        var users = await _userService.GetAllUsers(token,pageNumber,pageSize);
+        return Ok(users);
+    }
+    
+    [Authorize]
+    [HttpDelete("{userId}")]
+    public async Task<IActionResult> DeleteUser(int userId,[FromHeader(Name = "Authorization")] string token)
+    {
+        if (string.IsNullOrEmpty(token))
+            return Unauthorized("Token missing");
+
+        var result = await _userService.DeleteUser(token, userId);
+        return StatusCode((int)result.Status, result.IsFail ? result.ErrorMessage : null);
+    }
+    
+    [Authorize]
+    [HttpPut("status/{userId}")]
+    public async Task<IActionResult> DeleteUser([FromHeader(Name = "Authorization")] string token,int userId)
+    {
+        if (string.IsNullOrEmpty(token))
+            return Unauthorized("Token missing");
+
+        var result = await _userService.UpdateUserStatus(userId,token);
+        return StatusCode((int)result.Status, result.IsFail ? result.ErrorMessage : null);
+    }
 
 }
