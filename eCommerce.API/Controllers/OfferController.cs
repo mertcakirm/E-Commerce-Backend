@@ -19,12 +19,6 @@ public class OffersController : ControllerBase
     public async Task<IActionResult> GetDiscountMatchedProducts(int offerId)
     {
         var products = await _offerService.GetDiscountMatchedProductsAsync(offerId);
-        return Ok(products.Select(p => new
-        {
-            p.Id,
-            p.Name,
-            p.Price,
-            p.DiscountRate
-        }));
+        return Ok(products);
     }
 }

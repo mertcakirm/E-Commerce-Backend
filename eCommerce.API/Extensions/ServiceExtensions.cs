@@ -1,6 +1,5 @@
 using eCommerce.Application.Interfaces;
 using eCommerce.Application.Services;
-using eCommerce.Application.ServicesImpl;
 using eCommerce.Core.Interfaces;
 using eCommerce.Infrastructure.Repositories;
 

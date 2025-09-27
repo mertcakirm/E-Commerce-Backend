@@ -1,8 +1,9 @@
+using eCommerce.Application.DTOs;
 using eCommerce.Application.Interfaces;
 using eCommerce.Core.Entities;
 using eCommerce.Core.Interfaces;
 
-namespace eCommerce.Application.ServicesImpl;
+namespace eCommerce.Application.Services;
 
 public class OfferService : IOfferService
 {
@@ -18,8 +19,30 @@ public class OfferService : IOfferService
         return await _offerRepository.GetByIdAsync(offerId);
     }
 
-    public async Task<List<Product>> GetDiscountMatchedProductsAsync(int offerId)
+    public async Task<List<DiscountProductDto>> GetDiscountMatchedProductsAsync(int offerId)
     {
-        return await _offerRepository.GetProductsMatchingOfferDiscountAsync(offerId);
+        var products = await _offerRepository.GetProductsMatchingOfferDiscountAsync(offerId);
+
+        var result = products.Select(p => new DiscountProductDto
+        {
+            Id           = p.Id,
+            Name         = p.Name,
+            Price    = p.Price,
+            DiscountRate = p.DiscountRate,
+            ImageUrls    = p.Images?
+                .Where(i => i != null)
+                .Select(i => i!.ImageUrl)
+                .ToList() ?? new List<string>(),
+
+            Variants     = p.Variants?
+                .Select(v => new ProductVariantResponseDto
+                {
+                    Id    = v.Id,
+                    Size  = v.Size,
+                    Stock = v.Stock
+                }).ToList() ?? new List<ProductVariantResponseDto>()
+        }).ToList();
+
+        return result;
     }
 }

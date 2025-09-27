@@ -23,7 +23,6 @@ public class OfferRepository : IOfferRepository
 
     public async Task<List<Product>> GetProductsMatchingOfferDiscountAsync(int offerId)
     {
-        // İlgili kampanyayı çek
         var offer = await GetByIdAsync(offerId);
         if (offer == null || !offer.IsActive || offer.DiscountRate == null)
             return new List<Product>();
@@ -32,6 +31,8 @@ public class OfferRepository : IOfferRepository
 
         var products = await _context.Products
             .AsNoTracking()
+            .Include(p=>p.Variants)
+            .Include(p=>p.Images)
             .Include(p => p.ProductOffers)
             .ThenInclude(po => po.Offer)
             .Where(p =>
@@ -44,4 +45,8 @@ public class OfferRepository : IOfferRepository
 
         return products;
     }
+    
+    
+    
+    
 }
