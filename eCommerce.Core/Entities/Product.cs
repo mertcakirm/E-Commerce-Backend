@@ -19,4 +19,5 @@ public class Product : BaseEntity
     public virtual List<CartItem> CartItems { get; set; } = new List<CartItem>();
     public virtual List<OrderItem> OrderItems { get; set; } = new List<OrderItem>();
     public virtual List<Wishlist> Wishlists { get; set; } = new List<Wishlist>();
+    public virtual List<ProductOffer> ProductOffers { get; set; } = new();
 }

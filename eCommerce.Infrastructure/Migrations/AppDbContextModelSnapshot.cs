@@ -209,6 +209,52 @@ namespace eCommerce.Infrastructure.Migrations
                     b.ToTable("Comments");
                 });
 
+            modelBuilder.Entity("eCommerce.Core.Entities.Offer", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasColumnType("longtext");
+
+                    b.Property<decimal?>("DiscountRate")
+                        .HasColumnType("decimal(65,30)");
+
+                    b.Property<DateTime>("EndDate")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<string>("ImageUrl")
+                        .IsRequired()
+                        .HasColumnType("longtext");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("tinyint(1)");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("tinyint(1)");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("longtext");
+
+                    b.Property<DateTime>("StartDate")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime(6)");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("Offers");
+                });
+
             modelBuilder.Entity("eCommerce.Core.Entities.Order", b =>
                 {
                     b.Property<int>("Id")
@@ -417,6 +463,21 @@ namespace eCommerce.Infrastructure.Migrations
                     b.HasIndex("ProductId");
 
                     b.ToTable("ProductImages");
+                });
+
+            modelBuilder.Entity("eCommerce.Core.Entities.ProductOffer", b =>
+                {
+                    b.Property<int>("ProductId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("OfferId")
+                        .HasColumnType("int");
+
+                    b.HasKey("ProductId", "OfferId");
+
+                    b.HasIndex("OfferId");
+
+                    b.ToTable("ProductOffer");
                 });
 
             modelBuilder.Entity("eCommerce.Core.Entities.ProductVariant", b =>
@@ -709,6 +770,25 @@ namespace eCommerce.Infrastructure.Migrations
                     b.Navigation("Product");
                 });
 
+            modelBuilder.Entity("eCommerce.Core.Entities.ProductOffer", b =>
+                {
+                    b.HasOne("eCommerce.Core.Entities.Offer", "Offer")
+                        .WithMany("ProductOffers")
+                        .HasForeignKey("OfferId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("eCommerce.Core.Entities.Product", "Product")
+                        .WithMany("ProductOffers")
+                        .HasForeignKey("ProductId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Offer");
+
+                    b.Navigation("Product");
+                });
+
             modelBuilder.Entity("eCommerce.Core.Entities.ProductVariant", b =>
                 {
                     b.HasOne("eCommerce.Core.Entities.Product", "Product")
@@ -762,6 +842,11 @@ namespace eCommerce.Infrastructure.Migrations
                     b.Navigation("SubCategories");
                 });
 
+            modelBuilder.Entity("eCommerce.Core.Entities.Offer", b =>
+                {
+                    b.Navigation("ProductOffers");
+                });
+
             modelBuilder.Entity("eCommerce.Core.Entities.Order", b =>
                 {
                     b.Navigation("OrderItems");
@@ -779,6 +864,8 @@ namespace eCommerce.Infrastructure.Migrations
                     b.Navigation("Images");
 
                     b.Navigation("OrderItems");
+
+                    b.Navigation("ProductOffers");
 
                     b.Navigation("Variants");
 

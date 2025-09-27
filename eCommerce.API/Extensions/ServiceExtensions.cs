@@ -1,5 +1,6 @@
 using eCommerce.Application.Interfaces;
 using eCommerce.Application.Services;
+using eCommerce.Application.ServicesImpl;
 using eCommerce.Core.Interfaces;
 using eCommerce.Infrastructure.Repositories;
 
@@ -51,7 +52,10 @@ namespace eCommerce.API.Extensions;
             services.AddScoped<IAuditLogService, AuditLogService>();
             services.AddScoped<IAuditLogRepository, AuditLogRepository>();
             
-            
+            //Offer
+            services.AddScoped<IOfferRepository, OfferRepository>();
+            services.AddScoped<IOfferService, OfferService>();
+
             
         }
     }
