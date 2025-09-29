@@ -22,13 +22,16 @@ public class AuthController : ControllerBase
     [HttpPost("register")]
     public async Task<IActionResult> Register([FromBody] RegisterDto request)
     {
-        if (await _authRepository.UserExists(request.Email))
-            return BadRequest("Bu email zaten kayıtlı!");
+        if (await _authRepository.UserExists(request.Email)) return BadRequest("Bu email zaten kayıtlı!");
+
+        if (request.Password != request.ConfirmPassword) return BadRequest("Parolalar eşleşmiyor!");
 
         var newUser = new User
         {
             Name = request.UserName,
             Email = request.Email,
+            AcceptEmails = request.AcceptEmails,
+            PhoneNumber = request.PhoneNumber,
             Role = "User"
         };
 
@@ -46,8 +49,7 @@ public class AuthController : ControllerBase
     public async Task<IActionResult> Login([FromBody] LoginDto request)
     {
         var user = await _authRepository.Login(request.Email, request.Password);
-        if (user == null)
-            return Unauthorized("Email veya parola hatalı!");
+        if (user == null) return Unauthorized("Email veya parola hatalı!");
 
         var tokenString = _tokenService.CreateToken(user);
 

@@ -41,7 +41,7 @@ public class UserService : IUserService
         if (!userExists)
             return ServiceResult<bool>.Fail("Kullanıcı bulunamadı", HttpStatusCode.NotFound);
 
-        var user = (await _userRepository.GetAllUsers()).FirstOrDefault(u => u.Id == userId);
+        var user = await _userRepository.GetByIdUser(userId);
         if (user == null)
             return ServiceResult<bool>.Fail("Kullanıcı bulunamadı", HttpStatusCode.NotFound);
 
