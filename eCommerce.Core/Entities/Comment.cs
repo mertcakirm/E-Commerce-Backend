@@ -1,3 +1,5 @@
+using System.Text.Json.Serialization;
+
 namespace eCommerce.Core.Entities;
 
 public class Comment : BaseEntity
@@ -8,5 +10,6 @@ public class Comment : BaseEntity
     public string CommentText { get; set; }
 
     public User User { get; set; }
+    [JsonIgnore]
     public Product Product { get; set; }
 }

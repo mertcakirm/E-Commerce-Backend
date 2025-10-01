@@ -36,6 +36,7 @@ namespace eCommerce.Application.Services
             var commentsDto = comments.Select(c => new CommentListDto
             {
                 Id = c.Id,
+                CreatedAt = c.CreatedAt,
                 CommentText = c.CommentText,
                 Rating = c.Rating,
                 UserName = c.User != null ? c.User.Name : null
