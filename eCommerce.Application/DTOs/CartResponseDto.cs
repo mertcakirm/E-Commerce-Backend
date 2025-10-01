@@ -11,7 +11,7 @@ public class CartResponseDto
 public class CartItemDto
 {
     public int Id { get; set; }
-    public int ProductVariantId { get; set; }
+    public string ProductVariantId { get; set; }
     public int Quantity { get; set; }
 
     public ProductResponseDto Product { get; set; }

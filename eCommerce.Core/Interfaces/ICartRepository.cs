@@ -6,8 +6,8 @@ namespace eCommerce.Core.Interfaces
     {
         Task<Cart> GetUserCartAsync(int userId);
         Task ClearCartAsync(int userId);
-        Task AddItemAsync(int userId,int productId, int productVariantId, int quantity = 1);
-        Task IncreaseItemByProductIdAsync(int userId, int productId);
-        Task DecreaseItemByProductIdAsync(int userId, int productId);
+        Task AddItemAsync(int userId, int productVariantId, int quantity = 1);
+        Task IncreaseItemByProductIdAsync(int userId, int variantId);
+        Task DecreaseItemByProductIdAsync(int userId, int variantId);
     }
 }

@@ -27,11 +27,14 @@ public class CartRepository : GenericRepository<Cart>, ICartRepository
         }
     }
 
-    public async Task AddItemAsync(int userId, int productId, int productVariantId, int quantity = 1)
+    public async Task AddItemAsync(int userId, int productVariantId, int quantity = 1)
     {
         var cart = await _dbSet
             .Include(c => c.CartItems)
             .FirstOrDefaultAsync(c => c.UserId == userId);
+
+
+        var product = await _context.ProductVariants.Include(v=>v.Product).FirstOrDefaultAsync(p=>p.Id == productVariantId);
 
         if (cart == null)
         {
@@ -55,7 +58,7 @@ public class CartRepository : GenericRepository<Cart>, ICartRepository
         {
             var newItem = new CartItem
             {
-                ProductId = productId,       
+                ProductId = product.Product.Id,
                 ProductVariantId = productVariantId, 
                 Quantity = quantity
             };
@@ -65,10 +68,10 @@ public class CartRepository : GenericRepository<Cart>, ICartRepository
         await _context.SaveChangesAsync();
     }
 
-    public async Task IncreaseItemByProductIdAsync(int userId, int productId)
+    public async Task IncreaseItemByProductIdAsync(int userId, int variantId)
     {
         var cartItem = await _context.CartItems
-            .FirstOrDefaultAsync(ci => ci.Cart.UserId == userId && ci.ProductVariant.ProductId == productId);
+            .FirstOrDefaultAsync(ci => ci.Cart.UserId == userId && ci.ProductVariant.Id == variantId);
 
         if (cartItem != null)
         {
@@ -78,10 +81,10 @@ public class CartRepository : GenericRepository<Cart>, ICartRepository
         }
     }
 
-    public async Task DecreaseItemByProductIdAsync(int userId, int productId)
+    public async Task DecreaseItemByProductIdAsync(int userId, int variantId)
     {
         var cartItem = await _context.CartItems
-            .FirstOrDefaultAsync(ci => ci.Cart.UserId == userId && ci.ProductVariant.ProductId == productId);
+            .FirstOrDefaultAsync(ci => ci.Cart.UserId == userId && ci.ProductVariant.Id == variantId);
 
         if (cartItem != null)
         {

@@ -36,7 +36,7 @@ public class CartService : ICartService
             CartItems = cart.CartItems.Select(ci => new CartItemDto
             {
                 Id = ci.Id,
-                ProductVariantId = ci.ProductVariantId,
+                ProductVariantId = ci.ProductVariant.Size,
                 Quantity = ci.Quantity,
                 Product = new ProductResponseDto
                 {
@@ -46,12 +46,7 @@ public class CartService : ICartService
                     DiscountRate = ci.ProductVariant.Product.DiscountRate,
                     Price = ci.ProductVariant.Product.Price * (1 - (ci.ProductVariant.Product.DiscountRate / 100m )),
                     CategoryId = ci.ProductVariant.Product.CategoryId,
-                    Variants = ci.ProductVariant.Product.Variants.Select(v => new ProductVariantResponseDto
-                    {
-                        Id = v.Id,
-                        Size = v.Size,
-                        Stock = v.Stock
-                    }).ToList(),
+                    Variants = null,
                     Images = ci.ProductVariant.Product.Images.Select(i => new ProductImageResponseDto
                     {
                         Id = i.Id,
@@ -65,7 +60,7 @@ public class CartService : ICartService
         return ServiceResult<CartResponseDto>.Success(cartDto);
     }
     
-    public async Task<ServiceResult> AddItemAsync(string token, int productId, int productVariantId)
+    public async Task<ServiceResult> AddItemAsync(string token, int productVariantId)
     {
         var validation = await _userValidator.ValidateAsync(token);
         if (validation.IsFail) return ServiceResult.Fail(validation.ErrorMessage!, validation.Status);
@@ -74,12 +69,12 @@ public class CartService : ICartService
 
         if (userId == null) return ServiceResult.Fail("Geçersiz kullanıcı", HttpStatusCode.Unauthorized);
 
-        await _cartRepository.AddItemAsync(userId, productId, productVariantId, 1);
+        await _cartRepository.AddItemAsync(userId, productVariantId, 1);
         await _auditLogService.LogAsync(
             userId: null,
             action: "AddToCart",
             entityName: "ProductCart",
-            entityId: productId,
+            entityId: null,
             details: $"Ürün sepete eklendi: {validation.Data!.Email}"
         );
         return ServiceResult.Success();
@@ -103,7 +98,7 @@ public class CartService : ICartService
         return ServiceResult.Success();
     }
 
-    public async Task<ServiceResult> IncreaseItemAsync(int productId, string token)
+    public async Task<ServiceResult> IncreaseItemAsync(int variantId, string token)
     {
         var validation = await _userValidator.ValidateAsync(token);
         if (validation.IsFail) return ServiceResult.Fail(validation.ErrorMessage!, validation.Status);
@@ -115,18 +110,18 @@ public class CartService : ICartService
 
         if (cart.UserId != userId) return ServiceResult.Fail("Bu işlem için yetkiniz yok", HttpStatusCode.Forbidden);
 
-        await _cartRepository.IncreaseItemByProductIdAsync(userId, productId);
+        await _cartRepository.IncreaseItemByProductIdAsync(userId, variantId);
         await _auditLogService.LogAsync(
             userId: null,
             action: "IncreaseCart",
             entityName: "ProductCartIncrease",
-            entityId: productId,
+            entityId: variantId,
             details: $"Sepetteki ürün sayısı arttırıldı: {validation.Data!.Email}"
         );
         return ServiceResult.Success();
     }
 
-    public async Task<ServiceResult> DecreaseItemAsync(int productId, string token)
+    public async Task<ServiceResult> DecreaseItemAsync(int variantId, string token)
     {
         var validation = await _userValidator.ValidateAsync(token);
         if (validation.IsFail) return ServiceResult.Fail(validation.ErrorMessage!, validation.Status);
@@ -138,12 +133,12 @@ public class CartService : ICartService
 
         if (cart.UserId != userId) return ServiceResult.Fail("Bu işlem için yetkiniz yok", HttpStatusCode.Forbidden);
 
-        await _cartRepository.DecreaseItemByProductIdAsync(userId, productId);
+        await _cartRepository.DecreaseItemByProductIdAsync(userId, variantId);
         await _auditLogService.LogAsync(
             userId: null,
             action: "DecreaseCart",
             entityName: "ProductCartDecrease",
-            entityId: productId,
+            entityId: variantId,
             details: $"Sepetteki ürün sayısı azaltıldı: {validation.Data!.Email}"
         );
         return ServiceResult.Success();

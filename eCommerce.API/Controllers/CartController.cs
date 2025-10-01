@@ -29,10 +29,10 @@ public class CartController : ControllerBase
     
     [Authorize]
     [HttpPost("add")]
-    public async Task<IActionResult> AddItem(int productId, int productVariantId)
+    public async Task<IActionResult> AddItem(int productVariantId)
     {
         var token = Request.Headers["Authorization"].ToString();
-        var result = await _cartService.AddItemAsync(token, productId, productVariantId);
+        var result = await _cartService.AddItemAsync(token, productVariantId);
 
         if (result.IsFail)
             return StatusCode((int)result.Status, result.ErrorMessage);
@@ -42,23 +42,23 @@ public class CartController : ControllerBase
 
     [Authorize]
     [HttpPut("increase")]
-    public async Task<IActionResult> IncreaseCartAsync([FromHeader(Name = "Authorization")] string token, [FromQuery] int productId)
+    public async Task<IActionResult> IncreaseCartAsync([FromHeader(Name = "Authorization")] string token, [FromQuery] int variantId)
     {
         if (string.IsNullOrEmpty(token))
             return Unauthorized("Token gerekli");
 
-        var result = await _cartService.IncreaseItemAsync(productId, token);
+        var result = await _cartService.IncreaseItemAsync(variantId, token);
         return StatusCode((int)result.Status, result.IsFail ? result.ErrorMessage : null);
     }
 
     [Authorize]
     [HttpPut("decrease")]
-    public async Task<IActionResult> DecreaseCartAsync([FromHeader(Name = "Authorization")] string token, [FromQuery] int productId)
+    public async Task<IActionResult> DecreaseCartAsync([FromHeader(Name = "Authorization")] string token, [FromQuery] int variantId)
     {
         if (string.IsNullOrEmpty(token))
             return Unauthorized("Token gerekli");
 
-        var result = await _cartService.DecreaseItemAsync(productId, token);
+        var result = await _cartService.DecreaseItemAsync(variantId, token);
         return StatusCode((int)result.Status, result.IsFail ? result.ErrorMessage : null);
     }
 
