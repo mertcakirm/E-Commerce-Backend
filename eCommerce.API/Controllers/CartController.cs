@@ -29,9 +29,8 @@ public class CartController : ControllerBase
     
     [Authorize]
     [HttpPost("add")]
-    public async Task<IActionResult> AddItem(int productVariantId)
+    public async Task<IActionResult> AddItem([FromHeader(Name = "Authorization")] string token,int productVariantId)
     {
-        var token = Request.Headers["Authorization"].ToString();
         var result = await _cartService.AddItemAsync(token, productVariantId);
 
         if (result.IsFail)
@@ -70,5 +69,19 @@ public class CartController : ControllerBase
             return Unauthorized("Token gerekli");
         var cart = await _cartService.ClearCartAsync(token);
         return Ok(cart);
+    }
+    
+    [HttpDelete("{cartId}")]
+    public async Task<IActionResult> DeleteProductFromCart([FromHeader(Name = "Authorization")] string token,int cartId)
+    {
+        if (string.IsNullOrEmpty(token))
+            return Unauthorized("Token gerekli");
+
+        var result = await _cartService.DeleteProductFromCartAsync(cartId, token);
+
+        if (result.IsFail)
+            return BadRequest(result.ErrorMessage);
+
+        return Ok(new { success = true });
     }
 }

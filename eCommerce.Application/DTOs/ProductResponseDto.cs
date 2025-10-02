@@ -10,6 +10,7 @@ public class ProductResponseDto
     public string CategoryName { get; set; }
     
     public decimal Price { get; set; }
+    public decimal PriceWithDiscount { get; set; }
     public int CategoryId { get; set; }
 
     public List<ProductVariantResponseDto> Variants { get; set; } = new();

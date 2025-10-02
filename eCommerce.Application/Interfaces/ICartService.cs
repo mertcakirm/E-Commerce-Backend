@@ -9,4 +9,5 @@ public interface ICartService
     Task<ServiceResult> ClearCartAsync(string token);
     Task<ServiceResult> IncreaseItemAsync(int variantId, string token);
     Task<ServiceResult> DecreaseItemAsync(int variantId, string token);
+    Task<ServiceResult<bool>> DeleteProductFromCartAsync(int cartId, string token);
 }

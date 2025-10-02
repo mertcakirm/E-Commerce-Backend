@@ -8,7 +8,7 @@ public class CartRepository : GenericRepository<Cart>, ICartRepository
 {
     public CartRepository(AppDbContext context) : base(context) { }
 
-    public async Task<Cart> GetUserCartAsync(int userId)
+    public async Task<Cart?> GetUserCartAsync(int userId)
     {
         return await _dbSet
             .Include(c => c.CartItems)
@@ -26,6 +26,26 @@ public class CartRepository : GenericRepository<Cart>, ICartRepository
             _context.CartItems.RemoveRange(cart.CartItems);
             await _context.SaveChangesAsync();
         }
+    }
+
+    public async Task<bool> DeleteProductFromCartAsync(int cartId, int userId)
+    {
+        var cart = await GetUserCartAsync(userId);
+
+        if (cart != null)
+        {
+            var cartItem = await _context.CartItems
+                .FirstOrDefaultAsync(ci => ci.Id == cartId && ci.CartId == cart.Id);
+
+            if (cartItem != null)
+            {
+                _context.CartItems.Remove(cartItem);
+                await _context.SaveChangesAsync();
+                return true;
+            }
+        }
+
+        return false;
     }
 
     public async Task AddItemAsync(int userId, int productVariantId, int quantity = 1)

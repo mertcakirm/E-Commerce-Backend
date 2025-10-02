@@ -1,6 +1,6 @@
 namespace eCommerce.Core.Entities;
 
-public class Cart : BaseEntity
+public class  Cart : BaseEntity
 {
     public int UserId { get; set; }
     public virtual User User { get; set; }

@@ -10,13 +10,11 @@ public class CartService : ICartService
 {
     private readonly ICartRepository _cartRepository;
     private readonly UserValidator _userValidator;
-    private readonly IAuditLogService _auditLogService;
 
-    public CartService(ICartRepository cartRepository, UserValidator userValidator, IAuditLogService auditLogService)
+    public CartService(ICartRepository cartRepository, UserValidator userValidator)
     {
         _cartRepository = cartRepository;
         _userValidator = userValidator;
-        _auditLogService = auditLogService;
     }
 
     public async Task<ServiceResult<CartResponseDto>> GetUserCartAsync(string token)
@@ -45,7 +43,8 @@ public class CartService : ICartService
                     Name = ci.ProductVariant.Product.Name,
                     Description = ci.ProductVariant.Product.Description,
                     DiscountRate = ci.ProductVariant.Product.DiscountRate,
-                    Price = ci.ProductVariant.Product.Price * (1 - (ci.ProductVariant.Product.DiscountRate / 100m )),
+                    Price = ci.ProductVariant.Product.Price,
+                    PriceWithDiscount = ci.ProductVariant.Product.Price * (1 - (ci.ProductVariant.Product.DiscountRate / 100m )),
                     CategoryId = ci.ProductVariant.Product.CategoryId,
                     Images = ci.ProductVariant.Product.Images.Select(i => new ProductImageResponseDto
                     {
@@ -70,13 +69,6 @@ public class CartService : ICartService
         if (userId == null) return ServiceResult.Fail("Geçersiz kullanıcı", HttpStatusCode.Unauthorized);
 
         await _cartRepository.AddItemAsync(userId, productVariantId, 1);
-        await _auditLogService.LogAsync(
-            userId: null,
-            action: "AddToCart",
-            entityName: "ProductCart",
-            entityId: null,
-            details: $"Ürün sepete eklendi: {validation.Data!.Email}"
-        );
         return ServiceResult.Success();
     }
 
@@ -88,13 +80,6 @@ public class CartService : ICartService
         var userId = validation.Data!.Id;
         
         await _cartRepository.ClearCartAsync(userId);
-        await _auditLogService.LogAsync(
-            userId: null,
-            action: "ClearCart",
-            entityName: "ProductCartClear",
-            entityId: null,
-            details: $"Sepet temizlendi: {validation.Data!.Email}"
-        );
         return ServiceResult.Success();
     }
 
@@ -111,13 +96,7 @@ public class CartService : ICartService
         if (cart.UserId != userId) return ServiceResult.Fail("Bu işlem için yetkiniz yok", HttpStatusCode.Forbidden);
 
         await _cartRepository.IncreaseItemByProductIdAsync(userId, variantId);
-        await _auditLogService.LogAsync(
-            userId: null,
-            action: "IncreaseCart",
-            entityName: "ProductCartIncrease",
-            entityId: variantId,
-            details: $"Sepetteki ürün sayısı arttırıldı: {validation.Data!.Email}"
-        );
+
         return ServiceResult.Success();
     }
 
@@ -134,13 +113,30 @@ public class CartService : ICartService
         if (cart.UserId != userId) return ServiceResult.Fail("Bu işlem için yetkiniz yok", HttpStatusCode.Forbidden);
 
         await _cartRepository.DecreaseItemByProductIdAsync(userId, variantId);
-        await _auditLogService.LogAsync(
-            userId: null,
-            action: "DecreaseCart",
-            entityName: "ProductCartDecrease",
-            entityId: variantId,
-            details: $"Sepetteki ürün sayısı azaltıldı: {validation.Data!.Email}"
-        );
         return ServiceResult.Success();
+    }
+
+
+    public async Task<ServiceResult<bool>> DeleteProductFromCartAsync(int cartId, string token)
+    {
+        var validation = await _userValidator.ValidateAsync(token);
+        if (validation.IsFail) 
+            return ServiceResult<bool>.Fail("Geçersiz token");
+
+        var userId = validation.Data!.Id;
+
+        var cart = await _cartRepository.GetUserCartAsync(userId);
+        if (cart == null) 
+            return ServiceResult<bool>.Fail("Sepet bulunamadı");
+
+        if (cart.UserId != userId) 
+            return ServiceResult<bool>.Fail("Kullanıcı yetkisiz");
+
+        var result = await _cartRepository.DeleteProductFromCartAsync(cartId, userId);
+
+        if (!result) 
+            return ServiceResult<bool>.Fail("Ürün sepetten silinemedi");
+
+        return ServiceResult<bool>.Success(true);
     }
 }
