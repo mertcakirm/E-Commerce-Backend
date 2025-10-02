@@ -27,6 +27,7 @@ namespace eCommerce.Application.Services
             var sliders = await _sliderRepository.GetAllAsync();
             var dtos = sliders.Select(s => new SliderContentResponseDto
             {
+                Id = s.Id,
                 ImageUrl = s.ImageUrl,
                 ParentName = s.ParentName,
                 Name = s.Name,
@@ -44,6 +45,7 @@ namespace eCommerce.Application.Services
 
             var dto = new SliderContentResponseDto
             {
+                Id = slider.Id,
                 ImageUrl = slider.ImageUrl,
                 ParentName = slider.ParentName,
                 Name = slider.Name,
@@ -99,6 +101,7 @@ namespace eCommerce.Application.Services
             var carts = await _cartRepository.GetAllAsync();
             var dtos = carts.Select(c => new CartContentResponseDto
             {
+                Id = c.Id,
                 Name = c.Name,
                 Href = c.Href,
                 CartSize = c.CartSize,
@@ -115,6 +118,7 @@ namespace eCommerce.Application.Services
 
             var dto = new CartContentResponseDto
             {
+                Id = cart.Id,
                 Name = cart.Name,
                 Href = cart.Href,
                 CartSize = cart.CartSize,
