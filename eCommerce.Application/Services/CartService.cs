@@ -36,7 +36,8 @@ public class CartService : ICartService
             CartItems = cart.CartItems.Select(ci => new CartItemDto
             {
                 Id = ci.Id,
-                ProductVariantId = ci.ProductVariant.Size,
+                ProductVariantId = ci.ProductVariant.Id,
+                ProductVariantName = ci.ProductVariant.Size,
                 Quantity = ci.Quantity,
                 Product = new ProductResponseDto
                 {
@@ -46,7 +47,6 @@ public class CartService : ICartService
                     DiscountRate = ci.ProductVariant.Product.DiscountRate,
                     Price = ci.ProductVariant.Product.Price * (1 - (ci.ProductVariant.Product.DiscountRate / 100m )),
                     CategoryId = ci.ProductVariant.Product.CategoryId,
-                    Variants = null,
                     Images = ci.ProductVariant.Product.Images.Select(i => new ProductImageResponseDto
                     {
                         Id = i.Id,

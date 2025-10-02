@@ -14,6 +14,7 @@ public class CartRepository : GenericRepository<Cart>, ICartRepository
             .Include(c => c.CartItems)
             .ThenInclude(ci => ci.ProductVariant)
             .ThenInclude(pv => pv.Product)
+            .ThenInclude(pv => pv.Images)
             .FirstOrDefaultAsync(c => c.UserId == userId);
     }
 

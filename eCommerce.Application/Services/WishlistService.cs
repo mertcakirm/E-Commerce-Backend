@@ -34,30 +34,31 @@ namespace eCommerce.Application.Services
                 .Take(pageSize)
                 .ToList();
 
-            var productDtos = pagedItems.Select(w => new ProductResponseDto
-            {
-                Id = w.Product.Id,
-                Name = w.Product.Name,
-                Description = w.Product.Description,
-                DiscountRate = w.Product.DiscountRate,
-                CategoryName = w.Product.Category.Name,
-                Price = w.Product.Price,
-                AverageRating = w.Product.AverageRating,
-                
-                CategoryId = w.Product.CategoryId,
-                Variants = w.Product.Variants.Select(v => new ProductVariantResponseDto
+            var productDtos = pagedItems
+                .Where(w => w.Product != null) // null olan ürünleri filtrele
+                .Select(w => new ProductResponseDto
                 {
-                    Id = v.Id,
-                    Size = v.Size,
-                    Stock = v.Stock
-                }).ToList(),
-                Images = w.Product.Images.Select(i => new ProductImageResponseDto
-                {
-                    Id = i.Id,
-                    ImageUrl = i.ImageUrl,
-                    IsMain = i.IsMain
-                }).ToList()
-            }).ToList();
+                    Id = w.Product!.Id,
+                    Name = w.Product!.Name ?? "",
+                    Description = w.Product!.Description ?? "",
+                    DiscountRate = w.Product!.DiscountRate,
+                    CategoryName = w.Product!.Category?.Name ?? "",
+                    Price = w.Product!.Price,
+                    AverageRating = w.Product!.AverageRating,
+                    CategoryId = w.Product!.CategoryId,
+                    Variants = w.Product!.Variants?.Select(v => new ProductVariantResponseDto
+                    {
+                        Id = v.Id,
+                        Size = v.Size
+                    }).ToList() ?? new List<ProductVariantResponseDto>(),
+                    Images = w.Product!.Images?.Select(i => new ProductImageResponseDto
+                    {
+                        Id = i.Id,
+                        ImageUrl = i.ImageUrl,
+                        IsMain = i.IsMain
+                    }).ToList() ?? new List<ProductImageResponseDto>()
+                })
+                .ToList();
 
             var pagedResult = new PagedResult<ProductResponseDto>(productDtos, totalCount, pageNumber, pageSize);
 

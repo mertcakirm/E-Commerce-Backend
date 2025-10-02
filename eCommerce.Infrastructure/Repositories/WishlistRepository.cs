@@ -13,7 +13,9 @@ namespace eCommerce.Infrastructure.Repositories
         {
             return await _dbSet
                 .Include(w => w.Product)
-                .ThenInclude(w=>w.Category)
+                .ThenInclude(p=>p.Images)
+                .Include(w => w.Product)
+                .ThenInclude(p=>p.Variants)
                 .Where(w => w.UserId == userId)
                 .ToListAsync();
         }
