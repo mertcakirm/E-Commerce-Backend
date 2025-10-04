@@ -651,11 +651,11 @@ namespace eCommerce.Infrastructure.Migrations
                         .IsRequired()
                         .HasColumnType("longtext");
 
-                    b.Property<string>("City")
+                    b.Property<string>("AddressTitle")
                         .IsRequired()
                         .HasColumnType("longtext");
 
-                    b.Property<string>("Country")
+                    b.Property<string>("City")
                         .IsRequired()
                         .HasColumnType("longtext");
 
@@ -664,11 +664,6 @@ namespace eCommerce.Infrastructure.Migrations
 
                     b.Property<bool>("IsDeleted")
                         .HasColumnType("tinyint(1)");
-
-                    b.Property<string>("PhoneNumber")
-                        .IsRequired()
-                        .HasMaxLength(15)
-                        .HasColumnType("varchar(15)");
 
                     b.Property<string>("PostalCode")
                         .IsRequired()

@@ -27,6 +27,7 @@ public class UserAddressRepository : IUserAddressRepository
     public async Task<IEnumerable<UserAddress>> GetUserAddressAll(int userId)
     {
         return await _context.UserAddresses
+            .Include(u => u.User)
             .Where(u => u.UserId == userId && u.IsDeleted == false)
             .ToListAsync();
     }
@@ -56,8 +57,7 @@ public class UserAddressRepository : IUserAddressRepository
         existingAddress.AddressLine = userAddress.AddressLine;
         existingAddress.City = userAddress.City;
         existingAddress.PostalCode = userAddress.PostalCode;
-        existingAddress.Country = userAddress.Country;
-        existingAddress.PhoneNumber = userAddress.PhoneNumber;
+        existingAddress.AddressTitle = userAddress.AddressTitle;
 
         _context.UserAddresses.Update(existingAddress);
         var result = await _context.SaveChangesAsync();

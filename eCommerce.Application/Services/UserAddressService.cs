@@ -29,11 +29,10 @@ public class UserAddressService : IUserAddressService
         var newAddress = new UserAddress
         {
             UserId = userId,
+            AddressTitle = userAddressDto.AddressTitle,
             AddressLine = userAddressDto.AddressLine,
             City = userAddressDto.City,
-            Country = userAddressDto.Country,
             PostalCode = userAddressDto.PostalCode,
-            PhoneNumber = userAddressDto.PhoneNumber
         };
 
         var success = await _userAddressRepository.CreateUserAddressAsync(newAddress);
@@ -43,9 +42,8 @@ public class UserAddressService : IUserAddressService
         {
             AddressLine = newAddress.AddressLine,
             City = newAddress.City,
-            Country = newAddress.Country,
+            AddressTitle = newAddress.AddressTitle,
             PostalCode = newAddress.PostalCode,
-            PhoneNumber = newAddress.PhoneNumber
         };
         await _auditLogService.LogAsync(
             userId: userId,
@@ -58,25 +56,25 @@ public class UserAddressService : IUserAddressService
         return ServiceResult<UserAddressDto>.Success(resultDto, status:HttpStatusCode.Created);
     }
 
-    public async Task<ServiceResult<IEnumerable<UserAddressDto>>> GetUserAddressesAsync(string token)
+    public async Task<ServiceResult<IEnumerable<UserAddressResponseDto>>> GetUserAddressesAsync(string token)
     {
         var validation = await _userValidator.ValidateAsync(token);
-        if (validation.IsFail) return ServiceResult<IEnumerable<UserAddressDto>>.Fail(validation.ErrorMessage!, validation.Status);
+        if (validation.IsFail) return ServiceResult<IEnumerable<UserAddressResponseDto>>.Fail(validation.ErrorMessage!, validation.Status);
 
         var userId = validation.Data!.Id;
 
         var addresses = await _userAddressRepository.GetUserAddressAll(userId);
 
-        var dtoList = addresses.Select(a => new UserAddressDto
+        var dtoList = addresses.Select(a => new UserAddressResponseDto
         {
+            Id = a.Id,
             AddressLine = a.AddressLine,
             City = a.City,
-            Country = a.Country,
+            AddressTitle = a.AddressTitle,
             PostalCode = a.PostalCode,
-            PhoneNumber = a.PhoneNumber
         });
 
-        return ServiceResult<IEnumerable<UserAddressDto>>.Success(dtoList, status: HttpStatusCode.OK);
+        return ServiceResult<IEnumerable<UserAddressResponseDto>>.Success(dtoList, status: HttpStatusCode.OK);
     }
 
     public async Task<ServiceResult<UserAddressDto>> UpdateUserAddressAsync(int addressId, UserAddressDto userAddressDto,string token)
@@ -89,9 +87,8 @@ public class UserAddressService : IUserAddressService
 
             existingAddress.AddressLine = userAddressDto.AddressLine;
             existingAddress.City = userAddressDto.City;
-            existingAddress.Country = userAddressDto.Country;
+            existingAddress.AddressTitle = userAddressDto.AddressTitle;
             existingAddress.PostalCode = userAddressDto.PostalCode;
-            existingAddress.PhoneNumber = userAddressDto.PhoneNumber;
 
         var success = await _userAddressRepository.UpdateUserAddressAsync(existingAddress, addressId);
         if (!success)
@@ -101,9 +98,8 @@ public class UserAddressService : IUserAddressService
         {
             AddressLine = existingAddress.AddressLine,
             City = existingAddress.City,
-            Country = existingAddress.Country,
+            AddressTitle = existingAddress.AddressTitle,
             PostalCode = existingAddress.PostalCode,
-            PhoneNumber = existingAddress.PhoneNumber
         };
         
         await _auditLogService.LogAsync(
