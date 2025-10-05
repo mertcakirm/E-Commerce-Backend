@@ -1,6 +1,7 @@
 using eCommerce.Application.DTOs;
 using eCommerce.Application.Interfaces;
 using eCommerce.Core.Entities;
+using eCommerce.Core.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -11,12 +12,14 @@ namespace eCommerce.API.Controllers;
 public class AdminController : ControllerBase
 {
     private readonly IProductService _productService;
-    private readonly IWebHostEnvironment _env;
+    private readonly IAuthRepository  _authRepository;
+    private readonly ITokenService _tokenService;
 
-    public AdminController(IProductService productService, IWebHostEnvironment env)
+    public AdminController(IProductService productService, IAuthRepository authRepository, ITokenService tokenService)
     {
         _productService = productService;
-        _env = env;
+        _authRepository = authRepository;
+        _tokenService = tokenService;
     }
     
     [HttpGet("products")]
@@ -33,5 +36,32 @@ public class AdminController : ControllerBase
         if (result.IsFail) return StatusCode((int)result.Status, result);
 
         return Ok(result);
+    }
+    
+    
+    [HttpPost("login")]
+    public async Task<IActionResult> Login([FromBody] LoginDto request)
+    {
+        if (string.IsNullOrEmpty(request.Email) || string.IsNullOrEmpty(request.Password))
+            return BadRequest("Email ve şifre boş olamaz.");
+
+        var adminUser = await _authRepository.LoginAdmin(request.Email, request.Password);
+        if (adminUser == null)
+            return Unauthorized("Geçersiz e-posta veya şifre.");
+
+        // JWT token oluşturuluyor
+        var tokenString = _tokenService.CreateToken(adminUser);
+
+        return Ok(new
+        {
+            message = "Giriş başarılı.",
+            user = new
+            {
+                adminUser.Id,
+                adminUser.Email,
+                adminUser.Role
+            },
+            tokenString
+        });
     }
 }
