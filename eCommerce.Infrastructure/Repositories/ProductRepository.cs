@@ -140,6 +140,17 @@ namespace eCommerce.Infrastructure.Repositories
                 .Where(x => x.ProductId == productId)
                 .ToListAsync();
         }
+
+        public async Task<bool> UpdateProductSaleCount(int productId)
+        {
+            var product = await _dbSet.FirstOrDefaultAsync(p => p.Id == productId);
+            if (product == null)
+                return false;
+            product.SaleCount = product.SaleCount + 1;
+            _context.Products.Update(product);
+            var result = await _context.SaveChangesAsync();
+            return result > 0;
+        }
         
         
         }

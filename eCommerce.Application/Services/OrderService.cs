@@ -132,8 +132,10 @@ public async Task<ServiceResult<Order>> CreateOrderAsync(OrderCreateDto dto, str
     foreach (var cartItem in cart.CartItems)
     {
         var product = await _productRepo.GetByIdWithDetailsAsync(cartItem.ProductId);
+        
         if (product == null)
             return ServiceResult<Order>.Fail($"Ürün bilgisi cartItem {cartItem.Id} için bulunamadı.", HttpStatusCode.NotFound);
+            await _productRepo.UpdateProductSaleCount(product.Id);
         
         decimal discountedPrice = product.Price * (1 - (product.DiscountRate / 100m));
 
