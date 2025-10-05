@@ -69,6 +69,60 @@ namespace eCommerce.Application.Services
             return ServiceResult<PagedResult<ProductResponseDto>>.Success(pagedResult);
         }
         
+        
+        public async Task<ServiceResult<PagedResult<ProductResponseDto>>> GetAllProductsAdminAsync(int pageNumber, int pageSize,string token)
+        {
+            var isAdmin = await _userValidator.IsAdminAsync(token);
+            var validation = await _userValidator.ValidateAsync(token);
+            
+            if (isAdmin.IsFail || !isAdmin.Data) return ServiceResult<PagedResult<ProductResponseDto>>.Fail("Yetkisiz giriş!", HttpStatusCode.Forbidden);
+            
+            if (pageNumber <= 0) pageNumber = 1;
+            if (pageSize <= 0) pageSize = 10;
+
+            var products = await _productRepository.GetAllWithDetailsAsync();
+
+            var totalCount = products.Count();
+
+            var productDtos = products
+                .Skip((pageNumber - 1) * pageSize)
+                .Take(pageSize)
+                .Select(p => new ProductResponseDto
+                {
+                    Id = p.Id,
+                    Name = p.Name,
+                    AverageRating = p.AverageRating,
+                    Description = p.Description,
+                    DiscountRate = p.DiscountRate,
+                    SaleCount = p.SaleCount,
+                    Price = p.Price,
+                    PriceWithDiscount = p.Price * (1 - (p.DiscountRate / 100m )),
+                    CategoryId = p.CategoryId,
+                    CategoryName = p.Category.Name,
+                    Variants = p.Variants.Select(v => new ProductVariantResponseDto
+                    {
+                        Id = v.Id,
+                        Size = v.Size,
+                        Stock = v.Stock,
+                    }).OrderBy(v => v.Id).ToList(),
+                    Images = p.Images.Select(i => new ProductImageResponseDto
+                    {
+                        Id = i.Id,
+                        ImageUrl = i.ImageUrl,
+                        IsMain = i.IsMain
+                    }).OrderBy(i => i.Id).ToList()
+                }).ToList();
+
+            var pagedResult = new PagedResult<ProductResponseDto>(
+                productDtos,
+                totalCount,
+                pageNumber,
+                pageSize
+            );
+
+            return ServiceResult<PagedResult<ProductResponseDto>>.Success(pagedResult);
+        }
+        
         public async Task<ServiceResult<PagedResult<ProductResponseDto>>> GetProductByCategoryAsync(string categoryName,int pageNumber, int pageSize)
         {
             if (pageNumber <= 0) pageNumber = 1;

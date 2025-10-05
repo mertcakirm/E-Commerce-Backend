@@ -6,6 +6,7 @@ public class ProductResponseDto
     public string Name { get; set; }
     public string Description { get; set; }
     public int DiscountRate { get; set; }
+    public int SaleCount { get; set; } = 0;
     public double AverageRating { get; set; }
     public string CategoryName { get; set; }
     

@@ -32,6 +32,8 @@ namespace eCommerce.API.Controllers
             return Ok(result);
         }
         
+
+        
         // GET: api/products/get-by-category/t-shirt?pageNumber=1&pageSize=10
         [HttpGet("get-by-category/{categoryName}")]
         public async Task<IActionResult> GetByCategory(

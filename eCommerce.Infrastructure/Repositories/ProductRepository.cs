@@ -44,7 +44,6 @@ namespace eCommerce.Infrastructure.Repositories
                 .Include(p=>p.Category)
                 .ToListAsync();
         }
-
         public async Task<Product?> GetByIdWithDetailsAsync(int id)
         {
             return await _dbSet
@@ -128,8 +127,6 @@ namespace eCommerce.Infrastructure.Repositories
             return result > 0;
         }
         
-        
-        
         public async Task<ProductImage> AddImageAsync(ProductImage image)
         {
             _context.ProductImages.Add(image);
@@ -143,6 +140,7 @@ namespace eCommerce.Infrastructure.Repositories
                 .Where(x => x.ProductId == productId)
                 .ToListAsync();
         }
+        
         
         }
     }
