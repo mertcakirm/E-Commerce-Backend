@@ -29,6 +29,15 @@ namespace eCommerce.API.Controllers
             return Ok(result.Data);
         }
 
+        [HttpGet("{id}")]
+        public async Task<IActionResult> GetAddressById(int id, [FromHeader(Name = "Authorization")] string token)
+        {
+            var result = await _userAddressService.GetAddressByIdAsync(id, token);
+            if (!result.IsSuccess)
+                return StatusCode((int)result.Status, result.ErrorMessage);
+            return Ok(result.Data);
+        }
+
         // POST: api/UserAddress
         [HttpPost]
         public async Task<IActionResult> CreateAddress([FromHeader(Name = "Authorization")] string token,[FromBody] UserAddressDto userAddressDto)
@@ -64,5 +73,7 @@ namespace eCommerce.API.Controllers
 
             return Ok(new { Message = "Adres başarıyla silindi." });
         }
+        
+        
     }
 }

@@ -132,4 +132,29 @@ public class UserAddressService : IUserAddressService
         );
         return ServiceResult<bool>.Success(true, status:HttpStatusCode.OK);
     }
+
+    public async Task<ServiceResult<UserAddressResponseDto>> GetAddressByIdAsync(int addressId, string token)
+    {
+        var validation = await _userValidator.ValidateAsync(token);
+        if (validation.IsFail)
+            return ServiceResult<UserAddressResponseDto>.Fail(validation.ErrorMessage!, validation.Status);
+
+        var address = await _userAddressRepository.GetByIdAsync(addressId);
+        if (address == null)
+            return ServiceResult<UserAddressResponseDto>.Fail("Adres bulunamadı", HttpStatusCode.NotFound);
+
+        var dto = new UserAddressResponseDto
+        {
+            Id = address.Id,
+            AddressLine = address.AddressLine,
+            City = address.City,
+            AddressTitle = address.AddressTitle,
+            PostalCode = address.PostalCode,
+        };
+
+        return ServiceResult<UserAddressResponseDto>.Success(dto);
+    }
 }
+
+
+
