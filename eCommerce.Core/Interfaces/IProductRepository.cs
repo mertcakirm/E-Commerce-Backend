@@ -19,5 +19,6 @@ namespace eCommerce.Core.Interfaces
         Task<ProductImage> AddImageAsync(ProductImage image);
         Task<List<ProductImage>> GetImageByProductIdAsync(int productId);
         Task<List<Product>> GetProductsWithLowStockAsync(int limit);
+        Task<bool> UpdateOrderStockAsync(int productVariantId, int quantity);
     }
 }

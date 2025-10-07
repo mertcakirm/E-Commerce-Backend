@@ -96,12 +96,15 @@ namespace eCommerce.API.Controllers
     }
     
     [HttpGet("notCompleted")]
-    public async Task<IActionResult> GetNotCompletedOrders([FromHeader(Name = "Authorization")] string token)
+    public async Task<IActionResult> GetNotCompletedOrders(
+        [FromHeader(Name = "Authorization")] string token,
+        [FromQuery] int pageNumber = 1,
+        [FromQuery] int pageSize = 10)
     {
         if (string.IsNullOrEmpty(token))
             return Unauthorized("Token eksik.");
 
-        var result = await _orderService.GetNotCompletedOrdersAsync(token);
+        var result = await _orderService.GetNotCompletedOrdersAsync(token, pageNumber, pageSize);
 
         if (result.IsFail)
             return StatusCode((int)result.Status, new { errors = result.ErrorMessage });
@@ -110,12 +113,15 @@ namespace eCommerce.API.Controllers
     }
 
     [HttpGet("completed")]
-    public async Task<IActionResult> GetCompletedOrders([FromHeader(Name = "Authorization")] string token)
+    public async Task<IActionResult> GetCompletedOrders(
+        [FromHeader(Name = "Authorization")] string token,
+        [FromQuery] int pageNumber = 1,
+        [FromQuery] int pageSize = 10)
     {
         if (string.IsNullOrEmpty(token))
             return Unauthorized("Token eksik.");
 
-        var result = await _orderService.GetCompletedOrdersAsync(token);
+        var result = await _orderService.GetCompletedOrdersAsync(token, pageNumber, pageSize);
 
         if (result.IsFail)
             return StatusCode((int)result.Status, new { errors = result.ErrorMessage });

@@ -126,6 +126,7 @@ namespace eCommerce.Infrastructure.Repositories
         public async Task<bool> RemoveStockAsync(int variantId)
         {
             var variant = await _context.ProductVariants.FirstOrDefaultAsync(v => v.Id == variantId);
+            if (variant == null) return false;
             
             variant.IsDeleted = true;
             
@@ -133,6 +134,20 @@ namespace eCommerce.Infrastructure.Repositories
 
             var result = await _context.SaveChangesAsync();
 
+            return result > 0;
+        }
+
+        public async Task<bool> UpdateOrderStockAsync(int productVariantId, int quantity)
+        {
+            var productVariant = await _context.ProductVariants.FirstOrDefaultAsync(p => p.Id == productVariantId);
+            if (productVariant == null) return false;
+            
+            if (productVariant.Stock < quantity) throw new InvalidOperationException($"Variant ID {productVariantId} için yeterli stok yok. Mevcut stok: {productVariant.Stock}");
+
+            productVariant.Stock -= quantity;
+            _context.ProductVariants.Update(productVariant);
+            var result = await _context.SaveChangesAsync();
+            
             return result > 0;
         }
         

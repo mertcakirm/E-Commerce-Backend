@@ -10,7 +10,7 @@ namespace eCommerce.Infrastructure.Repositories
         public OrderRepository(AppDbContext context) : base(context) { }
 
         // Kullanıcının tüm siparişlerini getir
-        public async Task<IEnumerable<Order>> GetUserOrdersAsync(int userId)
+        public async Task<IEnumerable<Order?>> GetUserOrdersAsync(int userId)
         {
             return await _dbSet
                 .Include(o => o.OrderItems)
@@ -22,27 +22,28 @@ namespace eCommerce.Infrastructure.Repositories
                 .ToListAsync();
         }
 
-        public async Task<IEnumerable<Order>> GetNotCompletedOrdersAsync()
+        public async Task<IEnumerable<Order?>> GetNotCompletedOrdersAsync()
         {
             return await _dbSet
                 .Include(o => o.OrderItems)
                 .ThenInclude(oi => oi.ProductVariant)
-                .ThenInclude(oi=>oi.Product)
+                .ThenInclude(pv => pv.Product)
                 .Include(o => o.Payment)
-                .Include(o=> o.User)
-                .Where(o => o.IsComplete == false && !EF.Property<bool>(o, "IsDeleted"))
+                .Include(o => o.User)
+                .Where(o => !o.IsComplete && !EF.Property<bool>(o, "IsDeleted"))
                 .OrderByDescending(o => o.OrderDate)
                 .ToListAsync();
         }
-        
-        public async Task<IEnumerable<Order>> GetCompletedOrdersAsync()
+
+        public async Task<IEnumerable<Order?>> GetCompletedOrdersAsync()
         {
             return await _dbSet
                 .Include(o => o.OrderItems)
                 .ThenInclude(oi => oi.ProductVariant)
-                .ThenInclude(oi=>oi.Product)
+                .ThenInclude(pv => pv.Product)
                 .Include(o => o.Payment)
-                .Where(o => o.IsComplete == true && !EF.Property<bool>(o, "IsDeleted"))
+                .Include(o => o.User)
+                .Where(o => o.IsComplete && !EF.Property<bool>(o, "IsDeleted"))
                 .OrderByDescending(o => o.OrderDate)
                 .ToListAsync();
         }
@@ -71,7 +72,7 @@ namespace eCommerce.Infrastructure.Repositories
             }
         }
         // En çok satılan ürünleri getir
-        public async Task<IEnumerable<Product>> GetTopProductsAsync(int count)
+        public async Task<IEnumerable<Product?>> GetTopProductsAsync(int count)
         {
             return await _context.Products
                 .Include(p => p.Variants)
