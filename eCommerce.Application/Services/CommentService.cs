@@ -87,7 +87,7 @@ namespace eCommerce.Application.Services
                 action: "AddComment",
                 entityName: "Comment",
                 entityId: commentDto.ProductId,
-                details: $"Yorum eklendi: {validation.Data!.Email}"
+                details: $"Yorum eklendi: {commentDto.ProductId}"
             );
             return ServiceResult<Comment?>.Success(newComment, "Yorum eklendi");
         }
@@ -119,7 +119,7 @@ namespace eCommerce.Application.Services
                 action: "RemoveComment",
                 entityName: "Comment",
                 entityId: id,
-                details: $"Yorum silindi: {validation.Data!.Email}"
+                details: $"Yorum silindi: {id}"
             );
             return ServiceResult<bool>.Success(true, "Yorum silindi");
         }

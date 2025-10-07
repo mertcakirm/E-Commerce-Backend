@@ -10,11 +10,13 @@ public class OfferService : IOfferService
 {
     private readonly IOfferRepository _offerRepository;
     private readonly UserValidator _userValidator;
+    private readonly IAuditLogService _auditLogService;
 
-    public OfferService(IOfferRepository offerRepository,UserValidator userValidator)
+    public OfferService(IOfferRepository offerRepository,UserValidator userValidator, IAuditLogService auditLogService)
     {
         _offerRepository = offerRepository;
         _userValidator = userValidator;
+        _auditLogService = auditLogService;
     }
 
 
@@ -106,6 +108,13 @@ public class OfferService : IOfferService
         };
 
          var offerRes = await _offerRepository.CreateOfferAsync(offer);
+         await _auditLogService.LogAsync(
+             userId: null,
+             action: "AddOffer",
+             entityName: "Offer",
+             entityId: null,
+             details: $"Kampanya eklendi: {dto.Name}"
+         );
 
         return ServiceResult<Offer>.Success(offerRes);
     }
@@ -120,6 +129,13 @@ public class OfferService : IOfferService
         if (offer == null) return ServiceResult.Fail("Kampanya bulunamadı", HttpStatusCode.NotFound);
 
         await _offerRepository.RemoveOfferAsync(offerId);
+        await _auditLogService.LogAsync(
+            userId: null,
+            action: "DeleteOffer",
+            entityName: "Offer",
+            entityId: offerId,
+            details: $"Kampanya silindi: {offerId}"
+        );
         return ServiceResult.Success();
     }
     
@@ -133,6 +149,13 @@ public class OfferService : IOfferService
         if (offer == null) return ServiceResult.Fail("Kampanya bulunamadı", HttpStatusCode.NotFound);
 
         await _offerRepository.ToggleOfferAsync(offerId);
+        await _auditLogService.LogAsync(
+            userId: null,
+            action: "ToggleOffer",
+            entityName: "Offer",
+            entityId: offerId,
+            details: $"Kampanya aktiflik durumu güncellendi: {offerId}"
+        );
         return ServiceResult.Success();
     }
 }

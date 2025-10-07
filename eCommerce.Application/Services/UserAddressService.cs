@@ -107,7 +107,7 @@ public class UserAddressService : IUserAddressService
             action: "UpdateAddress",
             entityName: "UserAddresses",
             entityId: addressId,
-            details: $"Adres güncellendi: {validation.Data!.Email}"
+            details: $"Adres güncellendi: {addressId}"
         );
 
         return ServiceResult<UserAddressDto>.Success(resultDto, status:HttpStatusCode.OK);
@@ -128,7 +128,7 @@ public class UserAddressService : IUserAddressService
             action: "RemoveAddress",
             entityName: "UserAddresses",
             entityId: addressId,
-            details: $"Adres silindi: {validation.Data!.Email}"
+            details: $"Adres silindi: {addressId}"
         );
         return ServiceResult<bool>.Success(true, status:HttpStatusCode.OK);
     }

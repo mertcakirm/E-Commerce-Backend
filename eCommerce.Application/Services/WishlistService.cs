@@ -84,7 +84,7 @@ namespace eCommerce.Application.Services
                     action: "RemoveProductToWishlist",
                     entityName: "Wishlist",
                     entityId: productId,
-                    details: $"Ürün favorilerden silindi: {validation.Data!.Email}"
+                    details: $"Ürün favorilerden silindi: {productId}"
                 );
                 return ServiceResult.Success( "Ürün wishlist'ten çıkarıldı",HttpStatusCode.OK);
             }
@@ -103,7 +103,7 @@ namespace eCommerce.Application.Services
                     action: "AddProductToWishlist",
                     entityName: "Wishlist",
                     entityId: productId,
-                    details: $"Ürün favorilere eklendi: {validation.Data!.Email}"
+                    details: $"Ürün favorilere eklendi: {productId}"
                 );
                 return ServiceResult.Success( "Ürün wishlist'e eklendi",HttpStatusCode.OK);
             }
@@ -126,7 +126,7 @@ namespace eCommerce.Application.Services
                 action: "RemoveProductToWishlist",
                 entityName: "Wishlist",
                 entityId: productId,
-                details: $"Ürün favorilerden silindi: {validation.Data!.Email}"
+                details: $"Ürün favorilerden silindi: {productId}"
             );
             return ServiceResult.Success(status:HttpStatusCode.OK);
         }

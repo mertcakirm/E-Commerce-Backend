@@ -11,15 +11,18 @@ namespace eCommerce.Application.Services
         private readonly IGenericRepository<SliderContent> _sliderRepository;
         private readonly IGenericRepository<CartContent> _cartRepository;
         private readonly UserValidator _userValidator;
+        private readonly IAuditLogService _auditLogService;
 
         public SliderCartService(
             IGenericRepository<SliderContent> sliderRepository,
             IGenericRepository<CartContent> cartRepository
-            ,UserValidator userValidator)
+            ,UserValidator userValidator, 
+            IAuditLogService auditLogService)
         {
             _sliderRepository = sliderRepository;
             _cartRepository = cartRepository;
             _userValidator = userValidator;
+            _auditLogService = auditLogService;
         }
 
         public async Task<ServiceResult<List<SliderContentResponseDto>>> GetAllSlidersAsync()
@@ -66,6 +69,13 @@ namespace eCommerce.Application.Services
                 return ServiceResult<SliderContentResponseDto>.Fail("Yetkisiz giriş!", HttpStatusCode.Forbidden);
 
             await _sliderRepository.AddAsync(slider);
+            await _auditLogService.LogAsync(
+                userId: validation.Data!.Id,
+                action: "AddSlider",
+                entityName: "SliderCart",
+                entityId: null,
+                details: $"Slider eklendi: {slider.Id}"
+            );
             var dto = new SliderContentResponseDto
             {
                 ImageUrl = slider.ImageUrl,
@@ -91,6 +101,13 @@ namespace eCommerce.Application.Services
             if (slider == null) return ServiceResult<bool>.Fail("Slider bulunamadı", HttpStatusCode.NotFound);
 
             await _sliderRepository.RemoveAsync(slider);
+            await _auditLogService.LogAsync(
+                userId: validation.Data!.Id,
+                action: "DeleteSlider",
+                entityName: "SliderCart",
+                entityId: id,
+                details: $"Slider silindi: {id}"
+            );
             return ServiceResult<bool>.Success(true);
         }
 
@@ -137,6 +154,13 @@ namespace eCommerce.Application.Services
             if (isAdmin.IsFail || !isAdmin.Data)
                 return ServiceResult<CartContentResponseDto>.Fail("Yetkisiz giriş!", HttpStatusCode.Forbidden);
             await _cartRepository.AddAsync(cart);
+            await _auditLogService.LogAsync(
+                userId: validation.Data!.Id,
+                action: "AddCart",
+                entityName: "SliderCart",
+                entityId: cart.Id,
+                details: $"Kart eklendi: {cart.Id}"
+            );
             var dto = new CartContentResponseDto
             {
                 Name = cart.Name,
@@ -162,6 +186,13 @@ namespace eCommerce.Application.Services
             if (cart == null) return ServiceResult<bool>.Fail("Cart bulunamadı", HttpStatusCode.NotFound);
 
             await _cartRepository.RemoveAsync(cart);
+            await _auditLogService.LogAsync(
+                userId: validation.Data!.Id,
+                action: "DeleteCart",
+                entityName: "SliderCart",
+                entityId: id,
+                details: $"Kart silindi: {id}"
+            );
             return ServiceResult<bool>.Success(true);
         }
 

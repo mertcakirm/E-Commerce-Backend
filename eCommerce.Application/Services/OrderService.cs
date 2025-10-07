@@ -204,7 +204,7 @@ public async Task<ServiceResult<Order>> CreateOrderAsync(OrderCreateDto dto, str
             action: "UpdatePaymentStatus",
             entityName: "Payment",
             entityId: orderId,
-            details: $"Ödeme durumu güncellendi: {validation.Data!.Email}"
+            details: $"Ödeme durumu güncellendi: {orderId}"
         );
 
         return ServiceResult.Success("Ödeme durumu güncellendi");
@@ -236,7 +236,7 @@ public async Task<ServiceResult<Order>> CreateOrderAsync(OrderCreateDto dto, str
             action: "UpdateOrderStatus",
             entityName: "Order",
             entityId: orderId,
-            details: $"Sipariş durumu oluşturuldu: {validation.Data!.Email}"
+            details: $"Sipariş durumu oluşturuldu: {orderId}"
         );
 
         return ServiceResult.Success("Sipariş durumu güncellendi");
@@ -267,7 +267,7 @@ public async Task<ServiceResult<Order>> CreateOrderAsync(OrderCreateDto dto, str
             action: "CompleteOrderStatus",
             entityName: "Order",
             entityId: orderId,
-            details: $"Sipariş tamamlandı: {validation.Data!.Email}"
+            details: $"Sipariş tamamlandı: {orderId}"
         );
         return ServiceResult.Success("Sipariş tamamlandı!");
     }

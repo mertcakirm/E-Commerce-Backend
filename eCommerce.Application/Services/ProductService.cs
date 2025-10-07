@@ -290,7 +290,7 @@ public async Task<ServiceResult<ProductDto>> CreateProductAsync(ProductCreateDto
         action: "CreateProduct",
         entityName: "Product",
         entityId: product.Id,
-        details: $"Ürün oluşturuldu: {validation.Data.Email}"
+        details: $"Ürün oluşturuldu: {product.Id}"
     );
 
     return ServiceResult<ProductDto>.SuccessAsCreated(resultDto, $"/api/products/{product.Id}");
@@ -338,8 +338,8 @@ public async Task<ServiceResult<ProductDto>> CreateProductAsync(ProductCreateDto
                 userId: validation.Data!.Id,
                 action: "UpdateProduct",
                 entityName: "Product",
-                entityId: null,
-                details: $"Ürün güncellendi: {validation.Data!.Email}"
+                entityId: id,
+                details: $"Ürün güncellendi: {id}"
             );
 
 
@@ -364,7 +364,7 @@ public async Task<ServiceResult<ProductDto>> CreateProductAsync(ProductCreateDto
                 action: "DeleteProduct",
                 entityName: "Product",
                 entityId: id,
-                details: $"Ürün silindi: {validation.Data!.Email}"
+                details: $"Ürün silindi: {id}"
             );
 
             return ServiceResult.NoContent();
@@ -385,7 +385,7 @@ public async Task<ServiceResult<ProductDto>> CreateProductAsync(ProductCreateDto
                     action: "DeleteProductImage",
                     entityName: "ProductImage",
                     entityId: id,
-                    details: $"Ürün görseli silindi: {validation.Data!.Email}"
+                    details: $"Ürün görseli silindi: {id}"
                 );
                 return ServiceResult.Success(status: HttpStatusCode.NoContent);
             }
@@ -412,7 +412,7 @@ public async Task<ServiceResult<ProductDto>> CreateProductAsync(ProductCreateDto
                 action: "DiscountProduct",
                 entityName: "Product",
                 entityId: productId,
-                details: $"Ürüne indirim yapıldı: {user.Data!.Email}"
+                details: $"Ürüne indirim yapıldı: {productId}"
             );
             return ServiceResult.Success(status: HttpStatusCode.OK);
         }
@@ -434,7 +434,7 @@ public async Task<ServiceResult<ProductDto>> CreateProductAsync(ProductCreateDto
                 action: "AddStock",
                 entityName: "ProductVariant",
                 entityId: productId,
-                details: $"Ürüne stok eklendi: {user.Data!.Email}"
+                details: $"Ürüne stok eklendi: {productId}"
             );
             return ServiceResult.Success(status: HttpStatusCode.OK);
         }
@@ -453,7 +453,7 @@ public async Task<ServiceResult<ProductDto>> CreateProductAsync(ProductCreateDto
                 action: "RemoveStock",
                 entityName: "ProductVariant",
                 entityId: variantId,
-                details: $"Üründen stok kaldırıldı: {user.Data!.Email}"
+                details: $"Üründen stok kaldırıldı: {variantId}"
             );
             return ServiceResult.Success(status: HttpStatusCode.OK);
         }
@@ -476,7 +476,7 @@ public async Task<ServiceResult<ProductDto>> CreateProductAsync(ProductCreateDto
                 action: "AddImages",
                 entityName: "ProductImage",
                 entityId: savedImage.Id,
-                details: $"Ürüne resim eklendi: {user.Data!.Email}"
+                details: $"Ürüne resim eklendi: {savedImage.Id}"
             );
 
             return ServiceResult<ProductImage>.Success(savedImage);

@@ -2,6 +2,8 @@ using eCommerce.Application.Interfaces;
 using eCommerce.Core.Entities;
 using eCommerce.Core.Interfaces;
 
+namespace eCommerce.Application.Services;
+
 public class AuditLogService : IAuditLogService
 {
     private readonly IAuditLogRepository _auditRepo;

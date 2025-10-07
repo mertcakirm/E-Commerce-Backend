@@ -96,7 +96,7 @@ namespace eCommerce.Application.Services
                 action: "AddCategory",
                 entityName: "Category",
                 entityId: category.Id,
-                details: $"Kategori eklendi: {validation.Data!.Email}"
+                details: $"Kategori eklendi: {category.Id}"
             );
 
             var resultDto = new CategoryDto
@@ -125,7 +125,7 @@ namespace eCommerce.Application.Services
                 action: "RemoveCategory",
                 entityName: "Category",
                 entityId: id,
-                details: $"Kategori silindi: {validation.Data!.Email}"
+                details: $"Kategori silindi: {id}"
             );
             return ServiceResult.Success();
         }
