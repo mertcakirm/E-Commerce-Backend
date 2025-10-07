@@ -17,4 +17,5 @@ public interface IProductService
     Task<ServiceResult> RemoveStock(int variantId, string token);
     Task<ServiceResult> AddStock(int productId, string newSize, int quantity, string token);
     Task<ServiceResult<ProductImage>> AddProductImageAsync(ProductImage image, string token);
+    Task<ServiceResult<List<ProductResponseDto>>> GetLowStockProductsAsync(int limit, string token);
 }

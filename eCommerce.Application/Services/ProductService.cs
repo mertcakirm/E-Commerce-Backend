@@ -481,5 +481,34 @@ public async Task<ServiceResult<ProductDto>> CreateProductAsync(ProductCreateDto
 
             return ServiceResult<ProductImage>.Success(savedImage);
         }
+        
+        public async Task<ServiceResult<List<ProductResponseDto>>> GetLowStockProductsAsync(int limit,string token)
+        {
+            if (string.IsNullOrEmpty(token))
+                return ServiceResult<List<ProductResponseDto>>.Fail("Token bulunamadı", HttpStatusCode.Unauthorized);
+
+            var isAdmin = await _userValidator.IsAdminAsync(token);
+            var user = await _userValidator.ValidateAsync(token);
+
+            if (isAdmin.IsFail || !isAdmin.Data)
+                return ServiceResult<List<ProductResponseDto>>.Fail("Yetkisiz giriş!", HttpStatusCode.Forbidden);
+            
+            var lowStockProducts = await _productRepository.GetProductsWithLowStockAsync(limit);
+            
+            var productDtos = lowStockProducts
+                .Select(p => new ProductResponseDto
+                {
+                    Id = p.Id,
+                    CategoryName = p.Category.Name,
+                    Variants = p.Variants.Select(v => new ProductVariantResponseDto
+                    {
+                        Id = v.Id,
+                        Size = v.Size,
+                        Stock = v.Stock,
+                    }).OrderBy(v => v.Id).ToList(),
+                }).ToList();
+
+            return ServiceResult<List<ProductResponseDto>>.Success(productDtos);
+        }
     }
 }

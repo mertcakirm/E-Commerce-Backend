@@ -53,6 +53,15 @@ namespace eCommerce.Infrastructure.Repositories
                 .FirstOrDefaultAsync(p => p.Id == id);
         }
         
+        public async Task<List<Product>> GetProductsWithLowStockAsync(int limit)
+        {
+            return await _dbSet
+                .Include(p => p.Variants)
+                .Include(p => p.Category)
+                .Where(p => p.Variants.Sum(v => v.Stock) < limit)
+                .ToListAsync();
+        }
+        
         public async Task<bool> DeleteImageAsync(int id)
         {
             var image = await _context.ProductImages.FirstOrDefaultAsync(p => p.Id == id);

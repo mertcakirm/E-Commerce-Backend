@@ -49,7 +49,6 @@ public class AdminController : ControllerBase
         if (adminUser == null)
             return Unauthorized("Geçersiz e-posta veya şifre.");
 
-        // JWT token oluşturuluyor
         var tokenString = _tokenService.CreateToken(adminUser);
 
         return Ok(new
@@ -63,5 +62,19 @@ public class AdminController : ControllerBase
             },
             tokenString
         });
+    }
+    
+    [HttpGet("low-stock")]
+    [Authorize]
+    public async Task<IActionResult> GetLowStockProducts([FromHeader(Name = "Authorization")] string token,[FromQuery] int limit = 20)
+    {
+        var result = await _productService.GetLowStockProductsAsync(limit, token);
+
+        if (result.IsFail)
+        {
+            return StatusCode((int)result.Status, new { message = result.ErrorMessage });
+        }
+
+        return Ok(result.Data);
     }
 }

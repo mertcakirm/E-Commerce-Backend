@@ -18,5 +18,6 @@ namespace eCommerce.Core.Interfaces
         Task<bool> RemoveStockAsync(int VariantId);
         Task<ProductImage> AddImageAsync(ProductImage image);
         Task<List<ProductImage>> GetImageByProductIdAsync(int productId);
+        Task<List<Product>> GetProductsWithLowStockAsync(int limit);
     }
 }
