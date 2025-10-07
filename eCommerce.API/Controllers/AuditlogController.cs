@@ -1,5 +1,6 @@
 using eCommerce.Application.Interfaces;
 using eCommerce.Core.Entities;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 [ApiController]
@@ -14,16 +15,21 @@ public class AuditLogController : ControllerBase
     }
 
     [HttpGet]
-    public async Task<IActionResult> GetAll()
+    [Authorize]
+    public async Task<IActionResult> GetAll(
+        [FromHeader(Name = "Authorization")] string token,
+        [FromQuery] int pageNumber = 1,
+        [FromQuery] int pageSize = 10)
     {
-        var logs = await _auditService.GetAllAsync();
-        return Ok(logs);
+        var result = await _auditService.GetAllAsync(token, pageNumber, pageSize);
+        return Ok(result);
     }
 
-    [HttpPost]
-    public async Task<IActionResult> Log([FromBody] AuditLog log)
+    [HttpDelete("clear")]
+    [Authorize]
+    public async Task<IActionResult> Clear([FromHeader(Name = "Authorization")] string token)
     {
-        await _auditService.LogAsync(log.UserId, log.Action, log.EntityName, log.EntityId, log.Details);
-        return Ok(new { message = "Kayıt Eklendi!" });
+        var logs = await _auditService.ClearAuditLogsHistoryAsync(token);
+        return Ok(logs);
     }
 }

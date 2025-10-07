@@ -5,5 +5,6 @@ namespace eCommerce.Core.Interfaces;
 public interface IAuditLogRepository
 {
     Task AddAsync(AuditLog log);
-    Task<IEnumerable<AuditLog>> GetAllAsync();
+    Task<(IEnumerable<AuditLog> Items, int TotalCount)> GetAllAsync(int pageNumber, int pageSize);
+    Task<bool> ClearAuditLogsHistoryAsync();
 }
