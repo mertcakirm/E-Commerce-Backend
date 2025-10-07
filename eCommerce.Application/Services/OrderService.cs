@@ -427,5 +427,69 @@ public async Task<ServiceResult<PagedResult<OrderResponseDto>>> GetCompletedOrde
 }
 
 
+public async Task<ServiceResult<List<MonthlySalesDto>>> GetYearlySalesByMonthAsync(string token)
+{
+    try
+    {
+        var isAdmin = await _userValidator.IsAdminAsync(token);
+        if (isAdmin.IsFail || !isAdmin.Data)
+            return ServiceResult<List<MonthlySalesDto>>.Fail("Yetkisiz giriş!", HttpStatusCode.Forbidden);
+        
+        var orders = await _orderRepo.GetOrdersFromLastYearAsync();
+
+        var groupedData = orders
+            .GroupBy(o => new { o.CreatedAt.Year, o.CreatedAt.Month })
+            .Select(g => new MonthlySalesDto
+            {
+                Year = g.Key.Year,
+                Month = g.Key.Month,
+                SalesCount = g.Count()
+            })
+            .OrderBy(x => x.Year)
+            .ThenBy(x => x.Month)
+            .ToList();
+
+        return ServiceResult<List<MonthlySalesDto>>.Success(groupedData);
+    }
+    catch (Exception ex)
+    {
+        return ServiceResult<List<MonthlySalesDto>>.Fail(ex.Message);
+    }
+    
+}
+public async Task<ServiceResult<List<MonthlyCategorySalesDto>>> GetMonthlyCategorySalesAsync(string token)
+{
+    var isAdmin = await _userValidator.IsAdminAsync(token);
+    if (isAdmin.IsFail || !isAdmin.Data)
+        return ServiceResult<List<MonthlyCategorySalesDto>>.Fail("Yetkisiz giriş!", HttpStatusCode.Forbidden);
+    
+    var orders = await _orderRepo.GetOrdersFromLastYearByCategoryAsync();
+
+    var result = orders
+        .SelectMany(o => o.OrderItems)
+        .GroupBy(oi => new
+        {
+            Year = oi.Order.OrderDate.Year,
+            Month = oi.Order.OrderDate.Month,
+            CategoryId = oi.ProductVariant.Product.Category.Id,
+            CategoryName = oi.ProductVariant.Product.Category.Name
+        })
+        .Select(g => new MonthlyCategorySalesDto
+        {
+            Year = g.Key.Year,
+            Month = g.Key.Month,
+            CategoryId = g.Key.CategoryId,
+            CategoryName = g.Key.CategoryName,
+            OrderCount = g.Count(),
+            TotalAmount = g.Sum(x => x.Price * x.Quantity)
+        })
+        .OrderBy(x => x.Year)
+        .ThenBy(x => x.Month)
+        .ThenBy(x => x.CategoryId)
+        .ToList();
+
+    return ServiceResult<List<MonthlyCategorySalesDto>>.Success(result);
+}
+
 
 }

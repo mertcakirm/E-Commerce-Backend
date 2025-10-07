@@ -14,12 +14,14 @@ public class AdminController : ControllerBase
     private readonly IProductService _productService;
     private readonly IAuthRepository  _authRepository;
     private readonly ITokenService _tokenService;
+    private readonly IOrderService _orderService;
 
-    public AdminController(IProductService productService, IAuthRepository authRepository, ITokenService tokenService)
+    public AdminController(IProductService productService, IAuthRepository authRepository, ITokenService tokenService, IOrderService orderService)
     {
         _productService = productService;
         _authRepository = authRepository;
         _tokenService = tokenService;
+        _orderService = orderService;
     }
     
     [HttpGet("products")]
@@ -76,5 +78,25 @@ public class AdminController : ControllerBase
         }
 
         return Ok(result.Data);
+    }
+    
+    [HttpGet("sale/yearly-by-month")]
+    [Authorize]
+    public async Task<IActionResult> GetYearlySalesByMonth([FromHeader(Name = "Authorization")] string token)
+    {
+        var result = await _orderService.GetYearlySalesByMonthAsync(token);
+
+        if (result.IsFail)
+            return StatusCode((int)result.Status, new { errors = result.ErrorMessage });
+
+        return Ok(result.Data);
+    }
+    
+    [HttpGet("monthly-category-sales")]
+    [Authorize]
+    public async Task<IActionResult> GetMonthlyCategorySales([FromHeader(Name = "Authorization")] string token)
+    {
+            var result = await _orderService.GetMonthlyCategorySalesAsync(token);
+            return Ok(result); 
     }
 }

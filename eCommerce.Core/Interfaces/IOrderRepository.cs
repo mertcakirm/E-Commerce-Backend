@@ -11,6 +11,8 @@ namespace eCommerce.Core.Interfaces
         Task UpdateOrderStatusAsync(int orderId, string newStatus);
         Task CompleteOrderStatusAsync(int orderId);
         Task<IEnumerable<Product?>> GetTopProductsAsync(int count);
+        Task<List<Order>> GetOrdersFromLastYearAsync();
+        Task<List<Order>> GetOrdersFromLastYearByCategoryAsync();
 
     }
 }

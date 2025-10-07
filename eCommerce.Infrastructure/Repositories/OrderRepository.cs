@@ -102,6 +102,28 @@ namespace eCommerce.Infrastructure.Repositories
                 await _context.SaveChangesAsync();
             }
         }
+
+        public async Task<List<Order>> GetOrdersFromLastYearAsync()
+        {
+            var oneYearAgo = DateTime.Now.AddYears(-1);
+
+            return await _context.Orders
+                .Where(o => o.CreatedAt >= oneYearAgo)
+                .ToListAsync();
+        }
         
+        public async Task<List<Order>> GetOrdersFromLastYearByCategoryAsync()
+        {
+            var today = DateTime.Today;
+            var lastYear = today.AddYears(-1);
+
+            var orders = await _context.Orders
+                .Where(o => o.OrderDate >= lastYear)
+                .Include(o => o.OrderItems)
+                .ThenInclude(oi => oi.ProductVariant.Product.Category)
+                .ToListAsync();
+
+            return orders;
+        }
     }
 }
