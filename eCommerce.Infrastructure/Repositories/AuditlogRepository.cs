@@ -18,6 +18,21 @@ public class AuditLogRepository : IAuditLogRepository
         await _context.SaveChangesAsync();
     }
 
+    public async Task<(IEnumerable<AuditLog> Items, int TotalCount)> GetNotSeenAllAsync(int pageNumber, int pageSize)
+    {
+        var query = _context.AuditLogs
+            .Where(a => !a.IsDeleted && a.IsSeen == false)
+            .OrderByDescending(a => a.CreatedAt);
+
+        var totalCount = await query.CountAsync();
+        var items = await query
+            .Skip((pageNumber - 1) * pageSize)
+            .Take(pageSize)
+            .ToListAsync();
+
+        return (items, totalCount);
+    }
+    
     public async Task<(IEnumerable<AuditLog> Items, int TotalCount)> GetAllAsync(int pageNumber, int pageSize)
     {
         var query = _context.AuditLogs
@@ -31,6 +46,16 @@ public class AuditLogRepository : IAuditLogRepository
             .ToListAsync();
 
         return (items, totalCount); // tuple ile döndürüyoruz
+    }
+
+    public async Task<bool> ToggleSeeLogAsync(int id)
+    {
+        var query = await _context.AuditLogs.FirstOrDefaultAsync(a=>a.Id == id);
+        if (query == null) return false;
+        query.IsSeen = !query.IsSeen;
+        await _context.SaveChangesAsync();
+        return true;
+        
     }
 
     public async Task<bool> ClearAuditLogsHistoryAsync()

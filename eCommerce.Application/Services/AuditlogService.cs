@@ -42,6 +42,32 @@ public class AuditLogService : IAuditLogService
 
         return ServiceResult<PagedResult<AuditLog>>.Success(pagedResult, "Loglar başarıyla getirildi.");
     }
+    
+    public async Task<ServiceResult<PagedResult<AuditLog>>> GetNotSeenAllAsync(string token, int pageNumber = 1, int pageSize = 10)
+    {
+        var isAdmin = await _userValidator.IsAdminAsync(token);
+        if (isAdmin.IsFail || !isAdmin.Data)
+            return ServiceResult<PagedResult<AuditLog>>.Fail("Yetkisiz giriş!", HttpStatusCode.Forbidden);
+
+        var (items, totalCount) = await _auditRepo.GetNotSeenAllAsync(pageNumber, pageSize);
+
+        var pagedResult = new PagedResult<AuditLog>(items, totalCount, pageNumber, pageSize);
+
+        return ServiceResult<PagedResult<AuditLog>>.Success(pagedResult, "Loglar başarıyla getirildi.");
+    }
+
+    public async Task<ServiceResult<bool>> ToggleSeeLogAsync(int id, string token)
+    {
+        var isAdmin = await _userValidator.IsAdminAsync(token);
+        if (isAdmin.IsFail || !isAdmin.Data)
+            return ServiceResult<bool>.Fail("Yetkisiz giriş!", HttpStatusCode.Forbidden);
+
+        var toggle = await _auditRepo.ToggleSeeLogAsync(id);
+        if (toggle == null)
+            return ServiceResult<bool>.Fail("İşlem bulunamadı!", HttpStatusCode.NotFound);
+
+        return ServiceResult<bool>.Success(true, "Log durumu başarıyla değiştirildi.");
+    }
 
     public async Task<ServiceResult<bool>> ClearAuditLogsHistoryAsync(string token)
     {
