@@ -58,5 +58,9 @@ namespace eCommerce.API.Extensions;
             // Slider and Cart Contents
             services.AddScoped<ISliderCartService, SliderCartService>();
             
+            // Payment
+            services.AddScoped<IPaymentService, PaymentService>();
+            services.AddScoped<IPaymentRepository, PaymentRepository>();
+            
         }
     }

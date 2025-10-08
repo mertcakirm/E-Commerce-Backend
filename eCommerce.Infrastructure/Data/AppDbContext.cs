@@ -21,6 +21,7 @@ public class AppDbContext : DbContext
     public DbSet<Order> Orders { get; set; }
     public DbSet<OrderItem> OrderItems { get; set; }
     public DbSet<Payment> Payments { get; set; }
+    public DbSet<PaymentRecord> PaymentRecords { get; set; }
     public DbSet<Wishlist> Wishlists { get; set; }
     public DbSet<UserAddress> UserAddresses { get; set; }
     public DbSet<AuditLog> AuditLogs { get; set; }

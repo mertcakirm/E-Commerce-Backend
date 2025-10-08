@@ -112,18 +112,30 @@ namespace eCommerce.Infrastructure.Repositories
                 .ToListAsync();
         }
         
-        public async Task<List<Order>> GetOrdersFromLastYearByCategoryAsync()
+        public async Task<List<Order>> GetOrdersFromLastMonthByCategoryAsync()
         {
             var today = DateTime.Today;
-            var lastYear = today.AddYears(-1);
+            var lastMonth = today.AddDays(-30);
 
             var orders = await _context.Orders
-                .Where(o => o.OrderDate >= lastYear)
+                .Where(o => o.OrderDate >= lastMonth)
                 .Include(o => o.OrderItems)
                 .ThenInclude(oi => oi.ProductVariant.Product.Category)
                 .ToListAsync();
 
             return orders;
         }
+        
+        public async Task<List<Order>> GetOrdersGeneralByCategoryAsync()
+        {
+            var orders = await _context.Orders
+                .Include(o => o.OrderItems)
+                .ThenInclude(oi => oi.ProductVariant.Product.Category)
+                .ToListAsync();
+
+            return orders;
+        }
+        
+      
     }
 }

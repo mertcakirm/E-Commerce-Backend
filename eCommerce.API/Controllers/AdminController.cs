@@ -15,13 +15,15 @@ public class AdminController : ControllerBase
     private readonly IAuthRepository  _authRepository;
     private readonly ITokenService _tokenService;
     private readonly IOrderService _orderService;
+    private readonly IPaymentService _paymentService;
 
-    public AdminController(IProductService productService, IAuthRepository authRepository, ITokenService tokenService, IOrderService orderService)
+    public AdminController(IProductService productService, IAuthRepository authRepository, ITokenService tokenService, IOrderService orderService, IPaymentService paymentService)
     {
         _productService = productService;
         _authRepository = authRepository;
         _tokenService = tokenService;
         _orderService = orderService;
+        _paymentService = paymentService;
     }
     
     [HttpGet("products")]
@@ -96,7 +98,66 @@ public class AdminController : ControllerBase
     [Authorize]
     public async Task<IActionResult> GetMonthlyCategorySales([FromHeader(Name = "Authorization")] string token)
     {
+            if (string.IsNullOrEmpty(token))
+                return Unauthorized("Token eksik.");
+        
             var result = await _orderService.GetMonthlyCategorySalesAsync(token);
             return Ok(result); 
+    }
+        
+    [HttpGet("category/general")]
+    [Authorize]
+    public async Task<IActionResult> GetGeneralCategorySales([FromHeader(Name = "Authorization")] string token)
+    {
+        if (string.IsNullOrEmpty(token))
+            return Unauthorized("Token eksik.");
+
+        var result = await _orderService.GetYearlyCategorySalesAsync(token);
+
+        return Ok(result); 
+    }
+    
+    [HttpGet("report-get-all")]
+    [Authorize]
+    public async Task<IActionResult> GetAllPaymentRecords(
+        [FromHeader(Name = "Authorization")] string token,
+        [FromQuery] int pageNumber = 1,
+        [FromQuery] int pageSize = 10)
+    {
+        var result = await _paymentService.GetAllPaymentRecordsAsync(token, pageNumber, pageSize);
+
+        if (result.IsFail)
+            return StatusCode((int)result.Status, result.ErrorMessage);
+
+        return Ok(result.Data);
+    }
+    
+    [HttpGet("monthly-report")]
+    [Authorize]
+    public async Task<IActionResult> GetMonthlyReport(
+        [FromHeader(Name = "Authorization")] string token,
+        [FromQuery] DateTime startDate,
+        [FromQuery] DateTime endDate)
+    {
+        if (string.IsNullOrEmpty(token))
+            return Unauthorized("Token eksik.");
+
+        var result = await _paymentService.GetMonthlySalesReportAsync(startDate, endDate, token);
+
+        if (result.IsFail)
+            return StatusCode((int)result.Status, new { errors = result.ErrorMessage });
+
+        return Ok(result.Data);
+    }
+    
+    [HttpPost("create-payment-record")]
+    [Authorize]
+    public async Task<IActionResult> CreatePaymentRecord([FromBody] MonthlySalesReportDto dto,[FromHeader(Name = "Authorization")] string token)
+    {
+        var result = await _paymentService.CreatePaymentRecordAsync(dto,token);
+        if (result.IsFail)
+            return StatusCode((int)result.Status, result.ErrorMessage);
+
+        return Ok(result.ErrorMessage);
     }
 }

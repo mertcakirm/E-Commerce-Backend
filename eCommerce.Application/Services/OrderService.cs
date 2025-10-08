@@ -463,7 +463,7 @@ public async Task<ServiceResult<List<MonthlyCategorySalesDto>>> GetMonthlyCatego
     if (isAdmin.IsFail || !isAdmin.Data)
         return ServiceResult<List<MonthlyCategorySalesDto>>.Fail("Yetkisiz giriş!", HttpStatusCode.Forbidden);
     
-    var orders = await _orderRepo.GetOrdersFromLastYearByCategoryAsync();
+    var orders = await _orderRepo.GetOrdersFromLastMonthByCategoryAsync();
 
     var result = orders
         .SelectMany(o => o.OrderItems)
@@ -480,12 +480,40 @@ public async Task<ServiceResult<List<MonthlyCategorySalesDto>>> GetMonthlyCatego
             Month = g.Key.Month,
             CategoryId = g.Key.CategoryId,
             CategoryName = g.Key.CategoryName,
-            OrderCount = g.Count(),
-            TotalAmount = g.Sum(x => x.Price * x.Quantity)
+            OrderCount = g.Count()
         })
         .OrderBy(x => x.Year)
         .ThenBy(x => x.Month)
         .ThenBy(x => x.CategoryId)
+        .ToList();
+
+    return ServiceResult<List<MonthlyCategorySalesDto>>.Success(result);
+}
+
+public async Task<ServiceResult<List<MonthlyCategorySalesDto>>> GetYearlyCategorySalesAsync(string token)
+{
+    var isAdmin = await _userValidator.IsAdminAsync(token);
+    if (isAdmin.IsFail || !isAdmin.Data)
+        return ServiceResult<List<MonthlyCategorySalesDto>>.Fail("Yetkisiz giriş!", HttpStatusCode.Forbidden);
+    
+    var orders = await _orderRepo.GetOrdersGeneralByCategoryAsync();
+
+    var result = orders
+        .SelectMany(o => o.OrderItems)
+        .GroupBy(oi => new
+        {
+            CategoryId = oi.ProductVariant.Product.Category.Id,
+            CategoryName = oi.ProductVariant.Product.Category.Name
+        })
+        .Select(g => new MonthlyCategorySalesDto
+        {
+            Year = 0,
+            Month = 0, 
+            CategoryId = g.Key.CategoryId,
+            CategoryName = g.Key.CategoryName,
+            OrderCount = g.Count()
+         })
+        .OrderBy(x => x.CategoryId)
         .ToList();
 
     return ServiceResult<List<MonthlyCategorySalesDto>>.Success(result);
