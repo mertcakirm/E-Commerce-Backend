@@ -11,7 +11,10 @@ namespace eCommerce.API.Extensions
                 options.AddPolicy(PolicyName, policy =>
                 {
                     policy
-                        .WithOrigins("http://localhost:5173") // frontend URL
+                        .WithOrigins(
+                            "http://localhost:5173",  // mevcut port
+                            "http://localhost:3001"   // eklenen port
+                        )
                         .AllowAnyHeader()
                         .AllowAnyMethod()
                         .AllowCredentials(); // token/cookie kullanıyorsan gerekli

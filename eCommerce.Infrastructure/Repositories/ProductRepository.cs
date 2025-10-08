@@ -9,15 +9,6 @@ namespace eCommerce.Infrastructure.Repositories
     {
         public ProductRepository(AppDbContext context) : base(context) { }
 
-        public async Task<IEnumerable<Product>> GetTopSellingProductsAsync(int count)
-        {
-            return await _dbSet
-                .Include(p => p.OrderItems)
-                .OrderByDescending(p => p.OrderItems.Count)
-                .Take(count)
-                .ToListAsync();
-        }
-
         public async Task<IEnumerable<Product>> SearchProductsAsync(string keyword, int? categoryId)
         {
             var query = _dbSet.Include(p => p.Variants).AsQueryable();
@@ -27,13 +18,6 @@ namespace eCommerce.Infrastructure.Repositories
                 query = query.Where(p => p.CategoryId == categoryId.Value);
 
             return await query.ToListAsync();
-        }
-
-        public async Task<IEnumerable<ProductVariant>> GetStockReportAsync()
-        {
-            return await _context.ProductVariants
-                .Include(v => v.Product)
-                .ToListAsync();
         }
         
         public async Task<IEnumerable<Product>> GetAllWithDetailsAsync()
@@ -100,13 +84,6 @@ namespace eCommerce.Infrastructure.Repositories
                 .ToListAsync();
         }
 
-        public async Task<ProductVariant?> GetVariantById(int variantId)
-        {
-            return await _context.ProductVariants
-                .Include(v => v.Product)
-                .FirstOrDefaultAsync(v => v.Id == variantId);
-        }
-
         public async Task<bool> AddStockAsync(int productId,string newSize ,int quantity)
         {
             var StokObj = new ProductVariant
@@ -157,13 +134,6 @@ namespace eCommerce.Infrastructure.Repositories
             await _context.SaveChangesAsync();
             return image;
         }
-        
-        public async Task<List<ProductImage>> GetImageByProductIdAsync(int productId)
-        {
-            return await _context.ProductImages
-                .Where(x => x.ProductId == productId)
-                .ToListAsync();
-        }
 
         public async Task<bool> UpdateProductSaleCount(int productId)
         {
@@ -175,7 +145,54 @@ namespace eCommerce.Infrastructure.Repositories
             var result = await _context.SaveChangesAsync();
             return result > 0;
         }
-        
+
+        public async Task<bool> AddProductQuestion(int productId, string question, int userId)
+        {
+            var productQuestion = new ProductQuestion
+            {
+                ProductId = productId,
+                UserId = userId,
+                QuestionText = question
+            };
+
+            await _context.ProductQuestions.AddAsync(productQuestion);
+            var result = await _context.SaveChangesAsync();
+
+            return result > 0;
+        }
+        public async Task<bool> AddProductAnswer(int questionId, string answer, int userId)
+        {
+            var productAnswer = new ProductAnswer
+            {
+                QuestionId = questionId,
+                UserId = userId,
+                AnswerText = answer
+            };
+
+            await _context.ProductAnswers.AddAsync(productAnswer);
+            var result = await _context.SaveChangesAsync();
+
+            return result > 0;
+        }
+
+
+        public async Task<List<ProductQuestion>> GetProductQuestions()
+        {
+            return await _context.ProductQuestions
+                .Include(q=>q.Answers)
+                .Include(q=>q.Product)
+                .Include(q=>q.User)
+                .ToListAsync();
+        }
+
+        public async Task<bool> DeleteProductQuestion(int questionId)
+        {
+            var productQuestion = await _context.ProductQuestions.FirstOrDefaultAsync(p => p.Id == questionId);
+            if (productQuestion == null) return false;
+            productQuestion.IsDeleted = true;
+            var result = await _context.SaveChangesAsync();
+            return result > 0;
+        }
         
         }
     }

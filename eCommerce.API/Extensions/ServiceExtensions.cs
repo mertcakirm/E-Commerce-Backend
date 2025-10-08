@@ -62,5 +62,8 @@ namespace eCommerce.API.Extensions;
             services.AddScoped<IPaymentService, PaymentService>();
             services.AddScoped<IPaymentRepository, PaymentRepository>();
             
+            // Questions
+            services.AddScoped<IQuestionService, QuestionService>();
+            
         }
     }

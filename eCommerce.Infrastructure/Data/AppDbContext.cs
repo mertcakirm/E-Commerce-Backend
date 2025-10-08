@@ -25,6 +25,8 @@ public class AppDbContext : DbContext
     public DbSet<Wishlist> Wishlists { get; set; }
     public DbSet<UserAddress> UserAddresses { get; set; }
     public DbSet<AuditLog> AuditLogs { get; set; }
+    public DbSet<ProductQuestion> ProductQuestions { get; set; }
+    public DbSet<ProductAnswer> ProductAnswers { get; set; }
     public DbSet<Offer> Offers { get; set; }
     public DbSet<CartContent> CartContents { get; set; }
     public DbSet<SliderContent> SliderContents { get; set; }

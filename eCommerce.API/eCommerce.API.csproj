@@ -24,4 +24,26 @@
     <ProjectReference Include="..\eCommerce.Core\eCommerce.Core.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <_ContentIncludedByDefault Remove="wwwroot\contents\163f8408-2185-410f-aa5b-a28ed5dc4904_kamp.webp" />
+    <_ContentIncludedByDefault Remove="wwwroot\contents\165c43e9-90df-4d44-9a3f-d2fb1197f873_kapak1.webp" />
+    <_ContentIncludedByDefault Remove="wwwroot\contents\1c2ba5e1-a3a2-41e6-80e8-20ff75b8bcbc_kamp3.webp" />
+    <_ContentIncludedByDefault Remove="wwwroot\contents\2d7bb71f-505a-47e0-b028-f2fc3dac8733_kamp4.jpg" />
+    <_ContentIncludedByDefault Remove="wwwroot\contents\3ef263d5-ac31-4ed6-a813-6d8ba985c0d8_87574c80-9608-4b1a-a487-639dc65caa48.JPG" />
+    <_ContentIncludedByDefault Remove="wwwroot\contents\7197a5a1-59ae-4a53-96a8-37b992946b7d_Screenshot 2025-08-28 at 14.26.00.png" />
+    <_ContentIncludedByDefault Remove="wwwroot\contents\73bf6011-93de-41dd-8795-6a949f6addb9_kamp5.jpeg" />
+    <_ContentIncludedByDefault Remove="wwwroot\contents\85740590-94e7-4fba-82f9-09d01914c706_egitimler.png" />
+    <_ContentIncludedByDefault Remove="wwwroot\contents\95eec609-a535-47f7-8abe-3e2b39b75239_kapak3.webp" />
+    <_ContentIncludedByDefault Remove="wwwroot\contents\a2a320f4-3c07-4eb7-82e2-c9eedaa68e50_87574c80-9608-4b1a-a487-639dc65caa48.JPG" />
+    <_ContentIncludedByDefault Remove="wwwroot\contents\dceba904-b9ee-4cec-8d31-f3b200e9f87d_kamp2.jpeg" />
+    <_ContentIncludedByDefault Remove="wwwroot\contents\e26695ea-6008-4d29-8a98-1c3a147ac6ac_Screenshot 2025-08-28 at 14.46.14.png" />
+    <_ContentIncludedByDefault Remove="wwwroot\contents\f9775247-587f-4848-a847-9bb2e8986506_kapak2.jpg" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="wwwroot\contents\" />
+    <Folder Include="wwwroot\images\" />
+    <Folder Include="wwwroot\offers\" />
+  </ItemGroup>
+
 </Project>
