@@ -7,6 +7,7 @@ public class ProductQuestion : BaseEntity
     public int UserId { get; set; } 
     public User User { get; set; }
 
+    public bool IsCorrect { get; set; }
     public string QuestionText { get; set; }
 
 

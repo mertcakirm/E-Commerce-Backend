@@ -34,6 +34,7 @@ public class QuestionService : IQuestionService
             ProductName = q.Product.Name,
             UserName = q.User.Name,
             QuestionText = q.QuestionText,
+            IsCorrect = q.IsCorrect,
             CreatedDate = q.CreatedAt
         }).ToList();
         

@@ -152,7 +152,9 @@ namespace eCommerce.Infrastructure.Repositories
             {
                 ProductId = productId,
                 UserId = userId,
-                QuestionText = question
+                QuestionText = question,
+                IsCorrect = false
+                
             };
 
             await _context.ProductQuestions.AddAsync(productQuestion);
@@ -170,6 +172,11 @@ namespace eCommerce.Infrastructure.Repositories
             };
 
             await _context.ProductAnswers.AddAsync(productAnswer);
+
+            var que = await _context.ProductQuestions.FirstOrDefaultAsync(q => q.Id == questionId);
+            if (que == null) return false;
+            que.IsCorrect = true;
+            
             var result = await _context.SaveChangesAsync();
 
             return result > 0;
