@@ -17,7 +17,6 @@ namespace eCommerce.Application.Services
             _paymentRepository = paymentRepository;
         }
         
-        // 📄 Sayfalı tüm ödeme kayıtlarını getirir
         public async Task<ServiceResult<PagedResult<PaymentRecord>>> GetAllPaymentRecordsAsync(
             string token, int pageNumber, int pageSize)
         {
@@ -42,7 +41,6 @@ namespace eCommerce.Application.Services
             return ServiceResult<PagedResult<PaymentRecord>>.Success(pagedResult);
         }
 
-        // 📊 Tarih aralığına göre aylık satış raporu
         public async Task<ServiceResult<List<MonthlySalesReportDto>>> GetMonthlySalesReportAsync(
             DateTime startDate, DateTime endDate, string token)
         {
@@ -61,7 +59,7 @@ namespace eCommerce.Application.Services
                     EndDate = endDate,
                     ReportMonth = new DateTime(g.Key.Year, g.Key.Month, 1).ToString("yyyy-MM"),
                     transferTotal = g
-                        .Where(x => x.PaymentMethod == "Havale")
+                        .Where(x => x.PaymentMethod == "Transfer")
                         .Sum(x => x.Order.OrderItems.Sum(oi => oi.Price * oi.Quantity)),
                     CreditCartTotal = g
                         .Where(x => x.PaymentMethod == "Credit_Card")
@@ -76,7 +74,6 @@ namespace eCommerce.Application.Services
             return ServiceResult<List<MonthlySalesReportDto>>.Success(report);
         }
 
-        // 💾 Yeni ödeme kaydı oluşturur
         public async Task<ServiceResult<string>> CreatePaymentRecordAsync(MonthlySalesReportDto dto, string token)
         {
             var isAdmin = await _userValidator.IsAdminAsync(token);
@@ -106,6 +103,19 @@ namespace eCommerce.Application.Services
             await _paymentRepository.AddPaymentRecordAsync(paymentRecord);
 
             return ServiceResult<string>.Success("Ödeme kaydı başarıyla oluşturuldu.");
+        }
+
+        public async Task<ServiceResult<bool>> RemovePaymentRecordAsync(int recordId,string token)
+        {
+            var isAdmin = await _userValidator.IsAdminAsync(token);
+            
+            if (isAdmin.IsFail || !isAdmin.Data)
+                return ServiceResult<bool>.Fail("Yetkisiz giriş!", HttpStatusCode.Forbidden);
+            
+            if(recordId == null || recordId == 0) return ServiceResult<bool>.Fail("Kayıt Id'si bulunamadı!", HttpStatusCode.BadRequest);
+            
+            await _paymentRepository.RemovePaymentRecordAsync(recordId);
+            return ServiceResult<bool>.Success(true);
         }
     }
 }

@@ -188,8 +188,21 @@ namespace eCommerce.Infrastructure.Repositories
         public async Task<bool> DeleteProductQuestion(int questionId)
         {
             var productQuestion = await _context.ProductQuestions.FirstOrDefaultAsync(p => p.Id == questionId);
+
             if (productQuestion == null) return false;
+            
+            var questionAnswers = await _context.ProductAnswers.Where(a => a.QuestionId == questionId).ToListAsync();
+
+            if (questionAnswers != null)
+            {
+                foreach (var answer in questionAnswers)
+                {
+                    answer.IsDeleted = true;
+                }
+            };
+            
             productQuestion.IsDeleted = true;
+            
             var result = await _context.SaveChangesAsync();
             return result > 0;
         }

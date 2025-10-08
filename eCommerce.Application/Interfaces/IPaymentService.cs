@@ -8,4 +8,5 @@ public interface IPaymentService
     Task<ServiceResult<PagedResult<PaymentRecord>>> GetAllPaymentRecordsAsync(string token, int pageNumber, int pageSize);
     Task<ServiceResult<List<MonthlySalesReportDto>>> GetMonthlySalesReportAsync(DateTime startDate, DateTime endDate, string token);
     Task<ServiceResult<string>> CreatePaymentRecordAsync(MonthlySalesReportDto dto,string token);
+    Task<ServiceResult<bool>> RemovePaymentRecordAsync(int recordId, string token);
 }

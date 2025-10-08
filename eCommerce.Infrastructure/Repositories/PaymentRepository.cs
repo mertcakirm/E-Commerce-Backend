@@ -36,5 +36,17 @@ public class PaymentRepository : IPaymentRepository
         await _context.PaymentRecords.AddAsync(paymentRecord);
         await _context.SaveChangesAsync();
     }
+
+    public async Task<bool> RemovePaymentRecordAsync(int recordId)
+    {
+        var record = await _context.PaymentRecords.FindAsync(recordId);
+        if (record == null) return false;
+        
+        record.IsDeleted = true;
+        
+        await _context.SaveChangesAsync();
+        
+        return true;
+    }
     
 }

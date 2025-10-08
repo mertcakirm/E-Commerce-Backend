@@ -122,7 +122,7 @@ public async Task<ServiceResult<Order>> CreateOrderAsync(OrderCreateDto dto, str
     {
         UserId = user.Id,
         OrderDate = DateTime.UtcNow,
-        Status = "Pending",
+        Status = "Onaylandı",
         ShippingAddress = dto.ShippingAddress,
         OrderItems = new List<OrderItem>()
     };

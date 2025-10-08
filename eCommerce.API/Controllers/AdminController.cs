@@ -160,4 +160,18 @@ public class AdminController : ControllerBase
 
         return Ok(result.ErrorMessage);
     }
+    
+    [HttpDelete("record/{recordId}")]
+    public async Task<IActionResult> DeletePaymentRecord([FromHeader(Name = "Authorization")] string token,int recordId)
+    {
+        if (string.IsNullOrEmpty(token))
+            return Unauthorized("Token gerekli");
+
+        var result = await _paymentService.RemovePaymentRecordAsync(recordId, token);
+
+        if (result.IsFail)
+            return BadRequest(result.ErrorMessage);
+
+        return Ok(new { success = true });
+    }
 }
