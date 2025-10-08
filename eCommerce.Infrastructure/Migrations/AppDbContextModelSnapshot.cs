@@ -451,6 +451,9 @@ namespace eCommerce.Infrastructure.Migrations
                     b.Property<decimal>("CreditCartTotal")
                         .HasColumnType("decimal(65,30)");
 
+                    b.Property<DateTime>("EndDate")
+                        .HasColumnType("datetime(6)");
+
                     b.Property<bool>("IsDeleted")
                         .HasColumnType("tinyint(1)");
 
@@ -461,6 +464,9 @@ namespace eCommerce.Infrastructure.Migrations
                         .HasColumnType("int");
 
                     b.Property<DateTime>("ReportMonth")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<DateTime>("StartDate")
                         .HasColumnType("datetime(6)");
 
                     b.Property<decimal>("TotalAmount")

@@ -11,14 +11,13 @@ namespace eCommerce.Application.Services
         private readonly UserValidator _userValidator;
         private readonly IPaymentRepository _paymentRepository;
         
-
         public PaymentService(UserValidator userValidator, IPaymentRepository paymentRepository)
         {
             _userValidator = userValidator;
             _paymentRepository = paymentRepository;
         }
         
-        
+        // 📄 Sayfalı tüm ödeme kayıtlarını getirir
         public async Task<ServiceResult<PagedResult<PaymentRecord>>> GetAllPaymentRecordsAsync(
             string token, int pageNumber, int pageSize)
         {
@@ -43,11 +42,14 @@ namespace eCommerce.Application.Services
             return ServiceResult<PagedResult<PaymentRecord>>.Success(pagedResult);
         }
 
-        public async Task<ServiceResult<List<MonthlySalesReportDto>>> GetMonthlySalesReportAsync(DateTime startDate, DateTime endDate,string token)
+        // 📊 Tarih aralığına göre aylık satış raporu
+        public async Task<ServiceResult<List<MonthlySalesReportDto>>> GetMonthlySalesReportAsync(
+            DateTime startDate, DateTime endDate, string token)
         {
             var isAdmin = await _userValidator.IsAdminAsync(token);
         
-            if (isAdmin.IsFail || !isAdmin.Data) return ServiceResult<List<MonthlySalesReportDto>>.Fail("Yetkisiz giriş!", HttpStatusCode.Forbidden);
+            if (isAdmin.IsFail || !isAdmin.Data)
+                return ServiceResult<List<MonthlySalesReportDto>>.Fail("Yetkisiz giriş!", HttpStatusCode.Forbidden);
             
             var payments = await _paymentRepository.GetPaymentsByDateRangeAsync(startDate, endDate);
 
@@ -55,7 +57,9 @@ namespace eCommerce.Application.Services
                 .GroupBy(p => new { p.Order.OrderDate.Year, p.Order.OrderDate.Month })
                 .Select(g => new MonthlySalesReportDto
                 {
-                    ReportMonth = $"{g.Key.Month:D2}/{g.Key.Year}",
+                    StartDate = startDate,
+                    EndDate = endDate,
+                    ReportMonth = new DateTime(g.Key.Year, g.Key.Month, 1).ToString("yyyy-MM"),
                     transferTotal = g
                         .Where(x => x.PaymentMethod == "Havale")
                         .Sum(x => x.Order.OrderItems.Sum(oi => oi.Price * oi.Quantity)),
@@ -69,39 +73,39 @@ namespace eCommerce.Application.Services
                 .OrderBy(r => r.ReportMonth)
                 .ToList();
 
-            
             return ServiceResult<List<MonthlySalesReportDto>>.Success(report);
         }
-        
-        
-        public async Task<ServiceResult<string>> CreatePaymentRecordAsync(MonthlySalesReportDto dto,string token)
+
+        // 💾 Yeni ödeme kaydı oluşturur
+        public async Task<ServiceResult<string>> CreatePaymentRecordAsync(MonthlySalesReportDto dto, string token)
         {
-                var isAdmin = await _userValidator.IsAdminAsync(token);
+            var isAdmin = await _userValidator.IsAdminAsync(token);
             
-                if (isAdmin.IsFail || !isAdmin.Data) return ServiceResult<string>.Fail("Yetkisiz giriş!", HttpStatusCode.Forbidden);
-                
-                if (dto == null)
-                    return ServiceResult<string>.Fail("Geçersiz veri gönderildi.", HttpStatusCode.BadRequest);
+            if (isAdmin.IsFail || !isAdmin.Data)
+                return ServiceResult<string>.Fail("Yetkisiz giriş!", HttpStatusCode.Forbidden);
+            
+            if (dto == null)
+                return ServiceResult<string>.Fail("Geçersiz veri gönderildi.", HttpStatusCode.BadRequest);
 
-                if (!DateTime.TryParse(dto.ReportMonth, out DateTime reportDate))
-                    return ServiceResult<string>.Fail("Geçersiz tarih formatı.", HttpStatusCode.BadRequest);
+            DateTime reportMonth;
+            if (!DateTime.TryParse(dto.ReportMonth, out reportMonth))
+                reportMonth = dto.StartDate; // fallback
 
-                var paymentRecord = new PaymentRecord
-                {
-                    ReportMonth = reportDate,
-                    TransferTotal = dto.transferTotal,
-                    CreditCartTotal = dto.CreditCartTotal,
-                    TotalAmount = dto.TotalAmount,
-                    NetProfit = dto.NetProfit,
-                    OrdersCount = dto.OrdersCount
-                };
+            var paymentRecord = new PaymentRecord
+            {
+                StartDate = dto.StartDate,
+                EndDate = dto.EndDate,
+                ReportMonth = reportMonth,
+                TransferTotal = dto.transferTotal,
+                CreditCartTotal = dto.CreditCartTotal,
+                TotalAmount = dto.TotalAmount,
+                NetProfit = dto.NetProfit,
+                OrdersCount = dto.OrdersCount
+            };
 
-                await _paymentRepository.AddPaymentRecordAsync(paymentRecord);
+            await _paymentRepository.AddPaymentRecordAsync(paymentRecord);
 
-                return ServiceResult<string>.Success("Ödeme kaydı başarıyla oluşturuldu.");
+            return ServiceResult<string>.Success("Ödeme kaydı başarıyla oluşturuldu.");
         }
-        
-        
-        
     }
 }

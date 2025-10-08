@@ -27,6 +27,7 @@ public class PaymentRepository : IPaymentRepository
             .Include(p => p.Order)
             .ThenInclude(o => o.OrderItems)
             .Where(p => p.Order.OrderDate >= startDate && p.Order.OrderDate <= endDate)
+            .OrderBy(o=>o.CreatedAt)
             .ToListAsync();
     }
     

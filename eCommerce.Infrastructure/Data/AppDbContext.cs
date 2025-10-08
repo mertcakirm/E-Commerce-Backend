@@ -102,3 +102,6 @@ public class AppDbContext : DbContext
         return base.SaveChanges();
     }
 }
+
+// cd ../eCommerce.API dotnet ef migrations add Address --project ../eCommerce.Infrastructure --startup-project
+// dotnet ef database update --project ../eCommerce.Infrastructure --startup-project

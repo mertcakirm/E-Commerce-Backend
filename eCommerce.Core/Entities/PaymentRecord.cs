@@ -3,6 +3,8 @@ namespace eCommerce.Core.Entities;
 public class PaymentRecord : BaseEntity
 {
     public DateTime ReportMonth {get; set;}
+    public DateTime StartDate {get; set;}
+    public DateTime EndDate {get; set;}
     public decimal TransferTotal {get; set;}
     public decimal CreditCartTotal  {get; set;}
     public decimal TotalAmount  {get; set;}
