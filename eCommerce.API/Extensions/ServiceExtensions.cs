@@ -65,5 +65,9 @@ namespace eCommerce.API.Extensions;
             // Questions
             services.AddScoped<IQuestionService, QuestionService>();
             
+            // Message
+            services.AddScoped<IMessageService, MessageService>();
+            services.AddScoped<IMessageRepository, MessageRepository>();
+            
         }
     }
