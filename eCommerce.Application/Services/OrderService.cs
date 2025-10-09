@@ -14,14 +14,15 @@ public class OrderService : IOrderService
     private readonly UserValidator _userValidator;
     private readonly ICartRepository _cartRepo;
     private readonly IAuditLogService _auditLogService;
-    
-    public OrderService(IOrderRepository orderRepo, IProductRepository productRepo,UserValidator userValidator,ICartRepository cartRepo,IAuditLogService auditLogService)
+    private readonly IUserAddressRepository _userAddressRepository;
+    public OrderService(IOrderRepository orderRepo, IProductRepository productRepo,UserValidator userValidator,ICartRepository cartRepo,IAuditLogService auditLogService, IUserAddressRepository userAddressRepository)
     {
         _orderRepo = orderRepo;
         _productRepo = productRepo;
         _userValidator = userValidator;
         _cartRepo = cartRepo;
         _auditLogService = auditLogService;
+        _userAddressRepository = userAddressRepository;
     }
 
     public async Task<ServiceResult<List<OrderResponseDto>>> GetUserOrderAsync(string token)
@@ -114,6 +115,11 @@ public async Task<ServiceResult<Order>> CreateOrderAsync(OrderCreateDto dto, str
 
     var user = validation.Data!;
 
+    var address = await _userAddressRepository.GetByIdAsync(dto.AddressId);
+    if (address == null || address.UserId != user.Id) return ServiceResult<Order>.Fail("Adres bulunamadı, sipariş oluşturulamaz.", HttpStatusCode.BadRequest);
+       
+    var joinAddress = address.AddressLine + " " + address.City + " " + address.PostalCode;
+
     var cart = await _cartRepo.GetUserCartAsync(user.Id);
     if (cart == null || cart.CartItems == null || !cart.CartItems.Any())
         return ServiceResult<Order>.Fail("Sepetiniz boş, sipariş oluşturulamaz.", HttpStatusCode.BadRequest);
@@ -123,7 +129,7 @@ public async Task<ServiceResult<Order>> CreateOrderAsync(OrderCreateDto dto, str
         UserId = user.Id,
         OrderDate = DateTime.UtcNow,
         Status = "Onaylandı",
-        ShippingAddress = dto.ShippingAddress,
+        ShippingAddress = joinAddress,
         OrderItems = new List<OrderItem>()
     };
 
