@@ -70,7 +70,7 @@ namespace eCommerce.Application.Services
         }
         
         
-        public async Task<ServiceResult<PagedResult<ProductResponseDto>>> GetAllProductsAdminAsync(int pageNumber, int pageSize,string token)
+        public async Task<ServiceResult<PagedResult<ProductResponseDto>>> GetAllProductsAdminAsync(int pageNumber, int pageSize,string token,string? searchTerm = null)
         {
             var isAdmin = await _userValidator.IsAdminAsync(token);
             var validation = await _userValidator.ValidateAsync(token);
@@ -80,7 +80,7 @@ namespace eCommerce.Application.Services
             if (pageNumber <= 0) pageNumber = 1;
             if (pageSize <= 0) pageSize = 10;
 
-            var products = await _productRepository.GetAllWithDetailsAsync();
+            var products = await _productRepository.GetAllWithDetailsAsync(searchTerm);
 
             var totalCount = products.Count();
 

@@ -6,7 +6,7 @@ namespace eCommerce.Application.Interfaces;
 public interface IProductService
 {
     Task<ServiceResult<PagedResult<ProductResponseDto>>> GetAllProductsAsync(int pageNumber, int pageSize);
-    Task<ServiceResult<PagedResult<ProductResponseDto>>> GetAllProductsAdminAsync(int pageNumber, int pageSize,string token);
+    Task<ServiceResult<PagedResult<ProductResponseDto>>> GetAllProductsAdminAsync(int pageNumber, int pageSize,string token,string? searchTerm = null);
     Task<ServiceResult<PagedResult<ProductResponseDto>>> GetProductByCategoryAsync(string categoryName,int pageNumber, int pageSize);
     Task<ServiceResult<ProductResponseDto>> GetProductByIdAsync(int id);
     Task<ServiceResult<ProductDto>> CreateProductAsync(ProductCreateDto dto, string token);

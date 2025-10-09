@@ -3,7 +3,7 @@ namespace eCommerce.Core.Interfaces;
 
 public interface IUserRepository
 {
-    Task<IEnumerable<User>> GetAllUsers();
+    Task<IEnumerable<User>> GetAllUsers(string? searchTerm = null);
     Task<User?> GetByIdUser(int userId);
     Task<bool> IsUser(int id);
     Task<bool> DeleteUserAsync(int userId);

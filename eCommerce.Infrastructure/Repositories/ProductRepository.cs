@@ -20,13 +20,24 @@ namespace eCommerce.Infrastructure.Repositories
             return await query.ToListAsync();
         }
         
-        public async Task<IEnumerable<Product>> GetAllWithDetailsAsync()
+        public async Task<IEnumerable<Product>> GetAllWithDetailsAsync(string? searchTerm = null)
         {
-            return await _dbSet
+            IQueryable<Product> query = _dbSet
                 .Include(p => p.Variants)
                 .Include(p => p.Images)
-                .Include(p=>p.Category)
-                .ToListAsync();
+                .Include(p => p.Category);
+
+            if (!string.IsNullOrWhiteSpace(searchTerm))
+            {
+                var lower = searchTerm.ToLower();
+                query = query.Where(p =>
+                    p.Name.ToLower().Contains(lower) ||
+                    p.Description.ToLower().Contains(lower) ||
+                    p.Category.Name.ToLower().Contains(lower)
+                );
+            }
+
+            return await query.ToListAsync();
         }
         public async Task<Product?> GetByIdWithDetailsAsync(int id)
         {

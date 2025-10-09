@@ -31,12 +31,13 @@ public class AdminController : ControllerBase
     public async Task<IActionResult> GetAllAdmin(
         [FromHeader(Name = "Authorization")] string token,
         [FromQuery] int pageNumber = 1,
-        [FromQuery] int pageSize = 10)
+        [FromQuery] int pageSize = 10,
+        [FromQuery] string? searchTerm = null)
     {
         
         if (token == null) return StatusCode(401);
 
-        var result = await _productService.GetAllProductsAdminAsync(pageNumber, pageSize,token);
+        var result = await _productService.GetAllProductsAdminAsync(pageNumber, pageSize,token,searchTerm);
         if (result.IsFail) return StatusCode((int)result.Status, result);
 
         return Ok(result);

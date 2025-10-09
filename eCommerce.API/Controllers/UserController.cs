@@ -59,12 +59,16 @@ public class UserController: ControllerBase
     
     [Authorize]
     [HttpGet("get-all")]
-    public async Task<IActionResult> GetAllUsers([FromHeader(Name = "Authorization")] string token,[FromQuery] int pageNumber=1, [FromQuery] int pageSize=10)
+    public async Task<IActionResult> GetAllUsers(
+        [FromHeader(Name = "Authorization")] string token,
+        [FromQuery] int pageNumber = 1,
+        [FromQuery] int pageSize = 10,
+        [FromQuery] string? searchTerm = null) 
     {
         if (string.IsNullOrEmpty(token))
             return Unauthorized("Token gerekli");
 
-        var users = await _userService.GetAllUsers(token,pageNumber,pageSize);
+        var users = await _userService.GetAllUsers(token, pageNumber, pageSize, searchTerm);
         return Ok(users);
     }
     

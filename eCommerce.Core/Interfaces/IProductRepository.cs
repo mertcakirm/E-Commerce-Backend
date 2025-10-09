@@ -7,7 +7,7 @@ namespace eCommerce.Core.Interfaces
         Task<bool> UpdateProductSaleCount(int productId);
         Task<IEnumerable<Product>> SearchProductsAsync(string keyword, int? categoryId);
         Task<IEnumerable<Product>> GetProductByCategory(string categoryName);
-        Task<IEnumerable<Product>> GetAllWithDetailsAsync();
+        Task<IEnumerable<Product>> GetAllWithDetailsAsync(string? searchTerm = null);
         Task<bool> DiscountProductAsync(int productId, int discountRate);
         Task<Product?> GetByIdWithDetailsAsync(int id);
         Task<bool> DeleteImageAsync(int id);

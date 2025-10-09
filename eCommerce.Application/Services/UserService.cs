@@ -91,7 +91,8 @@ public class UserService : IUserService
         return ServiceResult<UserDto>.Success(userDto, status:HttpStatusCode.OK);
     }
 
-    public async Task<ServiceResult<PagedResult<UserDto>>> GetAllUsers(string token, int pageNumber, int pageSize)
+    public async Task<ServiceResult<PagedResult<UserDto>>> GetAllUsers(
+        string token, int pageNumber, int pageSize, string? searchTerm = null)
     {
         var isAdmin = await _userValidator.IsAdminAsync(token);
         if (isAdmin.IsFail || !isAdmin.Data)
@@ -100,7 +101,8 @@ public class UserService : IUserService
         if (pageNumber <= 0) pageNumber = 1;
         if (pageSize <= 0) pageSize = 10;
 
-        var users = await _userRepository.GetAllUsers();
+        // ✅ searchTerm'i repository'ye gönderiyoruz
+        var users = await _userRepository.GetAllUsers(searchTerm);
 
         var usersDto = users.Select(u => new UserDto
         {

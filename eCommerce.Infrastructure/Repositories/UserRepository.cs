@@ -13,10 +13,23 @@ public class UserRepository : IUserRepository
         _context = context;
     }
 
-    public async Task<IEnumerable<User>> GetAllUsers()
+    public async Task<IEnumerable<User>> GetAllUsers(string? searchTerm = null)
     {
-        var users = await _context.Users.IgnoreQueryFilters().Where(u=>u.Id != 1).ToListAsync();
-        return users;
+        IQueryable<User> query = _context.Users
+            .IgnoreQueryFilters()
+            .Where(u => u.Id != 1);
+
+        if (!string.IsNullOrWhiteSpace(searchTerm))
+        {
+            var lower = searchTerm.ToLower();
+            query = query.Where(u =>
+                u.Name.ToLower().Contains(lower) ||
+                u.Email.ToLower().Contains(lower) ||
+                u.Role.ToLower().Contains(lower)
+            );
+        }
+
+        return await query.ToListAsync();
     }
     
     public async Task<User?> GetByIdUser(int userId)
