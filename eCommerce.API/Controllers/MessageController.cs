@@ -51,9 +51,10 @@ namespace eCommerce.API.Controllers
         [HttpPut("reply/{messageId}")]
         [Authorize]
         public async Task<IActionResult> ToggleMessageReply(
+            [FromHeader(Name = "Authorization")] string token,
             int messageId,
-            [FromBody] string answer,
-            [FromHeader(Name = "Authorization")] string token)
+            [FromBody] string answer = ""
+            )
         {
             if (string.IsNullOrEmpty(token)) return Unauthorized("Token eksik.");
             
@@ -64,5 +65,20 @@ namespace eCommerce.API.Controllers
 
             return Ok(result);
         }
+
+        [HttpDelete("{messageId}")]
+        [Authorize]
+        public async Task<IActionResult> DeleteMessage(int messageId,[FromHeader(Name = "Authorization")] string token)
+        {
+            if (string.IsNullOrEmpty(token)) return Unauthorized("Token gerekli");
+            
+            var result = await _messageService.RemoveMessageAsync(messageId, token);
+
+            if (result.IsFail)
+                return BadRequest(result.ErrorMessage);
+
+            return Ok(new { success = true });
+        }
+        
     }
 }

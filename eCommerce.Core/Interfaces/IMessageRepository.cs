@@ -7,4 +7,5 @@ public interface IMessageRepository
     Task<bool> CreateMessageAsync(Message message);
     Task<List<Message>> GetAllMessagesAsync();
     Task<bool> ToggleMessageReply(int messageId, string answer);
+    Task<bool> RemoveMessageAsync(int messageId);
 }
