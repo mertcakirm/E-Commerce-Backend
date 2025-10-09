@@ -16,8 +16,11 @@ public class MessageRepository : IMessageRepository
 
     public async Task<bool> CreateMessageAsync(Message message)
     {
+        if (message == null) return false;
+
         await _context.Messages.AddAsync(message);
-        return true;
+        var changes = await _context.SaveChangesAsync();
+        return changes > 0;
     }
 
     public async Task<List<Message>> GetAllMessagesAsync()
