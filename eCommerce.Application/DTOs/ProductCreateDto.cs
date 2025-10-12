@@ -7,7 +7,9 @@ public class ProductCreateDto
     public string Description { get; set; }
     public decimal BasePrice { get; set; }
     public decimal Price { get; set; }
-    public int CategoryId { get; set; }
+
+    // 🔑 Çoklu kategori
+    public List<int> CategoryIds { get; set; } = new();
 
     // 🔑 JSON array olarak direkt gelecek
     public List<ProductVariantCreateDto> Variants { get; set; } = new();

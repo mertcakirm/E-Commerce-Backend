@@ -21,13 +21,11 @@ public class OfferRepository : IOfferRepository
             .FirstOrDefaultAsync(o => o.Id == offerId);
     }
     
-    public async Task<List<Product>> GetProductsByDiscountAsync(decimal discountRate)
+    public IQueryable<Product> GetProductsByDiscountQuery(decimal discountRate)
     {
-        return await _context.Products
+        return _context.Products
             .Where(p => p.IsActive && p.DiscountRate == discountRate)
-            .Include(p => p.Variants)
-            .Include(p => p.Images)
-            .ToListAsync();
+            .AsQueryable();
     }
 
     public async Task<List<Offer>> GetAllAsync()

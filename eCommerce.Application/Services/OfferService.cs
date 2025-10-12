@@ -3,6 +3,7 @@ using eCommerce.Application.DTOs;
 using eCommerce.Application.Interfaces;
 using eCommerce.Core.Entities;
 using eCommerce.Core.Interfaces;
+using Microsoft.EntityFrameworkCore;
 
 namespace eCommerce.Application.Services;
 
@@ -36,38 +37,54 @@ public class OfferService : IOfferService
         return ServiceResult<Offer>.Success(offer);
     }
 
-    public async Task<List<ServiceResult<DiscountProductDto>>> GetDiscountMatchedProductsAsync(int offerId)
+    public async Task<ServiceResult<PagedResult<DiscountProductDto>>> GetDiscountMatchedProductsAsync(int offerId, int pageNumber, int pageSize)
     {
         var offer = await _offerRepository.GetByIdAsync(offerId);
 
         if (offer == null || offer.DiscountRate == null)
-            return new List<ServiceResult<DiscountProductDto>>();
+            return ServiceResult<PagedResult<DiscountProductDto>>.Fail("Geçersiz kampanya veya indirim oranı bulunamadı.");
 
         var discount = offer.DiscountRate.Value;
 
-        var products = await _offerRepository.GetProductsByDiscountAsync(discount);
+        var productsQuery = _offerRepository.GetProductsByDiscountQuery(discount);
 
-        var result = products.Select(p => new DiscountProductDto
+        var totalCount = await productsQuery.CountAsync();
+
+        var pagedProducts = await productsQuery
+            .Skip((pageNumber - 1) * pageSize)
+            .Take(pageSize)
+            .Include(p => p.Variants)
+            .Include(p => p.Images)
+            .ToListAsync();
+
+        var productDtos = pagedProducts.Select(p => new DiscountProductDto
+        {
+            Id = p.Id,
+            Name = p.Name,
+            DiscountRate = p.DiscountRate,
+            Price = p.Price,
+            AverageRating = p.AverageRating,
+            PriceWithDiscount = p.Price * (1 - (p.DiscountRate / 100m)),
+            Images = p.Images?
+                .Where(i => i != null)
+                .Select(i => new ProductImage
+                {
+                    ImageUrl = i!.ImageUrl,
+                    IsMain = i.IsMain
+                })
+                .ToList() ?? new List<ProductImage>(),
+            Variants = p.Variants?.Select(v => new ProductVariantResponseDto
             {
-                Id           = p.Id,
-                Name         = p.Name,
-                Price        = p.Price,
-                DiscountRate = p.DiscountRate,
-                ImageUrls    = p.Images?
-                    .Where(i => i != null)
-                    .Select(i => i!.ImageUrl)
-                    .ToList() ?? new List<string>(),
-                Variants     = p.Variants?
-                    .Select(v => new ProductVariantResponseDto
-                    {
-                        Id    = v.Id,
-                        Size  = v.Size,
-                        Stock = v.Stock
-                    }).ToList() ?? new List<ProductVariantResponseDto>()
-            }).Select(p => ServiceResult<DiscountProductDto>.Success(p)) 
-            .ToList();
+                Id = v.Id,
+                Size = v.Size,
+                Stock = v.Stock
+            }).ToList() ?? new List<ProductVariantResponseDto>()
+        }).ToList();
 
-        return result;
+        // Sayfalı sonuç oluşturma
+        var pagedResult = new PagedResult<DiscountProductDto>(productDtos, totalCount, pageNumber, pageSize);
+
+        return ServiceResult<PagedResult<DiscountProductDto>>.Success(pagedResult);
     }
     
     public async Task<ServiceResult<Offer>> CreateOfferAsync(CreateOfferDto dto, string wwwRootPath,string token)

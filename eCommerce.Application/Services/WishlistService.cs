@@ -22,10 +22,10 @@ namespace eCommerce.Application.Services
         public async Task<ServiceResult<PagedResult<ProductResponseDto>>> GetUserWishlistAsync(string token, int pageNumber, int pageSize)
         {
             var validation = await _userValidator.ValidateAsync(token);
-            if (validation.IsFail) return ServiceResult<PagedResult<ProductResponseDto>>.Fail(validation.ErrorMessage!, validation.Status);
+            if (validation.IsFail) 
+                return ServiceResult<PagedResult<ProductResponseDto>>.Fail(validation.ErrorMessage!, validation.Status);
 
             var userId = validation.Data!.Id;
-            
             var allItems = await _wishlistRepository.GetUserWishlistAsync(userId);
 
             var totalCount = allItems.Count();
@@ -35,22 +35,27 @@ namespace eCommerce.Application.Services
                 .ToList();
 
             var productDtos = pagedItems
-                .Where(w => w.Product != null) // null olan ürünleri filtrele
+                .Where(w => w.Product != null)
                 .Select(w => new ProductResponseDto
                 {
                     Id = w.Product!.Id,
                     Name = w.Product!.Name ?? "",
                     Description = w.Product!.Description ?? "",
                     DiscountRate = w.Product!.DiscountRate,
-                    CategoryName = w.Product!.Category?.Name ?? "",
                     Price = w.Product!.Price,
                     AverageRating = w.Product!.AverageRating,
-                    CategoryId = w.Product!.CategoryId,
+
+                    // 🔹 Çoklu kategori
+                    CategoryIds = w.Product.ProductCategories?.Select(pc => pc.CategoryId).ToList() ?? new List<int>(),
+                    CategoryNames = w.Product.ProductCategories?.Select(pc => pc.Category?.Name ?? "").ToList() ?? new List<string>(),
+
                     Variants = w.Product!.Variants?.Select(v => new ProductVariantResponseDto
                     {
                         Id = v.Id,
-                        Size = v.Size
+                        Size = v.Size,
+                        Stock = v.Stock
                     }).ToList() ?? new List<ProductVariantResponseDto>(),
+
                     Images = w.Product!.Images?.Select(i => new ProductImageResponseDto
                     {
                         Id = i.Id,
@@ -62,7 +67,7 @@ namespace eCommerce.Application.Services
 
             var pagedResult = new PagedResult<ProductResponseDto>(productDtos, totalCount, pageNumber, pageSize);
 
-            return ServiceResult<PagedResult<ProductResponseDto>>.Success(pagedResult, status:HttpStatusCode.OK);
+            return ServiceResult<PagedResult<ProductResponseDto>>.Success(pagedResult, status: HttpStatusCode.OK);
         }
 
         public async Task<ServiceResult> AddToWishlistAsync(int productId, string token)
@@ -76,7 +81,6 @@ namespace eCommerce.Application.Services
 
             if (wishlistItem != null)
             {
-                // Ürün varsa sil
                 await _wishlistRepository.RemoveAsync(wishlistItem);
                 await _wishlistRepository.SaveChangesAsync();
                 await _auditLogService.LogAsync(
@@ -86,11 +90,10 @@ namespace eCommerce.Application.Services
                     entityId: productId,
                     details: $"Ürün favorilerden silindi: {productId}"
                 );
-                return ServiceResult.Success( "Ürün wishlist'ten çıkarıldı",HttpStatusCode.OK);
+                return ServiceResult.Success("Ürün wishlist'ten çıkarıldı", HttpStatusCode.OK);
             }
             else
             {
-                // Ürün yoksa ekle
                 wishlistItem = new Wishlist
                 {
                     UserId = userId,
@@ -105,7 +108,7 @@ namespace eCommerce.Application.Services
                     entityId: productId,
                     details: $"Ürün favorilere eklendi: {productId}"
                 );
-                return ServiceResult.Success( "Ürün wishlist'e eklendi",HttpStatusCode.OK);
+                return ServiceResult.Success("Ürün wishlist'e eklendi", HttpStatusCode.OK);
             }
         }
 
@@ -115,9 +118,10 @@ namespace eCommerce.Application.Services
             if (validation.IsFail) return ServiceResult.Fail(validation.ErrorMessage!, validation.Status);
 
             var userId = validation.Data!.Id;
-            
+
             var wishlistItem = await _wishlistRepository.GetByProductIdAsync(productId);
-            if (wishlistItem == null || wishlistItem.UserId != userId) return ServiceResult.Fail("Bu wishlist öğesine erişim yetkiniz yok", HttpStatusCode.Forbidden);
+            if (wishlistItem == null || wishlistItem.UserId != userId)
+                return ServiceResult.Fail("Bu wishlist öğesine erişim yetkiniz yok", HttpStatusCode.Forbidden);
 
             await _wishlistRepository.RemoveAsync(wishlistItem);
             await _wishlistRepository.SaveChangesAsync();
@@ -128,7 +132,7 @@ namespace eCommerce.Application.Services
                 entityId: productId,
                 details: $"Ürün favorilerden silindi: {productId}"
             );
-            return ServiceResult.Success(status:HttpStatusCode.OK);
+            return ServiceResult.Success(status: HttpStatusCode.OK);
         }
     }
 }

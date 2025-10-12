@@ -21,14 +21,13 @@ namespace eCommerce.Application.Services
 
         public async Task<ServiceResult<IEnumerable<CategoryDto>>> GetAllCategoriesAsync()
         {
-            var categories = await _categoryRepository.GetAllWithSubCategoriesAsync();
+            var categories = await _categoryRepository.GetAllAsync();
+
             var dto = categories.Select(c => new CategoryDto
             {
                 Id = c.Id,
                 Name = c.Name,
-                ParentCategoryId = c.ParentCategoryId,
                 ImageUrl = c.ImageUrl
-                
             });
 
             return ServiceResult<IEnumerable<CategoryDto>>.Success(dto);
@@ -36,20 +35,19 @@ namespace eCommerce.Application.Services
 
         public async Task<ServiceResult<CategoryDto>> GetCategoryByIdAsync(int id)
         {
-            var category = await _categoryRepository.GetCategoryWithSubCategoriesAsync(id);
-            if (category == null) return ServiceResult<CategoryDto>.Fail("Kategori bulunamadı", HttpStatusCode.NotFound);
+            var category = await _categoryRepository.GetByIdAsync(id);
+            if (category == null)
+                return ServiceResult<CategoryDto>.Fail("Kategori bulunamadı", HttpStatusCode.NotFound);
 
             var dto = new CategoryDto
             {
                 Id = category.Id,
                 Name = category.Name,
-                ParentCategoryId = category.ParentCategoryId,
                 ImageUrl = category.ImageUrl
             };
 
             return ServiceResult<CategoryDto>.Success(dto);
         }
-        
 
         public async Task<ServiceResult<CategoryDto>> AddCategoryAsync(CategoryRequestDto dto, string token)
         {
@@ -79,13 +77,12 @@ namespace eCommerce.Application.Services
                     await dto.Image.CopyToAsync(stream);
                 }
 
-                savedPath = $"/images/categories/{fileName}"; // DB'ye bu yol kaydedilir
+                savedPath = $"/images/categories/{fileName}";
             }
 
             var category = new Category
             {
                 Name = dto.Name,
-                ParentCategoryId = dto.ParentCategoryId,
                 ImageUrl = savedPath
             };
 
@@ -103,7 +100,6 @@ namespace eCommerce.Application.Services
             {
                 Id = category.Id,
                 Name = category.Name,
-                ParentCategoryId = category.ParentCategoryId,
                 ImageUrl = category.ImageUrl
             };
 
@@ -113,13 +109,15 @@ namespace eCommerce.Application.Services
         public async Task<ServiceResult> DeleteCategoryAsync(int id, string token)
         {
             var validation = await _userValidator.ValidateAsync(token);
-            if (validation.IsFail) return ServiceResult.Fail(validation.ErrorMessage!, validation.Status);
-
+            if (validation.IsFail)
+                return ServiceResult.Fail(validation.ErrorMessage!, validation.Status);
 
             var category = await _categoryRepository.GetByIdAsync(id);
-            if (category == null) return ServiceResult.Fail("Kategori bulunamadı", HttpStatusCode.NotFound);
+            if (category == null)
+                return ServiceResult.Fail("Kategori bulunamadı", HttpStatusCode.NotFound);
 
             await _categoryRepository.RemoveAsync(category);
+
             await _auditLogService.LogAsync(
                 userId: validation.Data!.Id,
                 action: "RemoveCategory",
@@ -127,6 +125,7 @@ namespace eCommerce.Application.Services
                 entityId: id,
                 details: $"Kategori silindi: {id}"
             );
+
             return ServiceResult.Success();
         }
     }

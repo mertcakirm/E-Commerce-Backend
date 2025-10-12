@@ -1,5 +1,7 @@
 namespace eCommerce.Application.DTOs;
 
+using System.Collections.Generic;
+
 public class ProductResponseDto
 {
     public int Id { get; set; }
@@ -8,11 +10,13 @@ public class ProductResponseDto
     public int DiscountRate { get; set; }
     public int SaleCount { get; set; } = 0;
     public double AverageRating { get; set; }
-    public string CategoryName { get; set; }
-    
+
+    // 🔹 Çoklu kategori
+    public List<int> CategoryIds { get; set; } = new();
+    public List<string> CategoryNames { get; set; } = new();
+
     public decimal Price { get; set; }
     public decimal PriceWithDiscount { get; set; }
-    public int CategoryId { get; set; }
 
     public List<ProductVariantResponseDto> Variants { get; set; } = new();
     public List<ProductImageResponseDto> Images { get; set; } = new();

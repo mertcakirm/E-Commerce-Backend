@@ -20,12 +20,14 @@ public class CartService : ICartService
     public async Task<ServiceResult<CartResponseDto>> GetUserCartAsync(string token)
     {
         var validation = await _userValidator.ValidateAsync(token);
-        if (validation.IsFail) return ServiceResult<CartResponseDto>.Fail(validation.ErrorMessage!, validation.Status);
+        if (validation.IsFail) 
+            return ServiceResult<CartResponseDto>.Fail(validation.ErrorMessage!, validation.Status);
 
         var userId = validation.Data!.Id;
 
         var cart = await _cartRepository.GetUserCartAsync(userId);
-        if (cart == null) return ServiceResult<CartResponseDto>.Fail("Sepet bulunamadı", HttpStatusCode.NotFound);
+        if (cart == null) 
+            return ServiceResult<CartResponseDto>.Fail("Sepet bulunamadı", HttpStatusCode.NotFound);
 
         var cartDto = new CartResponseDto
         {
@@ -44,8 +46,9 @@ public class CartService : ICartService
                     Description = ci.ProductVariant.Product.Description,
                     DiscountRate = ci.ProductVariant.Product.DiscountRate,
                     Price = ci.ProductVariant.Product.Price,
-                    PriceWithDiscount = ci.ProductVariant.Product.Price * (1 - (ci.ProductVariant.Product.DiscountRate / 100m )),
-                    CategoryId = ci.ProductVariant.Product.CategoryId,
+                    PriceWithDiscount = ci.ProductVariant.Product.Price * (1 - (ci.ProductVariant.Product.DiscountRate / 100m)),
+                    CategoryIds = ci.ProductVariant.Product.ProductCategories.Select(pc => pc.CategoryId).ToList(),
+                    CategoryNames = ci.ProductVariant.Product.ProductCategories.Select(pc => pc.Category.Name).ToList(),
                     Images = ci.ProductVariant.Product.Images.Select(i => new ProductImageResponseDto
                     {
                         Id = i.Id,
@@ -91,7 +94,7 @@ public class CartService : ICartService
         var userId = validation.Data!.Id;
 
         var cart = await _cartRepository.GetUserCartAsync(userId);
-        if (cart == null) return ServiceResult.Fail("Kart bulunamadı", HttpStatusCode.NotFound);
+        if (cart == null) return ServiceResult.Fail("Sepet bulunamadı", HttpStatusCode.NotFound);
 
         if (cart.UserId != userId) return ServiceResult.Fail("Bu işlem için yetkiniz yok", HttpStatusCode.Forbidden);
 
@@ -108,14 +111,13 @@ public class CartService : ICartService
         var userId = validation.Data!.Id;
 
         var cart = await _cartRepository.GetUserCartAsync(userId);
-        if (cart == null) return ServiceResult.Fail("Kart bulunamadı", HttpStatusCode.NotFound);
+        if (cart == null) return ServiceResult.Fail("Sepet bulunamadı", HttpStatusCode.NotFound);
 
         if (cart.UserId != userId) return ServiceResult.Fail("Bu işlem için yetkiniz yok", HttpStatusCode.Forbidden);
 
         await _cartRepository.DecreaseItemByProductIdAsync(userId, variantId);
         return ServiceResult.Success();
     }
-
 
     public async Task<ServiceResult<bool>> DeleteProductFromCartAsync(int cartId, string token)
     {

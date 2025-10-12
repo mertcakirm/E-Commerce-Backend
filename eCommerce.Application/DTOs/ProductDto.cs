@@ -6,7 +6,9 @@ public class ProductDto
     public string Description { get; set; }
     public decimal BasePrice { get; set; }
     public decimal Price { get; set; }
-    public int CategoryId { get; set; }
+
+    public List<int> CategoryIds { get; set; } = new();
+    public List<string> CategoryNames { get; set; } = new();
 
     public List<ProductVariantDto> Variants { get; set; } = new();
     public List<ProductImageDto> Images { get; set; } = new();

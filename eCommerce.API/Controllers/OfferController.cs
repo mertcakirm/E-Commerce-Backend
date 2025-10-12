@@ -39,9 +39,9 @@ public class OffersController : ControllerBase
     }
 
     [HttpGet("{offerId}/products/discountmatch")]
-    public async Task<IActionResult> GetDiscountMatchedProducts(int offerId)
+    public async Task<IActionResult> GetDiscountMatchedProducts(int offerId, int pageNumber = 1, int pageSize = 12)
     {
-        var products = await _offerService.GetDiscountMatchedProductsAsync(offerId);
+        var products = await _offerService.GetDiscountMatchedProductsAsync(offerId, pageNumber, pageSize);
         return Ok(products);
     }
 

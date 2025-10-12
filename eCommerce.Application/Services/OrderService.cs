@@ -28,163 +28,137 @@ public class OrderService : IOrderService
     public async Task<ServiceResult<List<OrderResponseDto>>> GetUserOrderAsync(string token)
     {
         var validation = await _userValidator.ValidateAsync(token);
-        if (validation.IsFail) return ServiceResult<List<OrderResponseDto>>.Fail(validation.ErrorMessage!, validation.Status);
+        if (validation.IsFail)
+            return ServiceResult<List<OrderResponseDto>>.Fail(validation.ErrorMessage!, validation.Status);
 
         var orders = await _orderRepo.GetUserOrdersAsync(validation.Data!.Id);
+        if (!orders.Any())
+            return ServiceResult<List<OrderResponseDto>>.Fail("Kullanıcının siparişi bulunamadı", HttpStatusCode.NotFound);
 
-        var lastOrder = orders
-            .OrderByDescending(o => o.OrderDate)
-            .FirstOrDefault();
-
-        if (lastOrder == null)
-            return new ServiceResult<List<OrderResponseDto>>
-            {
-                ErrorMessage = new List<string> { "Kullanıcının siparişi bulunamadı" },
-                Status = HttpStatusCode.NotFound
-            };
-
-
-var orderDtos = orders.Select(o => new OrderResponseDto
-{
-    Id = o.Id,
-    OrderDate = o.OrderDate,
-    IsComplete = o.IsComplete,
-    TotalAmount = o.TotalAmount,
-    ShippingAddress = o.ShippingAddress,
-    Status = o.Status,
-    UserEmail = o.User.Email,
-    Payment = o.Payment != null 
-        ? new List<PaymentResponseDto>
+        var orderDtos = orders.Select(o => new OrderResponseDto
         {
-            new PaymentResponseDto
+            Id = o.Id,
+            OrderDate = o.OrderDate,
+            IsComplete = o.IsComplete,
+            TotalAmount = o.TotalAmount,
+            ShippingAddress = o.ShippingAddress,
+            Status = o.Status,
+            UserEmail = o.User.Email,
+            Payment = o.Payment != null
+                ? new List<PaymentResponseDto>
+                {
+                    new PaymentResponseDto
+                    {
+                        PaymentId = o.Payment.Id,
+                        PaymentMethod = o.Payment.PaymentMethod,
+                        PaymentStatus = o.Payment.PaymentStatus
+                    }
+                }
+                : new List<PaymentResponseDto>(),
+            OrderItem = (o.OrderItems ?? new List<OrderItem>()).Select(i => new OrderItemResponseDto
             {
-                PaymentId = o.Payment.Id,
-                PaymentMethod = o.Payment.PaymentMethod,
-                PaymentStatus = o.Payment.PaymentStatus
-            }
-        }
-        : new List<PaymentResponseDto>(),
+                OrderItemId = i.Id,
+                Price = i.Price,
+                Quantity = i.Quantity,
+                ProductVariantOrder = i.ProductVariant != null
+                    ? new List<ProductVariantOrderResponseDto> { new ProductVariantOrderResponseDto { Size = i.ProductVariant.Size } }
+                    : new List<ProductVariantOrderResponseDto>(),
+                OrderItemProduct = i.ProductVariant?.Product != null
+                    ? i.ProductVariant.Product.ProductCategories.Select(pc => new OrderItemProductResponseDto
+                    {
+                        Id = i.ProductVariant.ProductId,
+                        Name = i.ProductVariant.Product.Name,
+                        Description = i.ProductVariant.Product.Description,
+                        DiscountRate = i.ProductVariant.Product.DiscountRate,
+                        AverageRating = i.ProductVariant.Product.AverageRating,
+                        CategoryName = pc.Category.Name,
+                        Price = i.ProductVariant.Product.Price
+                    }).ToList()
+                    : new List<OrderItemProductResponseDto>()
+            }).ToList()
+        }).ToList();
 
-    OrderItem = (o.OrderItems ?? new List<OrderItem>()).Select(i => new OrderItemResponseDto
+        return ServiceResult<List<OrderResponseDto>>.Success(orderDtos);
+    }
+
+    public async Task<ServiceResult<Order>> CreateOrderAsync(OrderCreateDto dto, string token)
     {
-        OrderItemId = i.Id, // buraya OrderItemId atıyoruz
-        Price = i.Price,
-        Quantity = i.Quantity,
-        
-        // Eğer ProductVariantOrder dönmesi gerekiyorsa:
-        ProductVariantOrder = (i.ProductVariant != null)
-            ? new List<ProductVariantOrderResponseDto>
-            {
-                new ProductVariantOrderResponseDto
-                {
-                    Size = i.ProductVariant.Size
-                }
-            }
-            : new List<ProductVariantOrderResponseDto>(),
+        var validation = await _userValidator.ValidateAsync(token);
+        if (validation.IsFail)
+            return ServiceResult<Order>.Fail(validation.ErrorMessage!, validation.Status);
 
-        OrderItemProduct = (i.ProductVariant?.Product != null)
-            ? new List<OrderItemProductResponseDto>
-            {
-                new OrderItemProductResponseDto
-                {
-                    Id = i.ProductVariant.ProductId, 
-                    Name = i.ProductVariant.Product.Name,
-                    Description = i.ProductVariant.Product.Description,
-                    DiscountRate = i.ProductVariant.Product.DiscountRate,
-                    AverageRating = i.ProductVariant.Product.AverageRating,
-                    CategoryName = i.ProductVariant.Product.Category?.Name ?? "",
-                    Price = i.ProductVariant.Product.Price
-                }
-            }
-            : new List<OrderItemProductResponseDto>()
-    }).ToList()
-}).ToList();
+        var user = validation.Data!;
+        var address = await _userAddressRepository.GetByIdAsync(dto.AddressId);
+        if (address == null || address.UserId != user.Id)
+            return ServiceResult<Order>.Fail("Adres bulunamadı, sipariş oluşturulamaz.", HttpStatusCode.BadRequest);
 
-        return new ServiceResult<List<OrderResponseDto>>
+        var joinAddress = $"{address.AddressLine} {address.City} {address.PostalCode}";
+        var cart = await _cartRepo.GetUserCartAsync(user.Id);
+        if (cart == null || cart.CartItems == null || !cart.CartItems.Any())
+            return ServiceResult<Order>.Fail("Sepetiniz boş, sipariş oluşturulamaz.", HttpStatusCode.BadRequest);
+
+        var order = new Order
         {
-            Data = orderDtos,
-            Status = HttpStatusCode.OK
+            UserId = user.Id,
+            OrderDate = DateTime.UtcNow,
+            Status = "Onaylandı",
+            ShippingAddress = joinAddress,
+            OrderItems = new List<OrderItem>()
         };
-    }
-    
-public async Task<ServiceResult<Order>> CreateOrderAsync(OrderCreateDto dto, string token)
-{
-    var validation = await _userValidator.ValidateAsync(token);
-    if (validation.IsFail)
-        return ServiceResult<Order>.Fail(validation.ErrorMessage!, validation.Status);
 
-    var user = validation.Data!;
+        decimal totalAmount = 0;
 
-    var address = await _userAddressRepository.GetByIdAsync(dto.AddressId);
-    if (address == null || address.UserId != user.Id) return ServiceResult<Order>.Fail("Adres bulunamadı, sipariş oluşturulamaz.", HttpStatusCode.BadRequest);
-       
-    var joinAddress = address.AddressLine + " " + address.City + " " + address.PostalCode;
-
-    var cart = await _cartRepo.GetUserCartAsync(user.Id);
-    if (cart == null || cart.CartItems == null || !cart.CartItems.Any())
-        return ServiceResult<Order>.Fail("Sepetiniz boş, sipariş oluşturulamaz.", HttpStatusCode.BadRequest);
-
-    var order = new Order
-    {
-        UserId = user.Id,
-        OrderDate = DateTime.UtcNow,
-        Status = "Onaylandı",
-        ShippingAddress = joinAddress,
-        OrderItems = new List<OrderItem>()
-    };
-
-    decimal totalAmount = 0;
-
-    foreach (var cartItem in cart.CartItems)
-    {
-        var product = await _productRepo.GetByIdWithDetailsAsync(cartItem.ProductId);
-        await _productRepo.UpdateOrderStockAsync(cartItem.ProductVariantId, cartItem.Quantity);
-        if (product == null)
-            return ServiceResult<Order>.Fail($"Ürün bilgisi cartItem {cartItem.Id} için bulunamadı.", HttpStatusCode.NotFound);
-            await _productRepo.UpdateProductSaleCount(product.Id);
-        
-        decimal discountedPrice = product.Price * (1 - (product.DiscountRate / 100m));
-
-        order.OrderItems.Add(new OrderItem
+        foreach (var cartItem in cart.CartItems)
         {
-            ProductVariantId = cartItem.ProductVariantId,
-            Quantity = cartItem.Quantity,
-            Price = discountedPrice * cartItem.Quantity,
-            ProductId = cartItem.ProductId
-            
-        });
+            var product = await _productRepo.GetByIdWithDetailsAsync(cartItem.ProductId);
+            if (product == null)
+                return ServiceResult<Order>.Fail($"Ürün bilgisi cartItem {cartItem.Id} için bulunamadı.", HttpStatusCode.NotFound);
 
-        totalAmount += discountedPrice * cartItem.Quantity;
-    }
-    order.TotalAmount = totalAmount;
+            await _productRepo.UpdateOrderStockAsync(cartItem.ProductVariantId, cartItem.Quantity);
+            await _productRepo.UpdateProductSaleCount(product.Id);
 
-    order.Payment = new Payment
-    {
-        PaymentMethod = dto.PaymentMethod ?? throw new Exception("Payment method boş olamaz"),
-        PaymentStatus = "Pending",
-        TransactionId = IdHelper.GenerateRandomAlphaNumeric(9)
-    };
-    try
-    {
-        await _orderRepo.AddAsync(order);
-        cart.CartItems.Clear();
-        await _cartRepo.UpdateAsync(cart);
-    }
-    catch (DbUpdateException ex)
-    {
-        ServiceResult<Order>.Fail(ex.InnerException?.Message ?? ex.Message);
-    }
-    
-    await _auditLogService.LogAsync(
-        userId: user.Id,
-        action: "CreateOrder",
-        entityName: "Order",
-        entityId: null,
-        details: $"Sipariş oluşturuldu: {user.Email}"
-    );
+            decimal discountedPrice = product.Price * (1 - (product.DiscountRate / 100m));
 
-    return ServiceResult<Order>.Success(order);
-}
+            order.OrderItems.Add(new OrderItem
+            {
+                ProductVariantId = cartItem.ProductVariantId,
+                Quantity = cartItem.Quantity,
+                Price = discountedPrice * cartItem.Quantity,
+                ProductId = cartItem.ProductId
+            });
+
+            totalAmount += discountedPrice * cartItem.Quantity;
+        }
+
+        order.TotalAmount = totalAmount;
+        order.Payment = new Payment
+        {
+            PaymentMethod = dto.PaymentMethod ?? throw new Exception("Payment method boş olamaz"),
+            PaymentStatus = "Pending",
+            TransactionId = IdHelper.GenerateRandomAlphaNumeric(9)
+        };
+
+        try
+        {
+            await _orderRepo.AddAsync(order);
+            cart.CartItems.Clear();
+            await _cartRepo.UpdateAsync(cart);
+        }
+        catch (DbUpdateException ex)
+        {
+            return ServiceResult<Order>.Fail(ex.InnerException?.Message ?? ex.Message);
+        }
+
+        await _auditLogService.LogAsync(
+            userId: user.Id,
+            action: "CreateOrder",
+            entityName: "Order",
+            entityId: order.Id,
+            details: $"Sipariş oluşturuldu: {user.Email}"
+        );
+
+        return ServiceResult<Order>.Success(order);
+    }
 
   public async Task<ServiceResult> UpdatePaymentStatusAsync(int orderId, string status, string token)
     {
@@ -280,7 +254,6 @@ public async Task<ServiceResult<Order>> CreateOrderAsync(OrderCreateDto dto, str
 
 public async Task<ServiceResult<PagedResult<OrderResponseDto>>> GetNotCompletedOrdersAsync(string token, int pageNumber, int pageSize)
 {
-    // Admin kontrolü
     var isAdmin = await _userValidator.IsAdminAsync(token);
     if (isAdmin.IsFail || !isAdmin.Data)
         return ServiceResult<PagedResult<OrderResponseDto>>.Fail("Yetkisiz giriş!", HttpStatusCode.Forbidden);
@@ -289,16 +262,9 @@ public async Task<ServiceResult<PagedResult<OrderResponseDto>>> GetNotCompletedO
     if (!orders.Any())
         return ServiceResult<PagedResult<OrderResponseDto>>.Fail("Tamamlanmamış sipariş bulunamadı", HttpStatusCode.NotFound);
 
-    // Toplam kayıt sayısı
     var totalCount = orders.Count();
+    var pagedOrders = orders.Skip((pageNumber - 1) * pageSize).Take(pageSize).ToList();
 
-    // Sayfalama işlemi
-    var pagedOrders = orders
-        .Skip((pageNumber - 1) * pageSize)
-        .Take(pageSize)
-        .ToList();
-
-    // DTO dönüşümü
     var dtoList = pagedOrders.Select(o => new OrderResponseDto
     {
         Id = o.Id,
@@ -308,7 +274,6 @@ public async Task<ServiceResult<PagedResult<OrderResponseDto>>> GetNotCompletedO
         ShippingAddress = o.ShippingAddress,
         Status = o.Status,
         UserEmail = o.User?.Email ?? string.Empty,
-
         Payment = o.Payment != null
             ? new List<PaymentResponseDto>
               {
@@ -320,43 +285,32 @@ public async Task<ServiceResult<PagedResult<OrderResponseDto>>> GetNotCompletedO
                   }
               }
             : new List<PaymentResponseDto>(),
-
-        OrderItem = (o.OrderItems ?? new List<OrderItem>())
-            .Select(i => new OrderItemResponseDto
-            {
-                OrderItemId = i.Id,
-                Price = i.Price,
-                Quantity = i.Quantity,
-
-                ProductVariantOrder = i.ProductVariant == null
-                    ? new List<ProductVariantOrderResponseDto>()
-                    : new List<ProductVariantOrderResponseDto>
-                    {
-                        new ProductVariantOrderResponseDto { Size = i.ProductVariant.Size }
-                    },
-
-                OrderItemProduct = new List<OrderItemProductResponseDto>
+        OrderItem = (o.OrderItems ?? new List<OrderItem>()).Select(i => new OrderItemResponseDto
+        {
+            OrderItemId = i.Id,
+            Price = i.Price,
+            Quantity = i.Quantity,
+            ProductVariantOrder = i.ProductVariant != null
+                ? new List<ProductVariantOrderResponseDto> { new ProductVariantOrderResponseDto { Size = i.ProductVariant.Size } }
+                : new List<ProductVariantOrderResponseDto>(),
+            OrderItemProduct = i.ProductVariant?.Product != null
+                ? i.ProductVariant.Product.ProductCategories.Select(pc => new OrderItemProductResponseDto
                 {
-                    new OrderItemProductResponseDto
-                    {
-                        Id = i.ProductId,
-                        Name = i.ProductVariant?.Product?.Name ?? "",
-                        Description = i.ProductVariant?.Product?.Description ?? "",
-                        DiscountRate = i.ProductVariant?.Product?.DiscountRate ?? 0,
-                        AverageRating = i.ProductVariant?.Product?.AverageRating ?? 0,
-                        CategoryName = i.ProductVariant?.Product?.Category?.Name ?? "",
-                        Price = i.ProductVariant?.Product?.Price ?? 0
-                    }
-                }
-            }).ToList()
+                    Id = i.ProductVariant.ProductId,
+                    Name = i.ProductVariant.Product.Name,
+                    Description = i.ProductVariant.Product.Description,
+                    DiscountRate = i.ProductVariant.Product.DiscountRate,
+                    AverageRating = i.ProductVariant.Product.AverageRating,
+                    CategoryName = pc.Category.Name,
+                    Price = i.ProductVariant.Product.Price
+                }).ToList()
+                : new List<OrderItemProductResponseDto>()
+        }).ToList()
     }).ToList();
 
-    // PagedResult oluştur
     var pagedResult = new PagedResult<OrderResponseDto>(dtoList, totalCount, pageNumber, pageSize);
-
     return ServiceResult<PagedResult<OrderResponseDto>>.Success(pagedResult);
 }
-
 
 public async Task<ServiceResult<PagedResult<OrderResponseDto>>> GetCompletedOrdersAsync(string token, int pageNumber, int pageSize)
 {
@@ -369,11 +323,7 @@ public async Task<ServiceResult<PagedResult<OrderResponseDto>>> GetCompletedOrde
         return ServiceResult<PagedResult<OrderResponseDto>>.Fail("Tamamlanmış sipariş bulunamadı", HttpStatusCode.NotFound);
 
     var totalCount = orders.Count();
-
-    var pagedOrders = orders
-        .Skip((pageNumber - 1) * pageSize)
-        .Take(pageSize)
-        .ToList();
+    var pagedOrders = orders.Skip((pageNumber - 1) * pageSize).Take(pageSize).ToList();
 
     var dtoList = pagedOrders.Select(o => new OrderResponseDto
     {
@@ -384,7 +334,6 @@ public async Task<ServiceResult<PagedResult<OrderResponseDto>>> GetCompletedOrde
         ShippingAddress = o.ShippingAddress,
         Status = o.Status,
         UserEmail = o.User?.Email ?? string.Empty,
-
         Payment = o.Payment != null
             ? new List<PaymentResponseDto>
               {
@@ -396,42 +345,96 @@ public async Task<ServiceResult<PagedResult<OrderResponseDto>>> GetCompletedOrde
                   }
               }
             : new List<PaymentResponseDto>(),
-
-        OrderItem = (o.OrderItems ?? new List<OrderItem>())
-            .Select(i => new OrderItemResponseDto
-            {
-                OrderItemId = i.Id,
-                Price = i.Price,
-                Quantity = i.Quantity,
-
-                ProductVariantOrder = i.ProductVariant == null
-                    ? new List<ProductVariantOrderResponseDto>()
-                    : new List<ProductVariantOrderResponseDto>
-                    {
-                        new ProductVariantOrderResponseDto { Size = i.ProductVariant.Size }
-                    },
-
-                OrderItemProduct = new List<OrderItemProductResponseDto>
+        OrderItem = (o.OrderItems ?? new List<OrderItem>()).Select(i => new OrderItemResponseDto
+        {
+            OrderItemId = i.Id,
+            Price = i.Price,
+            Quantity = i.Quantity,
+            ProductVariantOrder = i.ProductVariant != null
+                ? new List<ProductVariantOrderResponseDto> { new ProductVariantOrderResponseDto { Size = i.ProductVariant.Size } }
+                : new List<ProductVariantOrderResponseDto>(),
+            OrderItemProduct = i.ProductVariant?.Product != null
+                ? i.ProductVariant.Product.ProductCategories.Select(pc => new OrderItemProductResponseDto
                 {
-                    new OrderItemProductResponseDto
-                    {
-                        Id = i.ProductId,
-                        Name = i.ProductVariant?.Product?.Name ?? "",
-                        Description = i.ProductVariant?.Product?.Description ?? "",
-                        DiscountRate = i.ProductVariant?.Product?.DiscountRate ?? 0,
-                        AverageRating = i.ProductVariant?.Product?.AverageRating ?? 0,
-                        CategoryName = i.ProductVariant?.Product?.Category?.Name ?? "",
-                        Price = i.ProductVariant?.Product?.Price ?? 0
-                    }
-                }
-            }).ToList()
+                    Id = i.ProductVariant.ProductId,
+                    Name = i.ProductVariant.Product.Name,
+                    Description = i.ProductVariant.Product.Description,
+                    DiscountRate = i.ProductVariant.Product.DiscountRate,
+                    AverageRating = i.ProductVariant.Product.AverageRating,
+                    CategoryName = pc.Category.Name,
+                    Price = i.ProductVariant.Product.Price
+                }).ToList()
+                : new List<OrderItemProductResponseDto>()
+        }).ToList()
     }).ToList();
 
     var pagedResult = new PagedResult<OrderResponseDto>(dtoList, totalCount, pageNumber, pageSize);
-
     return ServiceResult<PagedResult<OrderResponseDto>>.Success(pagedResult);
 }
 
+public async Task<ServiceResult<List<MonthlyCategorySalesDto>>> GetMonthlyCategorySalesAsync(string token)
+{
+    var isAdmin = await _userValidator.IsAdminAsync(token);
+    if (isAdmin.IsFail || !isAdmin.Data)
+        return ServiceResult<List<MonthlyCategorySalesDto>>.Fail("Yetkisiz giriş!", HttpStatusCode.Forbidden);
+
+    var orders = await _orderRepo.GetOrdersFromLastMonthByCategoryAsync();
+
+    var result = orders
+        .SelectMany(o => o.OrderItems)
+        .SelectMany(oi => oi.ProductVariant.Product.ProductCategories, (oi, pc) => new { oi, pc })
+        .GroupBy(x => new
+        {
+            Year = x.oi.Order.OrderDate.Year,
+            Month = x.oi.Order.OrderDate.Month,
+            CategoryId = x.pc.Category.Id,
+            CategoryName = x.pc.Category.Name
+        })
+        .Select(g => new MonthlyCategorySalesDto
+        {
+            Year = g.Key.Year,
+            Month = g.Key.Month,
+            CategoryId = g.Key.CategoryId,
+            CategoryName = g.Key.CategoryName,
+            OrderCount = g.Count()
+        })
+        .OrderBy(x => x.Year)
+        .ThenBy(x => x.Month)
+        .ThenBy(x => x.CategoryId)
+        .ToList();
+
+    return ServiceResult<List<MonthlyCategorySalesDto>>.Success(result);
+}
+
+public async Task<ServiceResult<List<MonthlyCategorySalesDto>>> GetYearlyCategorySalesAsync(string token)
+{
+    var isAdmin = await _userValidator.IsAdminAsync(token);
+    if (isAdmin.IsFail || !isAdmin.Data)
+        return ServiceResult<List<MonthlyCategorySalesDto>>.Fail("Yetkisiz giriş!", HttpStatusCode.Forbidden);
+
+    var orders = await _orderRepo.GetOrdersGeneralByCategoryAsync();
+
+    var result = orders
+        .SelectMany(o => o.OrderItems)
+        .SelectMany(oi => oi.ProductVariant.Product.ProductCategories, (oi, pc) => new { oi, pc })
+        .GroupBy(x => new
+        {
+            CategoryId = x.pc.Category.Id,
+            CategoryName = x.pc.Category.Name
+        })
+        .Select(g => new MonthlyCategorySalesDto
+        {
+            Year = 0,
+            Month = 0,
+            CategoryId = g.Key.CategoryId,
+            CategoryName = g.Key.CategoryName,
+            OrderCount = g.Count()
+        })
+        .OrderBy(x => x.CategoryId)
+        .ToList();
+
+    return ServiceResult<List<MonthlyCategorySalesDto>>.Success(result);
+}
 
 public async Task<ServiceResult<List<MonthlySalesDto>>> GetYearlySalesByMonthAsync(string token)
 {
@@ -462,67 +465,6 @@ public async Task<ServiceResult<List<MonthlySalesDto>>> GetYearlySalesByMonthAsy
         return ServiceResult<List<MonthlySalesDto>>.Fail(ex.Message);
     }
     
-}
-public async Task<ServiceResult<List<MonthlyCategorySalesDto>>> GetMonthlyCategorySalesAsync(string token)
-{
-    var isAdmin = await _userValidator.IsAdminAsync(token);
-    if (isAdmin.IsFail || !isAdmin.Data)
-        return ServiceResult<List<MonthlyCategorySalesDto>>.Fail("Yetkisiz giriş!", HttpStatusCode.Forbidden);
-    
-    var orders = await _orderRepo.GetOrdersFromLastMonthByCategoryAsync();
-
-    var result = orders
-        .SelectMany(o => o.OrderItems)
-        .GroupBy(oi => new
-        {
-            Year = oi.Order.OrderDate.Year,
-            Month = oi.Order.OrderDate.Month,
-            CategoryId = oi.ProductVariant.Product.Category.Id,
-            CategoryName = oi.ProductVariant.Product.Category.Name
-        })
-        .Select(g => new MonthlyCategorySalesDto
-        {
-            Year = g.Key.Year,
-            Month = g.Key.Month,
-            CategoryId = g.Key.CategoryId,
-            CategoryName = g.Key.CategoryName,
-            OrderCount = g.Count()
-        })
-        .OrderBy(x => x.Year)
-        .ThenBy(x => x.Month)
-        .ThenBy(x => x.CategoryId)
-        .ToList();
-
-    return ServiceResult<List<MonthlyCategorySalesDto>>.Success(result);
-}
-
-public async Task<ServiceResult<List<MonthlyCategorySalesDto>>> GetYearlyCategorySalesAsync(string token)
-{
-    var isAdmin = await _userValidator.IsAdminAsync(token);
-    if (isAdmin.IsFail || !isAdmin.Data)
-        return ServiceResult<List<MonthlyCategorySalesDto>>.Fail("Yetkisiz giriş!", HttpStatusCode.Forbidden);
-    
-    var orders = await _orderRepo.GetOrdersGeneralByCategoryAsync();
-
-    var result = orders
-        .SelectMany(o => o.OrderItems)
-        .GroupBy(oi => new
-        {
-            CategoryId = oi.ProductVariant.Product.Category.Id,
-            CategoryName = oi.ProductVariant.Product.Category.Name
-        })
-        .Select(g => new MonthlyCategorySalesDto
-        {
-            Year = 0,
-            Month = 0, 
-            CategoryId = g.Key.CategoryId,
-            CategoryName = g.Key.CategoryName,
-            OrderCount = g.Count()
-         })
-        .OrderBy(x => x.CategoryId)
-        .ToList();
-
-    return ServiceResult<List<MonthlyCategorySalesDto>>.Success(result);
 }
 
 

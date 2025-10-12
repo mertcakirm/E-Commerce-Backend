@@ -120,17 +120,23 @@ namespace eCommerce.Infrastructure.Repositories
             var orders = await _context.Orders
                 .Where(o => o.OrderDate >= lastMonth)
                 .Include(o => o.OrderItems)
-                .ThenInclude(oi => oi.ProductVariant.Product.Category)
+                .ThenInclude(oi => oi.ProductVariant)
+                .ThenInclude(pv => pv.Product)
+                .ThenInclude(p => p.ProductCategories)
+                .ThenInclude(pc => pc.Category)
                 .ToListAsync();
 
             return orders;
         }
-        
+
         public async Task<List<Order>> GetOrdersGeneralByCategoryAsync()
         {
             var orders = await _context.Orders
                 .Include(o => o.OrderItems)
-                .ThenInclude(oi => oi.ProductVariant.Product.Category)
+                .ThenInclude(oi => oi.ProductVariant)
+                .ThenInclude(pv => pv.Product)
+                .ThenInclude(p => p.ProductCategories)
+                .ThenInclude(pc => pc.Category)
                 .ToListAsync();
 
             return orders;

@@ -10,8 +10,8 @@ public class Product : BaseEntity
     public int SaleCount { get; set; } = 0;
     public bool IsActive { get; set; } = true;
     public double AverageRating { get; set; } = 0.0;
-    public int CategoryId { get; set; }
-    public Category Category { get; set; }
+    
+    public ICollection<ProductCategory> ProductCategories { get; set; } = new List<ProductCategory>();
     public ICollection<ProductQuestion> Questions { get; set; }
 
     // Navigation properties

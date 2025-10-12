@@ -22,188 +22,198 @@ namespace eCommerce.Application.Services
             _auditLogService = auditLogService;
         }
 
-        public async Task<ServiceResult<PagedResult<ProductResponseDto>>> GetAllProductsAsync(int pageNumber, int pageSize)
+public async Task<ServiceResult<PagedResult<ProductResponseDto>>> GetAllProductsAsync(int pageNumber, int pageSize)
+{
+    if (pageNumber <= 0) pageNumber = 1;
+    if (pageSize <= 0) pageSize = 10;
+
+    var products = await _productRepository.GetAllWithDetailsAsync();
+    var totalCount = products.Count();
+
+    var productDtos = products
+        .Skip((pageNumber - 1) * pageSize)
+        .Take(pageSize)
+        .Select(p => new ProductResponseDto
         {
-            if (pageNumber <= 0) pageNumber = 1;
-            if (pageSize <= 0) pageSize = 10;
-
-            var products = await _productRepository.GetAllWithDetailsAsync();
-
-            var totalCount = products.Count();
-
-            var productDtos = products
-                .Skip((pageNumber - 1) * pageSize)
-                .Take(pageSize)
-                .Select(p => new ProductResponseDto
-                {
-                    Id = p.Id,
-                    Name = p.Name,
-                    AverageRating = p.AverageRating,
-                    Description = p.Description,
-                    DiscountRate = p.DiscountRate,
-                    Price = p.Price,
-                    PriceWithDiscount = p.Price * (1 - (p.DiscountRate / 100m )),
-                    CategoryId = p.CategoryId,
-                    CategoryName = p.Category.Name,
-                    Variants = p.Variants.Select(v => new ProductVariantResponseDto
-                    {
-                        Id = v.Id,
-                        Size = v.Size,
-                        Stock = v.Stock,
-                    }).OrderBy(v => v.Id).ToList(),
-                    Images = p.Images.Select(i => new ProductImageResponseDto
-                    {
-                        Id = i.Id,
-                        ImageUrl = i.ImageUrl,
-                        IsMain = i.IsMain
-                    }).OrderBy(i => i.Id).ToList()
-                }).ToList();
-
-            var pagedResult = new PagedResult<ProductResponseDto>(
-                productDtos,
-                totalCount,
-                pageNumber,
-                pageSize
-            );
-
-            return ServiceResult<PagedResult<ProductResponseDto>>.Success(pagedResult);
-        }
-        
-        
-        public async Task<ServiceResult<PagedResult<ProductResponseDto>>> GetAllProductsAdminAsync(int pageNumber, int pageSize,string token,string? searchTerm = null)
-        {
-            var isAdmin = await _userValidator.IsAdminAsync(token);
-            var validation = await _userValidator.ValidateAsync(token);
-            
-            if (isAdmin.IsFail || !isAdmin.Data) return ServiceResult<PagedResult<ProductResponseDto>>.Fail("Yetkisiz giriş!", HttpStatusCode.Forbidden);
-            
-            if (pageNumber <= 0) pageNumber = 1;
-            if (pageSize <= 0) pageSize = 10;
-
-            var products = await _productRepository.GetAllWithDetailsAsync(searchTerm);
-
-            var totalCount = products.Count();
-
-            var productDtos = products
-                .Skip((pageNumber - 1) * pageSize)
-                .Take(pageSize)
-                .Select(p => new ProductResponseDto
-                {
-                    Id = p.Id,
-                    Name = p.Name,
-                    AverageRating = p.AverageRating,
-                    Description = p.Description,
-                    DiscountRate = p.DiscountRate,
-                    SaleCount = p.SaleCount,
-                    Price = p.Price,
-                    PriceWithDiscount = p.Price * (1 - (p.DiscountRate / 100m )),
-                    CategoryId = p.CategoryId,
-                    CategoryName = p.Category.Name,
-                    Variants = p.Variants.Select(v => new ProductVariantResponseDto
-                    {
-                        Id = v.Id,
-                        Size = v.Size,
-                        Stock = v.Stock,
-                    }).OrderBy(v => v.Id).ToList(),
-                    Images = p.Images.Select(i => new ProductImageResponseDto
-                    {
-                        Id = i.Id,
-                        ImageUrl = i.ImageUrl,
-                        IsMain = i.IsMain
-                    }).OrderBy(i => i.Id).ToList()
-                }).ToList();
-
-            var pagedResult = new PagedResult<ProductResponseDto>(
-                productDtos,
-                totalCount,
-                pageNumber,
-                pageSize
-            );
-
-            return ServiceResult<PagedResult<ProductResponseDto>>.Success(pagedResult);
-        }
-        
-        public async Task<ServiceResult<PagedResult<ProductResponseDto>>> GetProductByCategoryAsync(string categoryName,int pageNumber, int pageSize)
-        {
-            if (pageNumber <= 0) pageNumber = 1;
-            if (pageSize <= 0) pageSize = 10;
-
-            var products = await _productRepository.GetProductByCategory(categoryName);
-
-            var totalCount = products.Count();
-
-            var productDtos = products
-                .Skip((pageNumber - 1) * pageSize)
-                .Take(pageSize)
-                .Select(p => new ProductResponseDto
-                {
-                    Id = p.Id,
-                    Name = p.Name,
-                    Description = p.Description,
-                    AverageRating = p.AverageRating,
-                    DiscountRate = p.DiscountRate,
-                    Price = p.Price,
-                    PriceWithDiscount = p.Price * (1 - (p.DiscountRate / 100m )),
-                    CategoryId = p.CategoryId,
-                    CategoryName = p.Category.Name,
-                    Variants = p.Variants.Select(v => new ProductVariantResponseDto
-                    {
-                        Id = v.Id,
-                        Size = v.Size,
-                        Stock = v.Stock,
-                    }).OrderBy(v => v.Id).ToList(),
-                    Images = p.Images.Select(i => new ProductImageResponseDto
-                    {
-                        Id = i.Id,
-                        ImageUrl = i.ImageUrl,
-                        IsMain = i.IsMain
-                    }).OrderBy(i => i.Id).ToList()
-                }).ToList();
-
-            var pagedResult = new PagedResult<ProductResponseDto>(
-                productDtos,
-                totalCount,
-                pageNumber,
-                pageSize
-            );
-
-            return ServiceResult<PagedResult<ProductResponseDto>>.Success(pagedResult);
-        }
-
-        public async Task<ServiceResult<ProductResponseDto>> GetProductByIdAsync(int id)
-        {
-            var product = await _productRepository.GetByIdWithDetailsAsync(id);
-            if (product == null)
-                return ServiceResult<ProductResponseDto>.Fail("Ürün bulunamadı", HttpStatusCode.NotFound);
-
-            var dto = new ProductResponseDto
+            Id = p.Id,
+            Name = p.Name,
+            AverageRating = p.AverageRating,
+            Description = p.Description,
+            DiscountRate = p.DiscountRate,
+            Price = p.Price,
+            PriceWithDiscount = p.Price * (1 - (p.DiscountRate / 100m)),
+            CategoryIds = p.ProductCategories.Select(pc => pc.CategoryId).ToList(),
+            CategoryNames = p.ProductCategories.Select(pc => pc.Category.Name).ToList(),
+            Variants = p.Variants.Select(v => new ProductVariantResponseDto
             {
-                Id = product.Id,
-                Name = product.Name,
-                Description = product.Description,
-                AverageRating = product.AverageRating,
-                DiscountRate = product.DiscountRate,
-                Price = product.Price,
-                PriceWithDiscount = product.Price * (1 - (product.DiscountRate / 100m )),
-                CategoryId = product.CategoryId,
-                CategoryName = product.Category.Name,
-                Variants = product.Variants.Select(v => new ProductVariantResponseDto
-                {
-                    Id = v.Id,
-                    Size = v.Size,
-                    Stock = v.Stock,
-                }).ToList(),
-                Images = product.Images.Select(i => new ProductImageResponseDto
-                {
-                    Id = i.Id,
-                    ImageUrl = i.ImageUrl,
-                    IsMain = i.IsMain
-                }).ToList()
-            };
+                Id = v.Id,
+                Size = v.Size,
+                Stock = v.Stock,
+            }).OrderBy(v => v.Id).ToList(),
+            Images = p.Images.Select(i => new ProductImageResponseDto
+            {
+                Id = i.Id,
+                ImageUrl = i.ImageUrl,
+                IsMain = i.IsMain
+            }).OrderBy(i => i.Id).ToList()
+        }).ToList();
 
-            return ServiceResult<ProductResponseDto>.Success(dto);
-        }
-        
+    var pagedResult = new PagedResult<ProductResponseDto>(productDtos, totalCount, pageNumber, pageSize);
+    return ServiceResult<PagedResult<ProductResponseDto>>.Success(pagedResult);
+}
+
+public async Task<ServiceResult<PagedResult<ProductResponseDto>>> GetAllProductsAdminAsync(int pageNumber, int pageSize, string token, string? searchTerm = null)
+{
+    var isAdmin = await _userValidator.IsAdminAsync(token);
+    var validation = await _userValidator.ValidateAsync(token);
+    if (isAdmin.IsFail || !isAdmin.Data)
+        return ServiceResult<PagedResult<ProductResponseDto>>.Fail("Yetkisiz giriş!", HttpStatusCode.Forbidden);
+
+    if (pageNumber <= 0) pageNumber = 1;
+    if (pageSize <= 0) pageSize = 10;
+
+    var products = await _productRepository.GetAllWithDetailsAsync(searchTerm);
+    var totalCount = products.Count();
+
+    var productDtos = products
+        .Skip((pageNumber - 1) * pageSize)
+        .Take(pageSize)
+        .Select(p => new ProductResponseDto
+        {
+            Id = p.Id,
+            Name = p.Name,
+            AverageRating = p.AverageRating,
+            Description = p.Description,
+            DiscountRate = p.DiscountRate,
+            SaleCount = p.SaleCount,
+            Price = p.Price,
+            PriceWithDiscount = p.Price * (1 - (p.DiscountRate / 100m)),
+            CategoryIds = p.ProductCategories.Select(pc => pc.CategoryId).ToList(),
+            CategoryNames = p.ProductCategories.Select(pc => pc.Category.Name).ToList(),
+            Variants = p.Variants.Select(v => new ProductVariantResponseDto
+            {
+                Id = v.Id,
+                Size = v.Size,
+                Stock = v.Stock,
+            }).OrderBy(v => v.Id).ToList(),
+            Images = p.Images.Select(i => new ProductImageResponseDto
+            {
+                Id = i.Id,
+                ImageUrl = i.ImageUrl,
+                IsMain = i.IsMain
+            }).OrderBy(i => i.Id).ToList()
+        }).ToList();
+
+    var pagedResult = new PagedResult<ProductResponseDto>(productDtos, totalCount, pageNumber, pageSize);
+    return ServiceResult<PagedResult<ProductResponseDto>>.Success(pagedResult);
+}
+
+public async Task<ServiceResult<PagedResult<ProductResponseDto>>> GetProductByCategoryAsync(string categoryName, int pageNumber, int pageSize)
+{
+    if (pageNumber <= 0) pageNumber = 1;
+    if (pageSize <= 0) pageSize = 10;
+
+    var products = await _productRepository.GetAllWithDetailsAsync();
+    products = products.Where(p => p.ProductCategories.Any(pc => pc.Category.Name == categoryName)).ToList();
+
+    var totalCount = products.Count();
+
+    var productDtos = products
+        .Skip((pageNumber - 1) * pageSize)
+        .Take(pageSize)
+        .Select(p => new ProductResponseDto
+        {
+            Id = p.Id,
+            Name = p.Name,
+            Description = p.Description,
+            AverageRating = p.AverageRating,
+            DiscountRate = p.DiscountRate,
+            Price = p.Price,
+            PriceWithDiscount = p.Price * (1 - (p.DiscountRate / 100m)),
+            CategoryIds = p.ProductCategories.Select(pc => pc.CategoryId).ToList(),
+            CategoryNames = p.ProductCategories.Select(pc => pc.Category.Name).ToList(),
+            Variants = p.Variants.Select(v => new ProductVariantResponseDto
+            {
+                Id = v.Id,
+                Size = v.Size,
+                Stock = v.Stock,
+            }).OrderBy(v => v.Id).ToList(),
+            Images = p.Images.Select(i => new ProductImageResponseDto
+            {
+                Id = i.Id,
+                ImageUrl = i.ImageUrl,
+                IsMain = i.IsMain
+            }).OrderBy(i => i.Id).ToList()
+        }).ToList();
+
+    var pagedResult = new PagedResult<ProductResponseDto>(productDtos, totalCount, pageNumber, pageSize);
+    return ServiceResult<PagedResult<ProductResponseDto>>.Success(pagedResult);
+}
+
+public async Task<ServiceResult<ProductResponseDto>> GetProductByIdAsync(int id)
+{
+    var product = await _productRepository.GetByIdWithDetailsAsync(id);
+    if (product == null)
+        return ServiceResult<ProductResponseDto>.Fail("Ürün bulunamadı", HttpStatusCode.NotFound);
+
+    var dto = new ProductResponseDto
+    {
+        Id = product.Id,
+        Name = product.Name,
+        Description = product.Description,
+        AverageRating = product.AverageRating,
+        DiscountRate = product.DiscountRate,
+        Price = product.Price,
+        PriceWithDiscount = product.Price * (1 - (product.DiscountRate / 100m)),
+        CategoryIds = product.ProductCategories.Select(pc => pc.CategoryId).ToList(),
+        CategoryNames = product.ProductCategories.Select(pc => pc.Category.Name).ToList(),
+        Variants = product.Variants.Select(v => new ProductVariantResponseDto
+        {
+            Id = v.Id,
+            Size = v.Size,
+            Stock = v.Stock,
+        }).ToList(),
+        Images = product.Images.Select(i => new ProductImageResponseDto
+        {
+            Id = i.Id,
+            ImageUrl = i.ImageUrl,
+            IsMain = i.IsMain
+        }).ToList()
+    };
+
+    return ServiceResult<ProductResponseDto>.Success(dto);
+}
+
+public async Task<ServiceResult<List<ProductResponseDto>>> GetLowStockProductsAsync(int limit, string token)
+{
+    if (string.IsNullOrEmpty(token))
+        return ServiceResult<List<ProductResponseDto>>.Fail("Token bulunamadı", HttpStatusCode.Unauthorized);
+
+    var isAdmin = await _userValidator.IsAdminAsync(token);
+    var user = await _userValidator.ValidateAsync(token);
+
+    if (isAdmin.IsFail || !isAdmin.Data)
+        return ServiceResult<List<ProductResponseDto>>.Fail("Yetkisiz giriş!", HttpStatusCode.Forbidden);
+
+    var lowStockProducts = await _productRepository.GetProductsWithLowStockAsync(limit);
+
+    var productDtos = lowStockProducts
+        .Select(p => new ProductResponseDto
+        {
+            Id = p.Id,
+            CategoryIds = p.ProductCategories.Select(pc => pc.CategoryId).ToList(),
+            CategoryNames = p.ProductCategories.Select(pc => pc.Category.Name).ToList(),
+            Variants = p.Variants.Select(v => new ProductVariantResponseDto
+            {
+                Id = v.Id,
+                Size = v.Size,
+                Stock = v.Stock,
+            }).OrderBy(v => v.Id).ToList(),
+        }).ToList();
+
+    return ServiceResult<List<ProductResponseDto>>.Success(productDtos);
+}
+
 public async Task<ServiceResult<ProductDto>> CreateProductAsync(ProductCreateDto dto, string token)
 {
     var isAdmin = await _userValidator.IsAdminAsync(token);
@@ -211,7 +221,7 @@ public async Task<ServiceResult<ProductDto>> CreateProductAsync(ProductCreateDto
     if (isAdmin.IsFail || !isAdmin.Data)
         return ServiceResult<ProductDto>.Fail("Yetkisiz giriş!", HttpStatusCode.Forbidden);
 
-    // --- 1) Resimleri Kaydet ---
+    // --- Resimleri kaydet ---
     var imageEntities = new List<ProductImage>();
     if (dto.Images != null && dto.Images.Count > 0)
     {
@@ -234,17 +244,16 @@ public async Task<ServiceResult<ProductDto>> CreateProductAsync(ProductCreateDto
 
             imageEntities.Add(new ProductImage
             {
-                ImageUrl = $"/images/products/{fileName}", // <-- Veritabanına bu yazılacak
+                ImageUrl = $"/images/products/{fileName}",
                 IsMain = false
             });
         }
 
-        // İlk resmi ana resim olarak işaretleyebilirsiniz:
         if (imageEntities.Count > 0)
             imageEntities[0].IsMain = true;
     }
 
-    // --- 2) Product nesnesi ---
+    // --- Ürün oluştur ---
     var product = new Product
     {
         Name = dto.Name,
@@ -253,27 +262,28 @@ public async Task<ServiceResult<ProductDto>> CreateProductAsync(ProductCreateDto
         Price = dto.Price,
         DiscountRate = 0,
         AverageRating = 0,
-        CategoryId = dto.CategoryId,
         Variants = dto.Variants.Select(v => new ProductVariant
         {
             Size = v.Size,
             Stock = v.Stock
         }).ToList(),
-        Images = imageEntities
+        Images = imageEntities,
+        ProductCategories = dto.CategoryIds.Select(cid => new ProductCategory
+        {
+            CategoryId = cid
+        }).ToList()
     };
 
     await _productRepo.AddAsync(product);
     await _productRepo.SaveChangesAsync();
 
-    // --- 3) DTO geri dönüş ---
     var resultDto = new ProductDto
     {
         Name = product.Name,
         Description = product.Description,
         BasePrice = product.BasePrice,
         Price = product.Price,
-        CategoryId = product.CategoryId,
-        Variants = product.Variants.Select(v => new eCommerce.Application.DTOs.ProductVariantDto
+        Variants = product.Variants.Select(v => new ProductVariantDto
         {
             Size = v.Size,
             Stock = v.Stock
@@ -282,7 +292,9 @@ public async Task<ServiceResult<ProductDto>> CreateProductAsync(ProductCreateDto
         {
             ImageUrl = i.ImageUrl,
             IsMain = i.IsMain
-        }).ToList()
+        }).ToList(),
+        CategoryIds = product.ProductCategories.Select(pc => pc.CategoryId).ToList(),
+        CategoryNames = product.ProductCategories.Select(pc => pc.Category?.Name ?? "").ToList()
     };
 
     await _auditLogService.LogAsync(
@@ -296,56 +308,64 @@ public async Task<ServiceResult<ProductDto>> CreateProductAsync(ProductCreateDto
     return ServiceResult<ProductDto>.SuccessAsCreated(resultDto, $"/api/products/{product.Id}");
 }
 
-        public async Task<ServiceResult<ProductDto>> UpdateProductAsync(int id, UpdateProductDto dto, string token)
+public async Task<ServiceResult<ProductDto>> UpdateProductAsync(int id, UpdateProductDto dto, string token)
+{
+    var isAdmin = await _userValidator.IsAdminAsync(token);
+    var validation = await _userValidator.ValidateAsync(token);
+
+    if (isAdmin.IsFail || !isAdmin.Data)
+        return ServiceResult<ProductDto>.Fail("Yetkisiz giriş!", HttpStatusCode.Forbidden);
+
+    var existing = await _productRepository.GetByIdWithDetailsAsync(id);
+    if (existing == null)
+        return ServiceResult<ProductDto>.Fail("Ürün bulunamadı", HttpStatusCode.NotFound);
+
+    // --- Ürün bilgilerini güncelle ---
+    existing.Name = dto.Name;
+    existing.Price = dto.Price;
+    existing.BasePrice = dto.BasePrice;
+    existing.Description = dto.Description;
+
+    // Çoklu kategori güncelleme
+    existing.ProductCategories.Clear();
+    existing.ProductCategories = dto.CategoryIds.Select(cid => new ProductCategory
+    {
+        CategoryId = cid
+    }).ToList();
+
+    await _productRepo.UpdateAsync(existing);
+    await _productRepo.SaveChangesAsync();
+
+    var updatedDto = new ProductDto
+    {
+        Name = existing.Name,
+        Description = existing.Description,
+        BasePrice = existing.BasePrice,
+        Price = existing.Price,
+        Variants = existing.Variants.Select(v => new ProductVariantDto
         {
-            var isAdmin = await _userValidator.IsAdminAsync(token);
-            var validation = await _userValidator.ValidateAsync(token);
+            Size = v.Size,
+            Stock = v.Stock
+        }).ToList(),
+        Images = existing.Images.Select(i => new ProductImageDto
+        {
+            ImageUrl = i.ImageUrl,
+            IsMain = i.IsMain
+        }).ToList(),
+        CategoryIds = existing.ProductCategories.Select(pc => pc.CategoryId).ToList(),
+        CategoryNames = existing.ProductCategories.Select(pc => pc.Category?.Name ?? "").ToList()
+    };
 
-            if (isAdmin.IsFail || !isAdmin.Data) return ServiceResult<ProductDto>.Fail("Yetkisiz giriş!", HttpStatusCode.Forbidden);
-            
-            var existing = await _productRepository.GetByIdWithDetailsAsync(id); 
-            if (existing == null) return ServiceResult<ProductDto>.Fail("Ürün bulunamadı", HttpStatusCode.NotFound);
+    await _auditLogService.LogAsync(
+        userId: validation.Data!.Id,
+        action: "UpdateProduct",
+        entityName: "Product",
+        entityId: id,
+        details: $"Ürün güncellendi: {id}"
+    );
 
-            existing.Name = dto.Name;
-            existing.Price = dto.Price;
-            existing.BasePrice = dto.BasePrice;
-            existing.Description = dto.Description;
-            existing.CategoryId = dto.CategoryId;
-
-
-            await _productRepo.UpdateAsync(existing);
-            await _productRepo.SaveChangesAsync();
-
-            var updatedDto = new ProductDto
-            {
-                Name = existing.Name,
-                Description = existing.Description,
-                BasePrice = existing.BasePrice,
-                Price = existing.Price,
-                CategoryId = existing.CategoryId,
-                Variants = existing.Variants.Select(v => new eCommerce.Application.DTOs.ProductVariantDto
-                {
-                    Size = v.Size,
-                    Stock = v.Stock
-                }).ToList(),
-                Images = existing.Images.Select(i => new ProductImageDto
-                {
-                    ImageUrl = i.ImageUrl,
-                    IsMain = i.IsMain
-                }).ToList()
-            };
-            await _auditLogService.LogAsync(
-                userId: validation.Data!.Id,
-                action: "UpdateProduct",
-                entityName: "Product",
-                entityId: id,
-                details: $"Ürün güncellendi: {id}"
-            );
-
-
-            return ServiceResult<ProductDto>.Success(updatedDto);
-        }
-
+    return ServiceResult<ProductDto>.Success(updatedDto);
+}
         public async Task<ServiceResult> DeleteProductAsync(int id, string token)
         {
             var isAdmin = await _userValidator.IsAdminAsync(token);
@@ -482,33 +502,5 @@ public async Task<ServiceResult<ProductDto>> CreateProductAsync(ProductCreateDto
             return ServiceResult<ProductImage>.Success(savedImage);
         }
         
-        public async Task<ServiceResult<List<ProductResponseDto>>> GetLowStockProductsAsync(int limit,string token)
-        {
-            if (string.IsNullOrEmpty(token))
-                return ServiceResult<List<ProductResponseDto>>.Fail("Token bulunamadı", HttpStatusCode.Unauthorized);
-
-            var isAdmin = await _userValidator.IsAdminAsync(token);
-            var user = await _userValidator.ValidateAsync(token);
-
-            if (isAdmin.IsFail || !isAdmin.Data)
-                return ServiceResult<List<ProductResponseDto>>.Fail("Yetkisiz giriş!", HttpStatusCode.Forbidden);
-            
-            var lowStockProducts = await _productRepository.GetProductsWithLowStockAsync(limit);
-            
-            var productDtos = lowStockProducts
-                .Select(p => new ProductResponseDto
-                {
-                    Id = p.Id,
-                    CategoryName = p.Category.Name,
-                    Variants = p.Variants.Select(v => new ProductVariantResponseDto
-                    {
-                        Id = v.Id,
-                        Size = v.Size,
-                        Stock = v.Stock,
-                    }).OrderBy(v => v.Id).ToList(),
-                }).ToList();
-
-            return ServiceResult<List<ProductResponseDto>>.Success(productDtos);
-        }
     }
 }
