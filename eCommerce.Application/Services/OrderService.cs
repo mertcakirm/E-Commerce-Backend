@@ -71,7 +71,6 @@ public class OrderService : IOrderService
                         Description = i.ProductVariant.Product.Description,
                         DiscountRate = i.ProductVariant.Product.DiscountRate,
                         AverageRating = i.ProductVariant.Product.AverageRating,
-                        CategoryName = pc.Category.Name,
                         Price = i.ProductVariant.Product.Price
                     }).ToList()
                     : new List<OrderItemProductResponseDto>()
@@ -276,14 +275,14 @@ public async Task<ServiceResult<PagedResult<OrderResponseDto>>> GetNotCompletedO
         UserEmail = o.User?.Email ?? string.Empty,
         Payment = o.Payment != null
             ? new List<PaymentResponseDto>
-              {
-                  new PaymentResponseDto
-                  {
-                      PaymentId = o.Payment.Id,
-                      PaymentMethod = o.Payment.PaymentMethod,
-                      PaymentStatus = o.Payment.PaymentStatus
-                  }
-              }
+            {
+                new PaymentResponseDto
+                {
+                    PaymentId = o.Payment.Id,
+                    PaymentMethod = o.Payment.PaymentMethod,
+                    PaymentStatus = o.Payment.PaymentStatus
+                }
+            }
             : new List<PaymentResponseDto>(),
         OrderItem = (o.OrderItems ?? new List<OrderItem>()).Select(i => new OrderItemResponseDto
         {
@@ -291,19 +290,27 @@ public async Task<ServiceResult<PagedResult<OrderResponseDto>>> GetNotCompletedO
             Price = i.Price,
             Quantity = i.Quantity,
             ProductVariantOrder = i.ProductVariant != null
-                ? new List<ProductVariantOrderResponseDto> { new ProductVariantOrderResponseDto { Size = i.ProductVariant.Size } }
+                ? new List<ProductVariantOrderResponseDto>
+                {
+                    new ProductVariantOrderResponseDto
+                    {
+                        Size = i.ProductVariant.Size
+                    }
+                }
                 : new List<ProductVariantOrderResponseDto>(),
             OrderItemProduct = i.ProductVariant?.Product != null
-                ? i.ProductVariant.Product.ProductCategories.Select(pc => new OrderItemProductResponseDto
+                ? new List<OrderItemProductResponseDto>
                 {
-                    Id = i.ProductVariant.ProductId,
-                    Name = i.ProductVariant.Product.Name,
-                    Description = i.ProductVariant.Product.Description,
-                    DiscountRate = i.ProductVariant.Product.DiscountRate,
-                    AverageRating = i.ProductVariant.Product.AverageRating,
-                    CategoryName = pc.Category.Name,
-                    Price = i.ProductVariant.Product.Price
-                }).ToList()
+                    new OrderItemProductResponseDto
+                    {
+                        Id = i.ProductVariant.Product.Id,
+                        Name = i.ProductVariant.Product.Name,
+                        Description = i.ProductVariant.Product.Description,
+                        DiscountRate = i.ProductVariant.Product.DiscountRate,
+                        AverageRating = i.ProductVariant.Product.AverageRating,
+                        Price = i.ProductVariant.Product.Price
+                    }
+                }
                 : new List<OrderItemProductResponseDto>()
         }).ToList()
     }).ToList();
@@ -361,7 +368,6 @@ public async Task<ServiceResult<PagedResult<OrderResponseDto>>> GetCompletedOrde
                     Description = i.ProductVariant.Product.Description,
                     DiscountRate = i.ProductVariant.Product.DiscountRate,
                     AverageRating = i.ProductVariant.Product.AverageRating,
-                    CategoryName = pc.Category.Name,
                     Price = i.ProductVariant.Product.Price
                 }).ToList()
                 : new List<OrderItemProductResponseDto>()

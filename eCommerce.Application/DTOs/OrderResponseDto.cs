@@ -44,7 +44,6 @@ public class OrderItemProductResponseDto
     public string Description { get; set; }
     public int DiscountRate { get; set; }
     public double AverageRating { get; set; }
-    public string CategoryName { get; set; }
     public decimal Price { get; set; }
 }
 

@@ -47,7 +47,7 @@ public class AuthRepository : IAuthRepository
 
         var adminUser = new User
         {
-            Id = 1,
+            Id = 100,
             Email = adminEmail,
             Name = "Admin",
             Role = "Admin"
