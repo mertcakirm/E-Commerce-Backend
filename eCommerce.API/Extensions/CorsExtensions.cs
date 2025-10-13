@@ -12,12 +12,12 @@ namespace eCommerce.API.Extensions
                 {
                     policy
                         .WithOrigins(
-                            "http://localhost:5173",  // mevcut port
-                            "http://localhost:3001"   // eklenen port
+                            "http://localhost:3002",
+                            "http://localhost:3001"
                         )
                         .AllowAnyHeader()
                         .AllowAnyMethod()
-                        .AllowCredentials(); // token/cookie kullanıyorsan gerekli
+                        .AllowCredentials();
                 });
             });
 

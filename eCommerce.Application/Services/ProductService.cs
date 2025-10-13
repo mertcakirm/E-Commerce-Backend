@@ -201,8 +201,7 @@ public async Task<ServiceResult<List<ProductResponseDto>>> GetLowStockProductsAs
         .Select(p => new ProductResponseDto
         {
             Id = p.Id,
-            CategoryIds = p.ProductCategories.Select(pc => pc.CategoryId).ToList(),
-            CategoryNames = p.ProductCategories.Select(pc => pc.Category.Name).ToList(),
+            Name = p.Name,
             Variants = p.Variants.Select(v => new ProductVariantResponseDto
             {
                 Id = v.Id,

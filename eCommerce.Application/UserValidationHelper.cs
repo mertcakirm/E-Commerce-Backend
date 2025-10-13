@@ -1,4 +1,6 @@
+using System.IdentityModel.Tokens.Jwt;
 using System.Net;
+using System.Security.Claims;
 using System.Threading.Tasks;
 using eCommerce.Application;
 using eCommerce.Core.Entities;
@@ -42,14 +44,28 @@ public class UserValidator
 
     public async Task<ServiceResult<bool>> IsAdminAsync(string token)
     {
-        var validation = await ValidateAsync(token);
-        if (validation.IsFail)
-            return ServiceResult<bool>.Fail(validation.ErrorMessage!, validation.Status);
+        if (string.IsNullOrWhiteSpace(token))
+            return ServiceResult<bool>.Fail("Token bulunamadı.", HttpStatusCode.Unauthorized);
 
-        var user = validation.Data!;
-        bool isAdmin = user.Role == "Admin";
+        try
+        {
+            var handler = new JwtSecurityTokenHandler();
+            var jwtToken = handler.ReadJwtToken(token.Replace("Bearer ", ""));
 
-        return ServiceResult<bool>.Success(isAdmin);
+            var roleClaim = jwtToken.Claims.FirstOrDefault(c => c.Type == ClaimTypes.Role)?.Value
+                            ?? jwtToken.Claims.FirstOrDefault(c => c.Type == "role")?.Value;
+
+            if (string.IsNullOrEmpty(roleClaim))
+                return ServiceResult<bool>.Fail("Role bilgisi bulunamadı.", HttpStatusCode.Forbidden);
+
+            bool isAdmin = roleClaim.Equals("Admin", StringComparison.OrdinalIgnoreCase);
+
+            return ServiceResult<bool>.Success(isAdmin);
+        }
+        catch (Exception ex)
+        {
+            return ServiceResult<bool>.Fail($"Token çözümlenemedi: {ex.Message}", HttpStatusCode.Unauthorized);
+        }
     }
 
     public async Task<ServiceResult<bool>> HasRoleAsync(string token, string roleName)

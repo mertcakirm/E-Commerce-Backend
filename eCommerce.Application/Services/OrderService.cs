@@ -382,13 +382,14 @@ public async Task<ServiceResult<List<MonthlyCategorySalesDto>>> GetMonthlyCatego
 
     var result = orders
         .SelectMany(o => o.OrderItems)
-        .SelectMany(oi => oi.ProductVariant.Product.ProductCategories, (oi, pc) => new { oi, pc })
+        .SelectMany(oi => oi.ProductVariant.Product.ProductCategories
+            .Select(pc => new { oi, pc.Category }))
         .GroupBy(x => new
         {
             Year = x.oi.Order.OrderDate.Year,
             Month = x.oi.Order.OrderDate.Month,
-            CategoryId = x.pc.Category.Id,
-            CategoryName = x.pc.Category.Name
+            CategoryId = x.Category.Id,
+            CategoryName = x.Category.Name
         })
         .Select(g => new MonthlyCategorySalesDto
         {
@@ -416,11 +417,12 @@ public async Task<ServiceResult<List<MonthlyCategorySalesDto>>> GetYearlyCategor
 
     var result = orders
         .SelectMany(o => o.OrderItems)
-        .SelectMany(oi => oi.ProductVariant.Product.ProductCategories, (oi, pc) => new { oi, pc })
+        .SelectMany(oi => oi.ProductVariant.Product.ProductCategories
+            .Select(pc => new { oi, pc.Category }))
         .GroupBy(x => new
         {
-            CategoryId = x.pc.Category.Id,
-            CategoryName = x.pc.Category.Name
+            CategoryId = x.Category.Id,
+            CategoryName = x.Category.Name
         })
         .Select(g => new MonthlyCategorySalesDto
         {
