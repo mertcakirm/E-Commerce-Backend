@@ -45,10 +45,6 @@ namespace eCommerce.Application.Services
         {
             try
             {
-                var validation = await _userValidator.ValidateAsync(token);
-                if (validation.IsFail)
-                    return ServiceResult<PagedResult<MessageResponseDto>>.Fail(validation.ErrorMessage!, validation.Status);
-
                 var isAdmin = await _userValidator.IsAdminAsync(token);
                 if (isAdmin.IsFail || !isAdmin.Data)
                     return ServiceResult<PagedResult<MessageResponseDto>>.Fail("Yetkisiz giriş!", HttpStatusCode.Forbidden);
@@ -91,10 +87,6 @@ namespace eCommerce.Application.Services
         {
             try
             {
-                var validation = await _userValidator.ValidateAsync(token);
-                if (validation.IsFail)
-                    return ServiceResult<bool>.Fail(validation.ErrorMessage!, validation.Status);
-
                 var isAdmin = await _userValidator.IsAdminAsync(token);
                 if (isAdmin.IsFail || !isAdmin.Data)
                     return ServiceResult<bool>.Fail("Yetkisiz giriş!", HttpStatusCode.Forbidden);
@@ -113,10 +105,6 @@ namespace eCommerce.Application.Services
         
         public async Task<ServiceResult<bool>> RemoveMessageAsync(int messageId,string token)
         {
-            var validation = await _userValidator.ValidateAsync(token);
-            if (validation.IsFail)
-                return ServiceResult<bool>.Fail(validation.ErrorMessage!, validation.Status);
-
             var isAdmin = await _userValidator.IsAdminAsync(token);
             if (isAdmin.IsFail || !isAdmin.Data)
                 return ServiceResult<bool>.Fail("Yetkisiz giriş!", HttpStatusCode.Forbidden);

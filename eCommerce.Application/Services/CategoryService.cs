@@ -51,17 +51,12 @@ namespace eCommerce.Application.Services
 
         public async Task<ServiceResult<CategoryDto>> AddCategoryAsync(CategoryRequestDto dto, string token)
         {
-            var validation = await _userValidator.ValidateAsync(token);
-            if (validation.IsFail)
-                return ServiceResult<CategoryDto>.Fail(validation.ErrorMessage!, validation.Status);
-
             var isAdmin = await _userValidator.IsAdminAsync(token);
             if (isAdmin.IsFail || !isAdmin.Data)
                 return ServiceResult<CategoryDto>.Fail("Yetkisiz giriş!", HttpStatusCode.Forbidden);
 
             string savedPath = null;
 
-            // ---- Resmi Kaydet ----
             if (dto.Image != null && dto.Image.Length > 0)
             {
                 var uploadPath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "images", "categories");
@@ -89,7 +84,7 @@ namespace eCommerce.Application.Services
             await _categoryRepository.AddAsync(category);
 
             await _auditLogService.LogAsync(
-                userId: validation.Data!.Id,
+                userId: null,
                 action: "AddCategory",
                 entityName: "Category",
                 entityId: category.Id,
@@ -108,9 +103,8 @@ namespace eCommerce.Application.Services
 
         public async Task<ServiceResult> DeleteCategoryAsync(int id, string token)
         {
-            var validation = await _userValidator.ValidateAsync(token);
-            if (validation.IsFail)
-                return ServiceResult.Fail(validation.ErrorMessage!, validation.Status);
+            var isAdmin = await _userValidator.IsAdminAsync(token);
+            if (isAdmin.IsFail || !isAdmin.Data) return ServiceResult.Fail("Yetkisiz giriş!", HttpStatusCode.Forbidden);
 
             var category = await _categoryRepository.GetByIdAsync(id);
             if (category == null)
@@ -119,7 +113,7 @@ namespace eCommerce.Application.Services
             await _categoryRepository.RemoveAsync(category);
 
             await _auditLogService.LogAsync(
-                userId: validation.Data!.Id,
+                userId: null,
                 action: "RemoveCategory",
                 entityName: "Category",
                 entityId: id,

@@ -18,9 +18,6 @@ public class QuestionService : IQuestionService
     
     public async Task<ServiceResult<List<GetAllQuestionsDto>>> GetProductQuestions(string token)
     {
-        var validation = await _userValidator.ValidateAsync(token);
-        if (validation.IsFail) return ServiceResult<List<GetAllQuestionsDto>>.Fail(validation.ErrorMessage!, validation.Status);
-
         var isAdmin = await _userValidator.IsAdminAsync(token);
         if (isAdmin.IsFail || !isAdmin.Data) return ServiceResult<List<GetAllQuestionsDto>>.Fail("Yetkisiz giriş!", HttpStatusCode.Forbidden);
         
@@ -60,21 +57,16 @@ public class QuestionService : IQuestionService
     
     public async Task<ServiceResult<bool>> AddProductAnswerAsync(int questionId, string answer, string token)
     {
-        var validation = await _userValidator.ValidateAsync(token);
-        if (validation.IsFail) return ServiceResult<bool>.Fail(validation.ErrorMessage!, validation.Status);
-
-        var userId = validation.Data!.Id;
-
-        var added = await _productRepository.AddProductAnswer( questionId , answer , userId );
+        var isAdmin = await _userValidator.IsAdminAsync(token);
+        if (isAdmin.IsFail || !isAdmin.Data) return ServiceResult<bool>.Fail("Yetkisiz giriş!", HttpStatusCode.Forbidden);
+        
+        var added = await _productRepository.AddProductAnswer( questionId , answer );
 
         return ServiceResult<bool>.Success(added);
     }
 
     public async Task<ServiceResult<bool>> RemoveProductQuestionAsync(int questionId, string token)
     {
-        var validation = await _userValidator.ValidateAsync(token);
-        if (validation.IsFail) return ServiceResult<bool>.Fail(validation.ErrorMessage!, validation.Status);
-
         var isAdmin = await _userValidator.IsAdminAsync(token);
         if (isAdmin.IsFail || !isAdmin.Data) return ServiceResult<bool>.Fail("Yetkisiz giriş!", HttpStatusCode.Forbidden);
         

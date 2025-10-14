@@ -101,7 +101,6 @@ public class UserService : IUserService
         if (pageNumber <= 0) pageNumber = 1;
         if (pageSize <= 0) pageSize = 10;
 
-        // ✅ searchTerm'i repository'ye gönderiyoruz
         var users = await _userRepository.GetAllUsers(searchTerm);
 
         var usersDto = users.Select(u => new UserDto
@@ -151,8 +150,7 @@ public class UserService : IUserService
         var isAdmin = await _userValidator.IsAdminAsync(token);
         if (isAdmin.IsFail || !isAdmin.Data)
             return ServiceResult.Fail("Yetkisiz giriş!", HttpStatusCode.Forbidden);
-
-
+        
         await _userRepository.UpdateUserStatusAsync(userId);
         await _auditLogService.LogAsync(
             userId: userId,

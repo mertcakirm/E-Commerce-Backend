@@ -17,6 +17,7 @@ public class ProductResponseDto
 
     public decimal Price { get; set; }
     public decimal PriceWithDiscount { get; set; }
+    public bool IsDeleted { get; set; }
 
     public List<ProductVariantResponseDto> Variants { get; set; } = new();
     public List<ProductImageResponseDto> Images { get; set; } = new();

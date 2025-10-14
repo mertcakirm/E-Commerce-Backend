@@ -44,6 +44,17 @@ public class AdminController : ControllerBase
     }
     
     
+    [HttpGet("product/{id}")]
+    public async Task<IActionResult> GetById([FromHeader(Name = "Authorization")] string token,int id)
+    {
+        var result = await _productService.GetProductByIdAdminAsync(id,token);
+        if (result.IsFail)
+            return StatusCode((int)result.Status, result);
+
+        return Ok(result); 
+    }
+    
+    
     [HttpPost("login")]
     public async Task<IActionResult> Login([FromBody] LoginDto request)
     {

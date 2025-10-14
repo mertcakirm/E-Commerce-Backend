@@ -16,8 +16,7 @@ public class UserRepository : IUserRepository
     public async Task<IEnumerable<User>> GetAllUsers(string? searchTerm = null)
     {
         IQueryable<User> query = _context.Users
-            .IgnoreQueryFilters()
-            .Where(u => u.Id != 1);
+            .IgnoreQueryFilters().OrderByDescending(u=>u.Id);
 
         if (!string.IsNullOrWhiteSpace(searchTerm))
         {

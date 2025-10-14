@@ -9,30 +9,37 @@ namespace eCommerce.Infrastructure.Repositories
     {
         public ProductRepository(AppDbContext context) : base(context) { }
 
-        public async Task<IEnumerable<Product>> SearchProductsAsync(string keyword, int? categoryId)
-        {
-            var query = _dbSet
-                .Include(p => p.Variants)
-                .Include(p => p.ProductCategories)
-                    .ThenInclude(pc => pc.Category)
-                .AsQueryable();
-
-            if (!string.IsNullOrWhiteSpace(keyword))
-                query = query.Where(p => p.Name.Contains(keyword));
-
-            if (categoryId.HasValue)
-                query = query.Where(p => p.ProductCategories.Any(pc => pc.CategoryId == categoryId.Value));
-
-            return await query.ToListAsync();
-        }
-
         public async Task<IEnumerable<Product>> GetAllWithDetailsAsync(string? searchTerm = null)
         {
             IQueryable<Product> query = _dbSet
                 .Include(p => p.Variants)
                 .Include(p => p.Images)
                 .Include(p => p.ProductCategories)
-                    .ThenInclude(pc => pc.Category);
+                    .ThenInclude(pc => pc.Category)
+                .OrderByDescending(p=>p.Id);
+
+            if (!string.IsNullOrWhiteSpace(searchTerm))
+            {
+                var lower = searchTerm.ToLower();
+                query = query.Where(p =>
+                    p.Name.ToLower().Contains(lower) ||
+                    p.Description.ToLower().Contains(lower) ||
+                    p.ProductCategories.Any(pc => pc.Category.Name.ToLower().Contains(lower))
+                );
+            }
+
+            return await query.ToListAsync();
+        }
+        
+        public async Task<IEnumerable<Product>> GetAllWithDetailsAdminAsync(string? searchTerm = null)
+        {
+            IQueryable<Product> query = _dbSet
+                .IgnoreQueryFilters()
+                .Include(p => p.Variants)
+                .Include(p => p.Images)
+                .Include(p => p.ProductCategories)
+                .ThenInclude(pc => pc.Category)
+                .OrderByDescending(p=>p.Id);
 
             if (!string.IsNullOrWhiteSpace(searchTerm))
             {
@@ -54,6 +61,17 @@ namespace eCommerce.Infrastructure.Repositories
                 .Include(p => p.Images)
                 .Include(p => p.ProductCategories)
                     .ThenInclude(pc => pc.Category)
+                .FirstOrDefaultAsync(p => p.Id == id);
+        }
+        
+        public async Task<Product?> GetByIdWithDetailsAdminAsync(int id)
+        {
+            return await _dbSet
+                .IgnoreQueryFilters()
+                .Include(p => p.Variants)
+                .Include(p => p.Images)
+                .Include(p => p.ProductCategories)
+                .ThenInclude(pc => pc.Category)
                 .FirstOrDefaultAsync(p => p.Id == id);
         }
 
@@ -170,12 +188,11 @@ namespace eCommerce.Infrastructure.Repositories
             return await _context.SaveChangesAsync() > 0;
         }
 
-        public async Task<bool> AddProductAnswer(int questionId, string answer, int userId)
+        public async Task<bool> AddProductAnswer(int questionId, string answer)
         {
             var productAnswer = new ProductAnswer
             {
                 QuestionId = questionId,
-                UserId = userId,
                 AnswerText = answer
             };
 
@@ -211,6 +228,14 @@ namespace eCommerce.Infrastructure.Repositories
 
             productQuestion.IsDeleted = true;
 
+            return await _context.SaveChangesAsync() > 0;
+        }
+        
+        public async Task<bool> ToggleProductActivity(int productId)
+        {
+            var product = await _dbSet.IgnoreQueryFilters().FirstOrDefaultAsync(p => p.Id == productId);
+            if (product == null) return false;
+            product.IsDeleted = !product.IsDeleted;
             return await _context.SaveChangesAsync() > 0;
         }
     }

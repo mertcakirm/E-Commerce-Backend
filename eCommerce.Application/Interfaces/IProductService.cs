@@ -9,6 +9,7 @@ public interface IProductService
     Task<ServiceResult<PagedResult<ProductResponseDto>>> GetAllProductsAdminAsync(int pageNumber, int pageSize,string token,string? searchTerm = null);
     Task<ServiceResult<PagedResult<ProductResponseDto>>> GetProductByCategoryAsync(string categoryName,int pageNumber, int pageSize);
     Task<ServiceResult<ProductResponseDto>> GetProductByIdAsync(int id);
+    Task<ServiceResult<ProductResponseDto>> GetProductByIdAdminAsync(int id,string token);
     Task<ServiceResult<ProductDto>> CreateProductAsync(ProductCreateDto dto, string token);
     Task<ServiceResult<ProductDto>> UpdateProductAsync(int id, UpdateProductDto product,string token);
     Task<ServiceResult> DeleteProductAsync(int id,string token);

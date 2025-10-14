@@ -162,24 +162,19 @@ public class OrderService : IOrderService
   public async Task<ServiceResult> UpdatePaymentStatusAsync(int orderId, string status, string token)
     {
         var isAdmin = await _userValidator.IsAdminAsync(token);
-        var validation = await _userValidator.ValidateAsync(token);
-        
-        var userId = validation.Data!.Id;
         
         if (isAdmin.IsFail || !isAdmin.Data) return ServiceResult.Fail("Yetkisiz giriş!", HttpStatusCode.Forbidden);
 
         var order = await _orderRepo.GetOrderByIdAsync(orderId);
 
         if (order == null) return ServiceResult.Fail("Sipariş bulunamadı", HttpStatusCode.NotFound);
-
-        if (order.UserId != userId) return ServiceResult.Fail("Kullanıcı yetkisiz", HttpStatusCode.Unauthorized);
-
+        
         if (order.Payment == null) return ServiceResult.Fail("Ödeme bilgisi bulunamadı", HttpStatusCode.BadRequest);
 
         order.Payment.PaymentStatus = status;
         await _orderRepo.UpdateAsync(order);
         await _auditLogService.LogAsync(
-            userId: userId,
+            userId: null,
             action: "UpdatePaymentStatus",
             entityName: "Payment",
             entityId: orderId,
@@ -192,26 +187,22 @@ public class OrderService : IOrderService
     public async Task<ServiceResult> UpdateOrderStatusAsync(int orderId, string status, string token)
     {
         var isAdmin = await _userValidator.IsAdminAsync(token);
-        var validation = await _userValidator.ValidateAsync(token);
         
-        var userId = validation.Data!.Id;
         
         if (isAdmin.IsFail || !isAdmin.Data) return ServiceResult.Fail("Yetkisiz giriş!", HttpStatusCode.Forbidden);
         
-        if (validation.IsFail) return ServiceResult.Fail(validation.ErrorMessage!, validation.Status);
 
         var order = await _orderRepo.GetOrderByIdAsync(orderId);
 
         if (order == null) return ServiceResult.Fail("Sipariş bulunamadı", HttpStatusCode.NotFound);
 
-        if (order.UserId != userId) return ServiceResult.Fail("Kullanıcı yetkisiz", HttpStatusCode.Unauthorized);
 
         if (order.Payment == null) return ServiceResult.Fail("Sipariş bilgisi bulunamadı", HttpStatusCode.BadRequest);
 
         order.Payment.PaymentStatus = status;
         await _orderRepo.UpdateOrderStatusAsync(orderId, status);
         await _auditLogService.LogAsync(
-            userId: userId,
+            userId: null,
             action: "UpdateOrderStatus",
             entityName: "Order",
             entityId: orderId,
@@ -224,25 +215,21 @@ public class OrderService : IOrderService
     public async Task<ServiceResult> CompleteOrderStatusAsync(int orderId, string token)
     {
         var isAdmin = await _userValidator.IsAdminAsync(token);
-        var validation = await _userValidator.ValidateAsync(token);
         
-        var userId = validation.Data!.Id;
         
         if (isAdmin.IsFail || !isAdmin.Data) return ServiceResult.Fail("Yetkisiz giriş!", HttpStatusCode.Forbidden);
 
-        if (validation.IsFail) return ServiceResult.Fail(validation.ErrorMessage!, validation.Status);
 
         var order = await _orderRepo.GetOrderByIdAsync(orderId);
 
         if (order == null) return ServiceResult.Fail("Sipariş bulunamadı", HttpStatusCode.NotFound);
 
-        if (order.UserId != userId) return ServiceResult.Fail("Kullanıcı yetkisiz", HttpStatusCode.Unauthorized);
 
         if (order.Payment == null) return ServiceResult.Fail("Ödeme bilgisi bulunamadı", HttpStatusCode.NotFound);
 
         await _orderRepo.CompleteOrderStatusAsync(orderId);
         await _auditLogService.LogAsync(
-            userId: userId,
+            userId: null,
             action: "CompleteOrderStatus",
             entityName: "Order",
             entityId: orderId,

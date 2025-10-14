@@ -60,17 +60,13 @@ namespace eCommerce.Application.Services
 
         public async Task<ServiceResult<SliderContentResponseDto>> AddSliderAsync(SliderContent slider,string token)
         {
-            var validation = await _userValidator.ValidateAsync(token);
-            if (validation.IsFail)
-                return ServiceResult<SliderContentResponseDto>.Fail(validation.ErrorMessage!, validation.Status);
-
             var isAdmin = await _userValidator.IsAdminAsync(token);
             if (isAdmin.IsFail || !isAdmin.Data)
                 return ServiceResult<SliderContentResponseDto>.Fail("Yetkisiz giriş!", HttpStatusCode.Forbidden);
 
             await _sliderRepository.AddAsync(slider);
             await _auditLogService.LogAsync(
-                userId: validation.Data!.Id,
+                userId: null,
                 action: "AddSlider",
                 entityName: "SliderCart",
                 entityId: null,
@@ -89,10 +85,6 @@ namespace eCommerce.Application.Services
 
         public async Task<ServiceResult<bool>> DeleteSliderAsync(int id,string token)
         {
-            var validation = await _userValidator.ValidateAsync(token);
-            if (validation.IsFail)
-                return ServiceResult<bool>.Fail(validation.ErrorMessage!, validation.Status);
-
             var isAdmin = await _userValidator.IsAdminAsync(token);
             if (isAdmin.IsFail || !isAdmin.Data)
                 return ServiceResult<bool>.Fail("Yetkisiz giriş!", HttpStatusCode.Forbidden);
@@ -102,7 +94,7 @@ namespace eCommerce.Application.Services
 
             await _sliderRepository.RemoveAsync(slider);
             await _auditLogService.LogAsync(
-                userId: validation.Data!.Id,
+                userId: null,
                 action: "DeleteSlider",
                 entityName: "SliderCart",
                 entityId: id,
@@ -146,16 +138,12 @@ namespace eCommerce.Application.Services
 
         public async Task<ServiceResult<CartContentResponseDto>> AddCartAsync(CartContent cart,string token)
         {
-            var validation = await _userValidator.ValidateAsync(token);
-            if (validation.IsFail)
-                return ServiceResult<CartContentResponseDto>.Fail(validation.ErrorMessage!, validation.Status);
-
             var isAdmin = await _userValidator.IsAdminAsync(token);
             if (isAdmin.IsFail || !isAdmin.Data)
                 return ServiceResult<CartContentResponseDto>.Fail("Yetkisiz giriş!", HttpStatusCode.Forbidden);
             await _cartRepository.AddAsync(cart);
             await _auditLogService.LogAsync(
-                userId: validation.Data!.Id,
+                userId: null,
                 action: "AddCart",
                 entityName: "SliderCart",
                 entityId: cart.Id,
@@ -174,10 +162,6 @@ namespace eCommerce.Application.Services
 
         public async Task<ServiceResult<bool>> DeleteCartAsync(int id,string token)
         {
-            var validation = await _userValidator.ValidateAsync(token);
-            if (validation.IsFail)
-                return ServiceResult<bool>.Fail(validation.ErrorMessage!, validation.Status);
-
             var isAdmin = await _userValidator.IsAdminAsync(token);
             if (isAdmin.IsFail || !isAdmin.Data)
                 return ServiceResult<bool>.Fail("Yetkisiz giriş!", HttpStatusCode.Forbidden);
@@ -187,7 +171,7 @@ namespace eCommerce.Application.Services
 
             await _cartRepository.RemoveAsync(cart);
             await _auditLogService.LogAsync(
-                userId: validation.Data!.Id,
+                userId: null,
                 action: "DeleteCart",
                 entityName: "SliderCart",
                 entityId: id,
