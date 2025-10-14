@@ -108,6 +108,8 @@ public class UserService : IUserService
             Id = u.Id,
             Name = u.Name,
             Email = u.Email,
+            PhoneNumber = u.PhoneNumber,
+            AcceptEmails = u.AcceptEmails,
             Role = u.Role,
             IsDeleted = u.IsDeleted
         }).ToList();
