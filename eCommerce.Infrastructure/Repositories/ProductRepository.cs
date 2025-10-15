@@ -16,6 +16,7 @@ namespace eCommerce.Infrastructure.Repositories
                 .Include(p => p.Images)
                 .Include(p => p.ProductCategories)
                     .ThenInclude(pc => pc.Category)
+                .Where(p=>p.IsActive==true)
                 .OrderByDescending(p=>p.Id);
 
             if (!string.IsNullOrWhiteSpace(searchTerm))
@@ -66,15 +67,23 @@ namespace eCommerce.Infrastructure.Repositories
         
         public async Task<Product?> GetByIdWithDetailsAdminAsync(int id)
         {
-            return await _dbSet
-                .IgnoreQueryFilters()
+            var product = await _dbSet
                 .Include(p => p.Variants)
                 .Include(p => p.Images)
-                .Include(p => p.ProductCategories)
-                .ThenInclude(pc => pc.Category)
                 .FirstOrDefaultAsync(p => p.Id == id);
-        }
 
+            if (product != null)
+            {
+                await _context.Entry(product)
+                    .Collection(p => p.ProductCategories)
+                    .Query()
+                    .IgnoreQueryFilters()
+                    .Include(pc => pc.Category)
+                    .LoadAsync();
+            }
+
+            return product;
+        }
         public async Task<List<Product>> GetProductsWithLowStockAsync(int limit)
         {
             return await _dbSet
@@ -233,9 +242,9 @@ namespace eCommerce.Infrastructure.Repositories
         
         public async Task<bool> ToggleProductActivity(int productId)
         {
-            var product = await _dbSet.IgnoreQueryFilters().FirstOrDefaultAsync(p => p.Id == productId);
+            var product = await _context.Products.IgnoreQueryFilters().FirstOrDefaultAsync(p => p.Id == productId);
             if (product == null) return false;
-            product.IsDeleted = !product.IsDeleted;
+            product.IsActive = !product.IsActive;
             return await _context.SaveChangesAsync() > 0;
         }
     }

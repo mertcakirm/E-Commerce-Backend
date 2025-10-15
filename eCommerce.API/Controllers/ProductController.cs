@@ -100,7 +100,7 @@ namespace eCommerce.API.Controllers
     }
 
     [Authorize]
-    [HttpDelete("{id}")]
+    [HttpPut("toggle/{id}")]
     public async Task<IActionResult> DeleteProduct([FromHeader(Name = "Authorization")] string token,int id)
     {
         var result = await _productService.DeleteProductAsync(id,token);

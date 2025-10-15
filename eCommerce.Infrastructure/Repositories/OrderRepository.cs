@@ -102,6 +102,7 @@ namespace eCommerce.Infrastructure.Repositories
             if (order != null)
             {
                 order.IsComplete = true;
+                order.Status = "Teslim Edildi";
                 _dbSet.Update(order);
                 await _context.SaveChangesAsync();
             }

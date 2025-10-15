@@ -407,9 +407,6 @@ namespace eCommerce.Application.Services
             
             if (isAdmin.IsFail || !isAdmin.Data) return ServiceResult.Fail("Yetkisiz giriş!", HttpStatusCode.Forbidden);
 
-            var existing = await _productRepository.GetByIdWithDetailsAdminAsync(id);
-            if (existing == null) return ServiceResult.Fail("Ürün bulunamadı", HttpStatusCode.NotFound);
-
             await _productRepository.ToggleProductActivity(id);
             await _productRepo.SaveChangesAsync();
             await _auditLogService.LogAsync(
