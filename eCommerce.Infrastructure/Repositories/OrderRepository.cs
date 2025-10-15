@@ -16,6 +16,7 @@ namespace eCommerce.Infrastructure.Repositories
                 .Include(o => o.OrderItems)
                     .ThenInclude(oi => oi.ProductVariant)
                     .ThenInclude(oi=>oi.Product)
+                    .ThenInclude(oi => oi.Images)
                 .Include(o => o.Payment)
                 .Where(o => o.UserId == userId && !EF.Property<bool>(o, "IsDeleted"))
                 .OrderByDescending(o => o.OrderDate)
@@ -25,6 +26,7 @@ namespace eCommerce.Infrastructure.Repositories
         public async Task<IEnumerable<Order?>> GetNotCompletedOrdersAsync()
         {
             return await _dbSet
+                .IgnoreQueryFilters()
                 .Include(o => o.OrderItems)
                 .ThenInclude(oi => oi.ProductVariant)
                 .ThenInclude(pv => pv.Product)
@@ -38,6 +40,7 @@ namespace eCommerce.Infrastructure.Repositories
         public async Task<IEnumerable<Order?>> GetCompletedOrdersAsync()
         {
             return await _dbSet
+                .IgnoreQueryFilters()
                 .Include(o => o.OrderItems)
                 .ThenInclude(oi => oi.ProductVariant)
                 .ThenInclude(pv => pv.Product)
@@ -52,6 +55,7 @@ namespace eCommerce.Infrastructure.Repositories
         public async Task<Order?> GetOrderDetailsByIdAsync(int orderId)
         {
             return await _dbSet
+                .IgnoreQueryFilters()
                 .Include(o => o.OrderItems)
                     .ThenInclude(oi => oi.ProductVariant)
                         .ThenInclude(pv => pv.Product)

@@ -64,15 +64,19 @@ public class OrderService : IOrderService
                     ? new List<ProductVariantOrderResponseDto> { new ProductVariantOrderResponseDto { Size = i.ProductVariant.Size } }
                     : new List<ProductVariantOrderResponseDto>(),
                 OrderItemProduct = i.ProductVariant?.Product != null
-                    ? i.ProductVariant.Product.ProductCategories.Select(pc => new OrderItemProductResponseDto
+                    ? new List<OrderItemProductResponseDto>
                     {
-                        Id = i.ProductVariant.ProductId,
-                        Name = i.ProductVariant.Product.Name,
-                        Description = i.ProductVariant.Product.Description,
-                        DiscountRate = i.ProductVariant.Product.DiscountRate,
-                        AverageRating = i.ProductVariant.Product.AverageRating,
-                        Price = i.ProductVariant.Product.Price
-                    }).ToList()
+                        new OrderItemProductResponseDto
+                        {
+                            Id = i.ProductVariant.Product.Id,
+                            Name = i.ProductVariant.Product.Name,
+                            Description = i.ProductVariant.Product.Description,
+                            DiscountRate = i.ProductVariant.Product.DiscountRate,
+                            AverageRating = i.ProductVariant.Product.AverageRating,
+                            Price = i.ProductVariant.Product.Price,
+                            ImageUrl = i.ProductVariant?.Product?.Images[0]?.ImageUrl
+                        }
+                    }
                     : new List<OrderItemProductResponseDto>()
             }).ToList()
         }).ToList();
