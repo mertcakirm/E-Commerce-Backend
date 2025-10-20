@@ -25,43 +25,53 @@ public class OrderService : IOrderService
         _userAddressRepository = userAddressRepository;
     }
 
-    public async Task<ServiceResult<List<OrderResponseDto>>> GetUserOrderAsync(string token)
+public async Task<ServiceResult<PagedResult<OrderResponseDto>>> GetUserOrderAsync(string token, int pageNumber, int pageSize)
+{
+    var validation = await _userValidator.ValidateAsync(token);
+    if (validation.IsFail)
+        return ServiceResult<PagedResult<OrderResponseDto>>.Fail(validation.ErrorMessage!, validation.Status);
+
+    var orders = await _orderRepo.GetUserOrdersAsync(validation.Data!.Id);
+    if (!orders.Any())
+        return ServiceResult<PagedResult<OrderResponseDto>>.Fail("Kullanıcının siparişi bulunamadı", HttpStatusCode.NotFound);
+
+    var totalCount = orders.Count();
+    var pagedOrders = orders.Skip((pageNumber - 1) * pageSize).Take(pageSize).ToList();
+
+    var dtoList = pagedOrders.Select(o => new OrderResponseDto
     {
-        var validation = await _userValidator.ValidateAsync(token);
-        if (validation.IsFail)
-            return ServiceResult<List<OrderResponseDto>>.Fail(validation.ErrorMessage!, validation.Status);
-
-        var orders = await _orderRepo.GetUserOrdersAsync(validation.Data!.Id);
-        if (!orders.Any())
-            return ServiceResult<List<OrderResponseDto>>.Fail("Kullanıcının siparişi bulunamadı", HttpStatusCode.NotFound);
-
-        var orderDtos = orders.Select(o => new OrderResponseDto
-        {
-            Id = o.Id,
-            OrderDate = o.OrderDate,
-            IsComplete = o.IsComplete,
-            TotalAmount = o.TotalAmount,
-            ShippingAddress = o.ShippingAddress,
-            Status = o.Status,
-            UserEmail = o.User.Email,
-            Payment = o.Payment != null
-                ? new List<PaymentResponseDto>
+        Id = o.Id,
+        OrderDate = o.OrderDate,
+        IsComplete = o.IsComplete,
+        TotalAmount = o.TotalAmount,
+        ShippingAddress = o.ShippingAddress,
+        Status = o.Status,
+        UserEmail = o.User.Email,
+        Payment = o.Payment != null
+            ? new List<PaymentResponseDto>
+            {
+                new PaymentResponseDto
                 {
-                    new PaymentResponseDto
-                    {
-                        PaymentId = o.Payment.Id,
-                        PaymentMethod = o.Payment.PaymentMethod,
-                        PaymentStatus = o.Payment.PaymentStatus
-                    }
+                    PaymentId = o.Payment.Id,
+                    PaymentMethod = o.Payment.PaymentMethod,
+                    PaymentStatus = o.Payment.PaymentStatus
                 }
-                : new List<PaymentResponseDto>(),
-            OrderItem = (o.OrderItems ?? new List<OrderItem>()).Select(i => new OrderItemResponseDto
+            }
+            : new List<PaymentResponseDto>(),
+        OrderItem = (o.OrderItems ?? new List<OrderItem>())
+            .Select(i => new OrderItemResponseDto
             {
                 OrderItemId = i.Id,
                 Price = i.Price,
                 Quantity = i.Quantity,
                 ProductVariantOrder = i.ProductVariant != null
-                    ? new List<ProductVariantOrderResponseDto> { new ProductVariantOrderResponseDto { Size = i.ProductVariant.Size } }
+                    ? new List<ProductVariantOrderResponseDto>
+                    {
+                        new ProductVariantOrderResponseDto
+                        {
+                            Size = i.ProductVariant.Size
+                        }
+                    }
                     : new List<ProductVariantOrderResponseDto>(),
                 OrderItemProduct = i.ProductVariant?.Product != null
                     ? new List<OrderItemProductResponseDto>
@@ -74,15 +84,144 @@ public class OrderService : IOrderService
                             DiscountRate = i.ProductVariant.Product.DiscountRate,
                             AverageRating = i.ProductVariant.Product.AverageRating,
                             Price = i.ProductVariant.Product.Price,
-                            ImageUrl = i.ProductVariant?.Product?.Images[0]?.ImageUrl
+                            ImageUrl = i.ProductVariant?.Product?.Images?[0]?.ImageUrl
                         }
                     }
                     : new List<OrderItemProductResponseDto>()
             }).ToList()
-        }).ToList();
+    }).ToList();
 
-        return ServiceResult<List<OrderResponseDto>>.Success(orderDtos);
-    }
+    var pagedResult = new PagedResult<OrderResponseDto>(dtoList, totalCount, pageNumber, pageSize);
+
+    return ServiceResult<PagedResult<OrderResponseDto>>.Success(pagedResult);
+}
+    
+    public async Task<ServiceResult<PagedResult<OrderResponseDto>>> GetNotCompletedOrdersAsync(string token, int pageNumber, int pageSize)
+{
+    var isAdmin = await _userValidator.IsAdminAsync(token);
+    if (isAdmin.IsFail || !isAdmin.Data)
+        return ServiceResult<PagedResult<OrderResponseDto>>.Fail("Yetkisiz giriş!", HttpStatusCode.Forbidden);
+
+    var orders = await _orderRepo.GetNotCompletedOrdersAsync();
+    if (!orders.Any())
+        return ServiceResult<PagedResult<OrderResponseDto>>.Fail("Tamamlanmamış sipariş bulunamadı", HttpStatusCode.NotFound);
+
+    var totalCount = orders.Count();
+    var pagedOrders = orders.Skip((pageNumber - 1) * pageSize).Take(pageSize).ToList();
+
+    var dtoList = pagedOrders.Select(o => new OrderResponseDto
+    {
+        Id = o.Id,
+        OrderDate = o.OrderDate,
+        IsComplete = o.IsComplete,
+        TotalAmount = o.TotalAmount,
+        ShippingAddress = o.ShippingAddress,
+        Status = o.Status,
+        UserEmail = o.User?.Email ?? string.Empty,
+        Payment = o.Payment != null
+            ? new List<PaymentResponseDto>
+            {
+                new PaymentResponseDto
+                {
+                    PaymentId = o.Payment.Id,
+                    PaymentMethod = o.Payment.PaymentMethod,
+                    PaymentStatus = o.Payment.PaymentStatus
+                }
+            }
+            : new List<PaymentResponseDto>(),
+        OrderItem = (o.OrderItems ?? new List<OrderItem>()).Select(i => new OrderItemResponseDto
+        {
+            OrderItemId = i.Id,
+            Price = i.Price,
+            Quantity = i.Quantity,
+            ProductVariantOrder = i.ProductVariant != null
+                ? new List<ProductVariantOrderResponseDto>
+                {
+                    new ProductVariantOrderResponseDto
+                    {
+                        Size = i.ProductVariant.Size
+                    }
+                }
+                : new List<ProductVariantOrderResponseDto>(),
+            OrderItemProduct = i.ProductVariant?.Product != null
+                ? new List<OrderItemProductResponseDto>
+                {
+                    new OrderItemProductResponseDto
+                    {
+                        Id = i.ProductVariant.Product.Id,
+                        Name = i.ProductVariant.Product.Name,
+                        Description = i.ProductVariant.Product.Description,
+                        DiscountRate = i.ProductVariant.Product.DiscountRate,
+                        AverageRating = i.ProductVariant.Product.AverageRating,
+                        Price = i.ProductVariant.Product.Price
+                    }
+                }
+                : new List<OrderItemProductResponseDto>()
+        }).ToList()
+    }).ToList();
+
+    var pagedResult = new PagedResult<OrderResponseDto>(dtoList, totalCount, pageNumber, pageSize);
+    return ServiceResult<PagedResult<OrderResponseDto>>.Success(pagedResult);
+}
+
+public async Task<ServiceResult<PagedResult<OrderResponseDto>>> GetCompletedOrdersAsync(string token, int pageNumber, int pageSize)
+{
+    var isAdmin = await _userValidator.IsAdminAsync(token);
+    if (isAdmin.IsFail || !isAdmin.Data)
+        return ServiceResult<PagedResult<OrderResponseDto>>.Fail("Yetkisiz giriş!", HttpStatusCode.Forbidden);
+
+    var orders = await _orderRepo.GetCompletedOrdersAsync();
+    if (!orders.Any())
+        return ServiceResult<PagedResult<OrderResponseDto>>.Fail("Tamamlanmış sipariş bulunamadı", HttpStatusCode.NotFound);
+
+    var totalCount = orders.Count();
+    var pagedOrders = orders.Skip((pageNumber - 1) * pageSize).Take(pageSize).ToList();
+
+    var dtoList = pagedOrders.Select(o => new OrderResponseDto
+    {
+        Id = o.Id,
+        OrderDate = o.OrderDate,
+        IsComplete = o.IsComplete,
+        TotalAmount = o.TotalAmount,
+        ShippingAddress = o.ShippingAddress,
+        Status = o.Status,
+        UserEmail = o.User?.Email ?? string.Empty,
+        Payment = o.Payment != null
+            ? new List<PaymentResponseDto>
+              {
+                  new PaymentResponseDto
+                  {
+                      PaymentId = o.Payment.Id,
+                      PaymentMethod = o.Payment.PaymentMethod,
+                      PaymentStatus = o.Payment.PaymentStatus
+                  }
+              }
+            : new List<PaymentResponseDto>(),
+        OrderItem = (o.OrderItems ?? new List<OrderItem>()).Select(i => new OrderItemResponseDto
+        {
+            OrderItemId = i.Id,
+            Price = i.Price,
+            Quantity = i.Quantity,
+            ProductVariantOrder = i.ProductVariant != null
+                ? new List<ProductVariantOrderResponseDto> { new ProductVariantOrderResponseDto { Size = i.ProductVariant.Size } }
+                : new List<ProductVariantOrderResponseDto>(),
+            OrderItemProduct = i.ProductVariant?.Product != null
+                ? i.ProductVariant.Product.ProductCategories.Select(pc => new OrderItemProductResponseDto
+                {
+                    Id = i.ProductVariant.ProductId,
+                    Name = i.ProductVariant.Product.Name,
+                    Description = i.ProductVariant.Product.Description,
+                    DiscountRate = i.ProductVariant.Product.DiscountRate,
+                    AverageRating = i.ProductVariant.Product.AverageRating,
+                    Price = i.ProductVariant.Product.Price
+                }).ToList()
+                : new List<OrderItemProductResponseDto>()
+        }).ToList()
+    }).ToList();
+
+    var pagedResult = new PagedResult<OrderResponseDto>(dtoList, totalCount, pageNumber, pageSize);
+    return ServiceResult<PagedResult<OrderResponseDto>>.Success(pagedResult);
+}
 
     public async Task<ServiceResult<Order>> CreateOrderAsync(OrderCreateDto dto, string token)
     {
@@ -241,133 +380,6 @@ public class OrderService : IOrderService
         );
         return ServiceResult.Success("Sipariş tamamlandı!");
     }
-
-public async Task<ServiceResult<PagedResult<OrderResponseDto>>> GetNotCompletedOrdersAsync(string token, int pageNumber, int pageSize)
-{
-    var isAdmin = await _userValidator.IsAdminAsync(token);
-    if (isAdmin.IsFail || !isAdmin.Data)
-        return ServiceResult<PagedResult<OrderResponseDto>>.Fail("Yetkisiz giriş!", HttpStatusCode.Forbidden);
-
-    var orders = await _orderRepo.GetNotCompletedOrdersAsync();
-    if (!orders.Any())
-        return ServiceResult<PagedResult<OrderResponseDto>>.Fail("Tamamlanmamış sipariş bulunamadı", HttpStatusCode.NotFound);
-
-    var totalCount = orders.Count();
-    var pagedOrders = orders.Skip((pageNumber - 1) * pageSize).Take(pageSize).ToList();
-
-    var dtoList = pagedOrders.Select(o => new OrderResponseDto
-    {
-        Id = o.Id,
-        OrderDate = o.OrderDate,
-        IsComplete = o.IsComplete,
-        TotalAmount = o.TotalAmount,
-        ShippingAddress = o.ShippingAddress,
-        Status = o.Status,
-        UserEmail = o.User?.Email ?? string.Empty,
-        Payment = o.Payment != null
-            ? new List<PaymentResponseDto>
-            {
-                new PaymentResponseDto
-                {
-                    PaymentId = o.Payment.Id,
-                    PaymentMethod = o.Payment.PaymentMethod,
-                    PaymentStatus = o.Payment.PaymentStatus
-                }
-            }
-            : new List<PaymentResponseDto>(),
-        OrderItem = (o.OrderItems ?? new List<OrderItem>()).Select(i => new OrderItemResponseDto
-        {
-            OrderItemId = i.Id,
-            Price = i.Price,
-            Quantity = i.Quantity,
-            ProductVariantOrder = i.ProductVariant != null
-                ? new List<ProductVariantOrderResponseDto>
-                {
-                    new ProductVariantOrderResponseDto
-                    {
-                        Size = i.ProductVariant.Size
-                    }
-                }
-                : new List<ProductVariantOrderResponseDto>(),
-            OrderItemProduct = i.ProductVariant?.Product != null
-                ? new List<OrderItemProductResponseDto>
-                {
-                    new OrderItemProductResponseDto
-                    {
-                        Id = i.ProductVariant.Product.Id,
-                        Name = i.ProductVariant.Product.Name,
-                        Description = i.ProductVariant.Product.Description,
-                        DiscountRate = i.ProductVariant.Product.DiscountRate,
-                        AverageRating = i.ProductVariant.Product.AverageRating,
-                        Price = i.ProductVariant.Product.Price
-                    }
-                }
-                : new List<OrderItemProductResponseDto>()
-        }).ToList()
-    }).ToList();
-
-    var pagedResult = new PagedResult<OrderResponseDto>(dtoList, totalCount, pageNumber, pageSize);
-    return ServiceResult<PagedResult<OrderResponseDto>>.Success(pagedResult);
-}
-
-public async Task<ServiceResult<PagedResult<OrderResponseDto>>> GetCompletedOrdersAsync(string token, int pageNumber, int pageSize)
-{
-    var isAdmin = await _userValidator.IsAdminAsync(token);
-    if (isAdmin.IsFail || !isAdmin.Data)
-        return ServiceResult<PagedResult<OrderResponseDto>>.Fail("Yetkisiz giriş!", HttpStatusCode.Forbidden);
-
-    var orders = await _orderRepo.GetCompletedOrdersAsync();
-    if (!orders.Any())
-        return ServiceResult<PagedResult<OrderResponseDto>>.Fail("Tamamlanmış sipariş bulunamadı", HttpStatusCode.NotFound);
-
-    var totalCount = orders.Count();
-    var pagedOrders = orders.Skip((pageNumber - 1) * pageSize).Take(pageSize).ToList();
-
-    var dtoList = pagedOrders.Select(o => new OrderResponseDto
-    {
-        Id = o.Id,
-        OrderDate = o.OrderDate,
-        IsComplete = o.IsComplete,
-        TotalAmount = o.TotalAmount,
-        ShippingAddress = o.ShippingAddress,
-        Status = o.Status,
-        UserEmail = o.User?.Email ?? string.Empty,
-        Payment = o.Payment != null
-            ? new List<PaymentResponseDto>
-              {
-                  new PaymentResponseDto
-                  {
-                      PaymentId = o.Payment.Id,
-                      PaymentMethod = o.Payment.PaymentMethod,
-                      PaymentStatus = o.Payment.PaymentStatus
-                  }
-              }
-            : new List<PaymentResponseDto>(),
-        OrderItem = (o.OrderItems ?? new List<OrderItem>()).Select(i => new OrderItemResponseDto
-        {
-            OrderItemId = i.Id,
-            Price = i.Price,
-            Quantity = i.Quantity,
-            ProductVariantOrder = i.ProductVariant != null
-                ? new List<ProductVariantOrderResponseDto> { new ProductVariantOrderResponseDto { Size = i.ProductVariant.Size } }
-                : new List<ProductVariantOrderResponseDto>(),
-            OrderItemProduct = i.ProductVariant?.Product != null
-                ? i.ProductVariant.Product.ProductCategories.Select(pc => new OrderItemProductResponseDto
-                {
-                    Id = i.ProductVariant.ProductId,
-                    Name = i.ProductVariant.Product.Name,
-                    Description = i.ProductVariant.Product.Description,
-                    DiscountRate = i.ProductVariant.Product.DiscountRate,
-                    AverageRating = i.ProductVariant.Product.AverageRating,
-                    Price = i.ProductVariant.Product.Price
-                }).ToList()
-                : new List<OrderItemProductResponseDto>()
-        }).ToList()
-    }).ToList();
-
-    var pagedResult = new PagedResult<OrderResponseDto>(dtoList, totalCount, pageNumber, pageSize);
-    return ServiceResult<PagedResult<OrderResponseDto>>.Success(pagedResult);
-}
 
 public async Task<ServiceResult<List<MonthlyCategorySalesDto>>> GetMonthlyCategorySalesAsync(string token)
 {

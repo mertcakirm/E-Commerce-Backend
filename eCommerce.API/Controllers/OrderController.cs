@@ -34,11 +34,14 @@ namespace eCommerce.API.Controllers
 
         [HttpGet]
         [Authorize]
-        public async Task<IActionResult> GetMyOrders([FromHeader(Name = "Authorization")] string token)
+        public async Task<IActionResult> GetMyOrders(
+            [FromHeader(Name = "Authorization")] string token,      
+            [FromQuery] int pageNumber = 1,
+            [FromQuery] int pageSize = 10)
         {
             try
             {
-                var order = await _orderService.GetUserOrderAsync(token);
+                var order = await _orderService.GetUserOrderAsync(token,pageNumber,pageSize);
                 return Ok(new { Success = true, data = order });
             }
             catch (Exception ex)
@@ -46,10 +49,9 @@ namespace eCommerce.API.Controllers
                 return BadRequest(new { Success = false, Message = ex.Message });
             }
         }
-        
-        
-        
-          [HttpPut("{orderId}/payment")]
+
+
+    [HttpPut("{orderId}/payment")]
     [Authorize]
     public async Task<IActionResult> UpdatePaymentStatus([FromHeader(Name = "Authorization")] string token,int orderId, [FromBody] PaymentUpdateDto dto)
     {

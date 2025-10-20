@@ -9,7 +9,6 @@ namespace eCommerce.Infrastructure.Repositories
     {
         public OrderRepository(AppDbContext context) : base(context) { }
 
-        // Kullanıcının tüm siparişlerini getir
         public async Task<IEnumerable<Order?>> GetUserOrdersAsync(int userId)
         {
             return await _dbSet
