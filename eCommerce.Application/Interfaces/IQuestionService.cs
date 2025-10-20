@@ -8,4 +8,5 @@ public interface IQuestionService
     Task<ServiceResult<bool>> AddProductQuestionAsync(int productId, string question, string token);
     Task<ServiceResult<bool>> AddProductAnswerAsync(int questionId, string answer, string token);
     Task<ServiceResult<bool>> RemoveProductQuestionAsync(int questionId, string token);
+    Task<ServiceResult<PagedResult<ProductQuestionResponseDto>>> GetProductQuestions(int productId, int pageNumber, int pageSize);
 }

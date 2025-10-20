@@ -27,7 +27,18 @@ namespace eCommerce.API.Controllers
 
             return Ok(result.Data);
         }
+        
+        [HttpGet("get-productId/{productId}")]
+        public async Task<IActionResult> GetByProductIdQuestions(
+            int productId, int pageNumber = 1, int pageSize = 10)
+        {
+            var result = await _questionService.GetProductQuestions(productId, pageNumber, pageSize);
 
+            if (result.IsFail)
+                return StatusCode((int)result.Status, result.ErrorMessage);
+
+            return Ok(result.Data);
+        }
         [HttpPost("add-question")]
         [Authorize]
         public async Task<IActionResult> AddQuestion([FromHeader(Name = "Authorization")] string token, [FromBody] AddQuestionRequest request)

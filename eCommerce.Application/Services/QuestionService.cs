@@ -2,6 +2,7 @@ using System.Net;
 using eCommerce.Application.DTOs;
 using eCommerce.Application.Interfaces;
 using eCommerce.Core.Interfaces;
+using Microsoft.EntityFrameworkCore;
 
 namespace eCommerce.Application.Services;
 
@@ -37,6 +38,42 @@ public class QuestionService : IQuestionService
         
         return ServiceResult<List<GetAllQuestionsDto>>.Success(questionsDto);
         
+    }
+
+    public async Task<ServiceResult<PagedResult<ProductQuestionResponseDto>>> GetProductQuestions(
+        int productId, int pageNumber, int pageSize)
+    {
+        var query = _productRepository.GetProductQuestionsByProductId(productId);
+
+        var totalCount = await query.CountAsync();
+        
+        if (totalCount == 0)
+            return ServiceResult<PagedResult<ProductQuestionResponseDto>>
+                .Fail("Soru bulunamadı", HttpStatusCode.NotFound);
+
+        var items = await query
+            .Skip((pageNumber - 1) * pageSize)
+            .Take(pageSize)
+            .Select(q => new ProductQuestionResponseDto
+            {
+                Id = q.Id,
+                UserEmail = q.User!.Email,
+                Question = q.QuestionText,
+                Answer = q.Answers.FirstOrDefault()!.AnswerText,
+                Created = q.CreatedAt
+            })
+            .ToListAsync();
+
+        var totalPages = (int)Math.Ceiling(totalCount / (double)pageSize);
+
+        var pagedResult = new PagedResult<ProductQuestionResponseDto>(
+            items,
+            totalCount,
+            pageNumber,
+            pageSize
+        );
+
+        return ServiceResult<PagedResult<ProductQuestionResponseDto>>.Success(pagedResult);
     }
 
     public async Task<ServiceResult<bool>> AddProductQuestionAsync(int productId, string question, string token)

@@ -239,6 +239,15 @@ namespace eCommerce.Infrastructure.Repositories
 
             return await _context.SaveChangesAsync() > 0;
         }
+
+        public IQueryable<ProductQuestion> GetProductQuestionsByProductId(int productId)
+        {
+            return _context.ProductQuestions
+                .Include(q => q.Answers)
+                .Include(q => q.User)
+                .Where(q => q.ProductId == productId)
+                .OrderByDescending(q => q.CreatedAt);
+        }
         
         public async Task<bool> ToggleProductActivity(int productId)
         {

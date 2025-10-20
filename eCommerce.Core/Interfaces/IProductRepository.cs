@@ -22,5 +22,6 @@ namespace eCommerce.Core.Interfaces
         Task<bool> AddProductAnswer(int questionId, string answer);
         Task<List<ProductQuestion>> GetProductQuestions();
         Task<bool> DeleteProductQuestion(int questionId);
+        IQueryable<ProductQuestion> GetProductQuestionsByProductId(int productId);
     }
 }

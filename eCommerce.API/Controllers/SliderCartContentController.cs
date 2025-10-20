@@ -20,6 +20,7 @@ namespace eCommerce.API.Controllers
         }
 
 
+        [AllowAnonymous]
         [HttpGet("sliders")]
         public async Task<IActionResult> GetAllSliders()
         {
@@ -79,6 +80,7 @@ namespace eCommerce.API.Controllers
 
 
 
+        [AllowAnonymous]
         [HttpGet("carts")]
         public async Task<IActionResult> GetAllCarts()
         {

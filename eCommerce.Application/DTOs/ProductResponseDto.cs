@@ -21,6 +21,9 @@ public class ProductResponseDto
 
     public List<ProductVariantResponseDto> Variants { get; set; } = new();
     public List<ProductImageResponseDto> Images { get; set; } = new();
+    public List<ProductQuestionResponseDto> Questions { get; set; } = new();
+    
+    
 }
 
 public class ProductVariantResponseDto
@@ -35,4 +38,13 @@ public class ProductImageResponseDto
     public int Id { get; set; }
     public string ImageUrl { get; set; }
     public bool IsMain { get; set; }
+}
+
+public class ProductQuestionResponseDto
+{
+    public int Id { get; set; }
+    public string UserEmail  { get; set; }
+    public string Question { get; set; }
+    public string Answer { get; set; }
+    public DateTime Created { get; set; }
 }
