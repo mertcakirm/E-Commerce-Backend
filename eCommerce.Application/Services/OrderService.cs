@@ -95,6 +95,75 @@ public async Task<ServiceResult<PagedResult<OrderResponseDto>>> GetUserOrderAsyn
 
     return ServiceResult<PagedResult<OrderResponseDto>>.Success(pagedResult);
 }
+
+public async Task<ServiceResult<OrderResponseDto>> GetOrderByIdAsync(string token, int orderId)
+{
+    var validation = await _userValidator.ValidateAsync(token);
+    if (validation.IsFail)
+        return ServiceResult<OrderResponseDto>.Fail(validation.ErrorMessage!, validation.Status);
+
+    var order = await _orderRepo.GetOrderByIdAsync(orderId);
+
+    if (order == null || order.UserId != validation.Data!.Id)
+        return ServiceResult<OrderResponseDto>.Fail("Sipariş bulunamadı", HttpStatusCode.NotFound);
+
+    var dto = new OrderResponseDto
+    {
+        Id = order.Id,
+        OrderDate = order.OrderDate,
+        IsComplete = order.IsComplete,
+        TotalAmount = order.TotalAmount,
+        ShippingAddress = order.ShippingAddress,
+        Status = order.Status,
+        UserEmail = order.User.Email,
+        Payment = order.Payment != null
+            ? new List<PaymentResponseDto>
+            {
+                new PaymentResponseDto
+                {
+                    PaymentId = order.Payment.Id,
+                    PaymentMethod = order.Payment.PaymentMethod,
+                    PaymentStatus = order.Payment.PaymentStatus
+                }
+            }
+            : new List<PaymentResponseDto>(),
+        OrderItem = (order.OrderItems ?? new List<OrderItem>())
+            .Select(i => new OrderItemResponseDto
+            {
+                OrderItemId = i.Id,
+                Price = i.Price,
+                Quantity = i.Quantity,
+                ProductVariantOrder = i.ProductVariant != null
+                    ? new List<ProductVariantOrderResponseDto>
+                    {
+                        new ProductVariantOrderResponseDto
+                        {
+                            Size = i.ProductVariant.Size
+                        }
+                    }
+                    : new List<ProductVariantOrderResponseDto>(),
+                OrderItemProduct = i.ProductVariant?.Product != null
+                    ? new List<OrderItemProductResponseDto>
+                    {
+                        new OrderItemProductResponseDto
+                        {
+                            Id = i.ProductVariant.Product.Id,
+                            Name = i.ProductVariant.Product.Name,
+                            Description = i.ProductVariant.Product.Description,
+                            DiscountRate = i.ProductVariant.Product.DiscountRate,
+                            AverageRating = i.ProductVariant.Product.AverageRating,
+                            Price = i.ProductVariant.Product.Price,
+                            ImageUrl = (i.ProductVariant.Product.Images != null && i.ProductVariant.Product.Images.Any())
+                                ? i.ProductVariant.Product.Images.First().ImageUrl
+                                : null
+                        }
+                    }
+                    : new List<OrderItemProductResponseDto>()
+            }).ToList()
+    };
+
+    return ServiceResult<OrderResponseDto>.Success(dto);
+}
     
     public async Task<ServiceResult<PagedResult<OrderResponseDto>>> GetNotCompletedOrdersAsync(string token, int pageNumber, int pageSize)
 {

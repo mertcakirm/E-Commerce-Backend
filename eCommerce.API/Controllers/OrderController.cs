@@ -97,6 +97,21 @@ namespace eCommerce.API.Controllers
         }
     }
     
+    [HttpGet("{orderId}")]
+    [Authorize]
+    public async Task<IActionResult> GetOrderById(int orderId,[FromHeader(Name = "Authorization")] string token)
+    {
+        if (string.IsNullOrEmpty(token))
+            return Unauthorized("Token bulunamadı");
+
+        var result = await _orderService.GetOrderByIdAsync(token, orderId);
+
+        if (result.IsFail)
+            return StatusCode((int)result.Status, result.ErrorMessage);
+
+        return Ok(result.Data);
+    }
+    
     [HttpGet("notCompleted")]
     public async Task<IActionResult> GetNotCompletedOrders(
         [FromHeader(Name = "Authorization")] string token,

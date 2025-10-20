@@ -11,7 +11,7 @@ public interface IOrderService
     Task<ServiceResult> UpdatePaymentStatusAsync(int orderId, string status, string token);
     Task<ServiceResult> CompleteOrderStatusAsync(int orderId, string token);
     Task<ServiceResult<PagedResult<OrderResponseDto>>> GetNotCompletedOrdersAsync(string token, int pageNumber, int pageSize);
-
+    Task<ServiceResult<OrderResponseDto>> GetOrderByIdAsync(string token, int orderId);
     Task<ServiceResult<PagedResult<OrderResponseDto>>> GetCompletedOrdersAsync(string token, int pageNumber, int pageSize);
     Task<ServiceResult<List<MonthlySalesDto>>> GetYearlySalesByMonthAsync(string token);
     Task<ServiceResult<List<MonthlyCategorySalesDto>>> GetMonthlyCategorySalesAsync(string token);

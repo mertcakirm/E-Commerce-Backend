@@ -90,7 +90,9 @@ namespace eCommerce.Infrastructure.Repositories
             return await _context.Orders
                 .Include(o=>o.Payment)
                 .Include(o => o.OrderItems)
-                .ThenInclude(oi => oi.ProductVariant)
+                    .ThenInclude(oi => oi.ProductVariant)
+                    .ThenInclude(oi=>oi.Product)
+                    .ThenInclude(oi => oi.Images)
                 .FirstOrDefaultAsync( o => o.Id == OrderId && !EF.Property<bool>(o, "IsDeleted"));
                 
         }
